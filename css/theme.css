@@ -1,0 +1,507 @@
+/* ====================================================================
+ * theme.css — Light (default) / Dark appearance
+ * Applied via <html data-theme="light|dark"> from user account prefs.
+ * ==================================================================== */
+
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    --nav-highlight-bg: #8b4a52;
+    --nav-highlight-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    --nav-text-color: #f5d0d4;
+
+    --theme-bg: #141418;
+    --theme-bg-elevated: #1c1c22;
+    --theme-surface: #222228;
+    --theme-surface-2: #2a2a32;
+    --theme-surface-3: #32323c;
+    --theme-border: rgba(255, 255, 255, 0.08);
+    --theme-border-strong: rgba(255, 255, 255, 0.14);
+    --theme-text: #ececf1;
+    --theme-text-muted: #a0a0ab;
+    --theme-text-subtle: #6e6e7a;
+    --theme-input-bg: #2a2a32;
+    --theme-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+    --theme-shadow-soft: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+/* ------------------------------------------------------------------ */
+/* Page shell                                                         */
+/* ------------------------------------------------------------------ */
+[data-theme="dark"] body {
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .main-wrap .showcase {
+    background-color: var(--theme-bg);
+}
+
+[data-theme="dark"] .showcase .head header h1 {
+    color: var(--theme-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* Sidebar                                                            */
+/* ------------------------------------------------------------------ */
+[data-theme="dark"] .main-wrap .main-head {
+    background-color: var(--theme-bg-elevated);
+    box-shadow: var(--theme-shadow-soft);
+    border-right: 1px solid var(--theme-border);
+}
+
+[data-theme="dark"] .main-wrap .main-head .main-nav .navbar .navbar-nav .logo {
+    border-bottom-color: var(--theme-border-strong);
+}
+
+[data-theme="dark"] .logo .showcase-toggler {
+    color: var(--nav-text-color);
+}
+
+[data-theme="dark"] .main-wrap .main-head .main-nav .navbar .navbar-nav .nav-list .nav-list-item.selected .nav-link {
+    color: #fff;
+}
+
+/* ------------------------------------------------------------------ */
+/* Header — search + profile circle                                   */
+/* ------------------------------------------------------------------ */
+[data-theme="dark"] .showcase .head header .search-bar-wrapper .search-icon {
+    color: var(--theme-text-subtle);
+}
+
+[data-theme="dark"] .showcase .head header .search-bar {
+    background-color: var(--theme-surface);
+    border-color: var(--theme-border-strong);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .showcase .head header .search-bar::placeholder {
+    color: var(--theme-text-subtle);
+}
+
+[data-theme="dark"] .showcase .head header .search-bar:focus {
+    border-color: #8b4a52;
+    background-color: var(--theme-surface-2);
+}
+
+[data-theme="dark"] .showcase .head header .profile-circle {
+    background-color: var(--theme-surface-3);
+    color: var(--theme-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* Status cards & dashboard                                             */
+/* ------------------------------------------------------------------ */
+[data-theme="dark"] .status-card,
+[data-theme="dark"] .chart-card,
+[data-theme="dark"] .tickets-list,
+[data-theme="dark"] .mailbox-container,
+[data-theme="dark"] .profile-cover-card,
+[data-theme="dark"] .profile-card,
+[data-theme="dark"] .settings-card,
+[data-theme="dark"] .user-form-card {
+    background-color: var(--theme-surface);
+    box-shadow: var(--theme-shadow-soft);
+    border: 1px solid var(--theme-border);
+}
+
+[data-theme="dark"] .status-card-count {
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .status-card-label,
+[data-theme="dark"] .chart-card-header h2,
+[data-theme="dark"] .chart-card-subtitle,
+[data-theme="dark"] .chart-legend-list,
+[data-theme="dark"] .dashboard-requesters-head h2,
+[data-theme="dark"] #page-dashboard.techn-dashboard-page .techn-dashboard-history-title,
+[data-theme="dark"] #page-dashboard.admin-dashboard-page .admin-dashboard-history-title {
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .status-card .status-card-icon.outline {
+    background-color: var(--theme-surface-3);
+}
+
+[data-theme="dark"] .tickets-list-header {
+    background-color: var(--theme-surface-2);
+    border-bottom-color: var(--theme-border);
+}
+
+[data-theme="dark"] .tickets-list-header span {
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .tickets-list-body {
+    background-color: var(--theme-surface);
+}
+
+[data-theme="dark"] .ticket-row {
+    border-bottom-color: var(--theme-border);
+}
+
+[data-theme="dark"] .ticket-row span {
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .ticket-row .status-badge,
+[data-theme="dark"] .ticket-row .severity-badge,
+[data-theme="dark"] .ticket-row .priority-badge {
+    color: #fff;
+}
+
+[data-theme="dark"] .ticket-row .severity-badge.medium,
+[data-theme="dark"] .ticket-row .priority-badge.medium {
+    color: #1a1a1a;
+}
+
+[data-theme="dark"] .ticket-row .severity-badge.undefined,
+[data-theme="dark"] .ticket-row .priority-badge.undefined {
+    color: #888;
+}
+
+[data-theme="dark"] .ticket-row:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .tickets-empty-state,
+[data-theme="dark"] .tickets-empty-state p {
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .tickets-empty-state svg {
+    color: var(--theme-text-subtle);
+}
+
+/* ------------------------------------------------------------------ */
+/* Mailbox                                                            */
+/* ------------------------------------------------------------------ */
+[data-theme="dark"] .mailbox-threads {
+    background-color: var(--theme-surface);
+    border-right: 1px solid var(--theme-border);
+}
+
+[data-theme="dark"] .mailbox-threads-header,
+[data-theme="dark"] .mailbox-chat-header,
+[data-theme="dark"] .mailbox-chat-input-row {
+    background-color: var(--theme-surface-2);
+    border-color: var(--theme-border);
+}
+
+[data-theme="dark"] .mailbox-threads-title,
+[data-theme="dark"] .mailbox-chat-header-subject,
+[data-theme="dark"] .mailbox-thread-subject {
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .mailbox-thread-preview,
+[data-theme="dark"] .mailbox-thread-party,
+[data-theme="dark"] .mailbox-thread-time,
+[data-theme="dark"] .mailbox-threads-empty p,
+[data-theme="dark"] .mailbox-chat-empty-title,
+[data-theme="dark"] .mailbox-chat-empty-sub,
+[data-theme="dark"] .mailbox-msg-time {
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .mailbox-thread-item:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .mailbox-thread-item.active {
+    background-color: rgba(139, 74, 82, 0.22);
+}
+
+[data-theme="dark"] .mailbox-chat {
+    background-color: var(--theme-bg-elevated);
+}
+
+[data-theme="dark"] .mailbox-msg.received .mailbox-msg-bubble {
+    background-color: var(--theme-surface-2);
+    color: var(--theme-text);
+    box-shadow: none;
+    border: 1px solid var(--theme-border);
+}
+
+[data-theme="dark"] .mailbox-chat-input {
+    background-color: var(--theme-input-bg);
+    border-color: var(--theme-border-strong);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .mailbox-chat-input:focus {
+    border-color: #8b4a52;
+    background-color: var(--theme-surface-3);
+}
+
+[data-theme="dark"] .mailbox-chat-input::placeholder {
+    color: var(--theme-text-subtle);
+}
+
+/* ------------------------------------------------------------------ */
+/* Profile & settings                                                 */
+/* ------------------------------------------------------------------ */
+[data-theme="dark"] .profile-display-name,
+[data-theme="dark"] .profile-card h2,
+[data-theme="dark"] .profile-pref-label,
+[data-theme="dark"] .settings-card-header h2,
+[data-theme="dark"] .settings-pref-label,
+[data-theme="dark"] .settings-subheading,
+[data-theme="dark"] .settings-form-field label,
+[data-theme="dark"] .profile-form-field label,
+[data-theme="dark"] .user-form-card h2,
+[data-theme="dark"] .user-form-field label {
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .profile-card-subtitle,
+[data-theme="dark"] .settings-card-header p,
+[data-theme="dark"] .settings-subtitle,
+[data-theme="dark"] .settings-placeholder,
+[data-theme="dark"] .settings-footnote,
+[data-theme="dark"] .profile-info-label {
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .profile-avatar-lg {
+    background-color: var(--theme-surface-3);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .profile-pref-row,
+[data-theme="dark"] .profile-info-row,
+[data-theme="dark"] .settings-pref-row,
+[data-theme="dark"] .settings-password-form {
+    border-bottom-color: var(--theme-border);
+}
+
+[data-theme="dark"] .profile-form-field input,
+[data-theme="dark"] .profile-form-field select,
+[data-theme="dark"] .settings-form-field input,
+[data-theme="dark"] .settings-form-field select,
+[data-theme="dark"] .profile-pref-select,
+[data-theme="dark"] .settings-pref-select,
+[data-theme="dark"] .user-form-field input,
+[data-theme="dark"] .user-form-field select {
+    background-color: var(--theme-input-bg);
+    border-color: var(--theme-border-strong);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .profile-form-field input:focus,
+[data-theme="dark"] .profile-form-field select:focus,
+[data-theme="dark"] .settings-form-field input:focus,
+[data-theme="dark"] .settings-form-field select:focus,
+[data-theme="dark"] .user-form-field input:focus,
+[data-theme="dark"] .user-form-field select:focus {
+    border-color: #8b4a52;
+    background-color: var(--theme-surface-3);
+}
+
+[data-theme="dark"] .profile-form-field input:disabled,
+[data-theme="dark"] .settings-form-field input:disabled {
+    background-color: var(--theme-bg-elevated);
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .settings-placeholder code,
+[data-theme="dark"] .profile-card code {
+    background-color: var(--theme-surface-2);
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .toggle-slider {
+    background-color: var(--theme-surface-3);
+}
+
+[data-theme="dark"] .toggle-slider::before {
+    background-color: #ececf1;
+}
+
+[data-theme="dark"] .toggle-switch input:checked + .toggle-slider {
+    background-color: #8b4a52;
+}
+
+[data-theme="dark"] .security-row {
+    background-color: var(--theme-surface-2);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .security-row:hover {
+    background-color: var(--theme-surface-3);
+}
+
+/* ------------------------------------------------------------------ */
+/* Forms, buttons, notices                                            */
+/* ------------------------------------------------------------------ */
+[data-theme="dark"] .admin-ticket-select,
+[data-theme="dark"] .techn-ticket-form select {
+    background-color: var(--theme-input-bg);
+    border-color: var(--theme-border-strong);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .btn-cancel-user,
+[data-theme="dark"] .btn-cancel-ticket {
+    background-color: var(--theme-surface-2);
+    color: var(--theme-text-muted);
+    border-color: var(--theme-border-strong);
+}
+
+[data-theme="dark"] .btn-cancel-user:hover,
+[data-theme="dark"] .btn-cancel-ticket:hover {
+    background-color: var(--theme-surface-3);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .utilities-notice {
+    background-color: rgba(52, 199, 89, 0.12);
+    color: #7ddea0;
+    border: 1px solid rgba(52, 199, 89, 0.25);
+}
+
+[data-theme="dark"] .utilities-notice-error {
+    background-color: rgba(255, 59, 48, 0.12);
+    color: #ff8a84;
+    border: 1px solid rgba(255, 59, 48, 0.25);
+}
+
+[data-theme="dark"] .dashboard-notice {
+    background-color: rgba(255, 204, 0, 0.1);
+    color: #f5d76e;
+    border-color: rgba(255, 204, 0, 0.25);
+}
+
+[data-theme="dark"] .dashboard-live-badge,
+[data-theme="dark"] .user-form-card .form-subtitle,
+[data-theme="dark"] .user-form-field small {
+    color: var(--theme-text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Dashboard extras (dashboard_extra.css)                             */
+/* ------------------------------------------------------------------ */
+[data-theme="dark"] .dashboard-requesters .tickets-list-header {
+    border-top-color: var(--theme-border);
+}
+
+[data-theme="dark"] .rcol-last {
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .chart-empty-state p,
+[data-theme="dark"] .chart-empty-state .chart-empty-hint {
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .rating-form-card,
+[data-theme="dark"] .confirm-panel,
+[data-theme="dark"] .priority-queue-panel,
+[data-theme="dark"] .perf-dropdown-menu {
+    background-color: var(--theme-surface);
+    border: 1px solid var(--theme-border);
+    box-shadow: var(--theme-shadow-soft);
+}
+
+[data-theme="dark"] .priority-queue-head h2,
+[data-theme="dark"] .priority-queue-band-label,
+[data-theme="dark"] .confirm-panel h3,
+[data-theme="dark"] .rating-form-card h3 {
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .priority-queue-band-count,
+[data-theme="dark"] .priority-queue-empty,
+[data-theme="dark"] .confirm-panel p {
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .priority-queue-band {
+    background-color: var(--theme-surface-2);
+    border-color: var(--theme-border);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .priority-queue-band-tier {
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .priority-queue-track {
+    background-color: var(--theme-surface-3);
+}
+
+[data-theme="dark"] .notification-badge {
+    background: rgba(139, 74, 82, 0.25);
+    color: #f5c2c8;
+}
+
+[data-theme="dark"] .notification-item {
+    border-bottom-color: var(--theme-border);
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .notification-time {
+    color: var(--theme-text-subtle);
+}
+
+[data-theme="dark"] .btn-link-mark-read {
+    color: #e8a0a8;
+}
+
+[data-theme="dark"] .perf-dropdown-item {
+    color: var(--theme-text);
+}
+
+[data-theme="dark"] .perf-dropdown-item:hover {
+    background-color: var(--theme-surface-2);
+}
+
+[data-theme="dark"] .rating-given-label,
+[data-theme="dark"] .rating-empty-hint {
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .confirm-notice-success {
+    background-color: rgba(52, 199, 89, 0.12);
+    color: #7ddea0;
+}
+
+[data-theme="dark"] .confirm-notice-error {
+    background-color: rgba(255, 59, 48, 0.12);
+    color: #ff8a84;
+}
+
+[data-theme="dark"] .rating-star-btn {
+    color: var(--theme-text-subtle);
+}
+
+[data-theme="dark"] .rating-star-btn.active,
+[data-theme="dark"] .rating-star-btn:hover {
+    color: #F5A623;
+}
+
+/* Technician hero — keep brand gradient, slightly deepened for dark UI */
+[data-theme="dark"] .tech-hero-banner {
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+}
+
+/* Priority badge "undefined" on dark rows */
+[data-theme="dark"] .priority-badge.undefined,
+[data-theme="dark"] .severity-badge.undefined {
+    background-color: var(--theme-surface-3);
+    color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .priority-badge.medium {
+    color: #1a1a1a;
+}
+
+/* Row highlight animation on utilities */
+[data-theme="dark"] .ticket-row.row-new {
+    animation-name: utilitiesRowHighlightDark;
+}
+
+@keyframes utilitiesRowHighlightDark {
+    0%   { background-color: rgba(255, 204, 0, 0.15); }
+    100% { background-color: transparent; }
+}

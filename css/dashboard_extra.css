@@ -1,0 +1,1000 @@
+/* ====================================================================
+ * dashboard_extra.css
+ * --------------------------------------------------------------------
+ * Styles for the pieces added when the dashboard was wired to the
+ * database: the ticket-requester panel, the chart empty states, the
+ * "updated at" stamp, and the user-side rating form.
+ *
+ * Kept in its own file rather than appended to main_interface.css so
+ * the 80KB base stylesheet stays untouched and this can be reverted by
+ * deleting one <link>. It deliberately reuses the existing class
+ * language (.ticket-row, .chart-card, .tickets-list) so the new panels
+ * look native rather than bolted on.
+ * ==================================================================== */
+
+/* --------------------------------------------------------------------
+ * Dashboard header strip: live stamp + setup notice
+ * ------------------------------------------------------------------ */
+.dashboard-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 15px 10px;
+    flex-wrap: wrap;
+}
+
+.dashboard-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: #787777;
+}
+
+/* Pulsing dot: the only signal that the numbers refresh on their own.
+   Without it a static-looking screen gives no hint it is live. */
+.dashboard-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #34C759;
+    display: inline-block;
+    animation: dashboard-pulse 2s ease-in-out infinite;
+}
+
+@keyframes dashboard-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.25; }
+}
+
+.dashboard-notice {
+    font-size: 12px;
+    color: #8a5b00;
+    background-color: #FFF6E0;
+    border: 1px solid #F5D48A;
+    border-radius: 6px;
+    padding: 8px 12px;
+    flex: 1 1 320px;
+}
+
+/* Counter flash when a status card changes during a poll. */
+.stat-bumped {
+    animation: stat-bump 0.9s ease;
+}
+
+@keyframes stat-bump {
+    0%   { color: #610107; transform: scale(1.12); }
+    100% { color: inherit; transform: scale(1); }
+}
+
+.status-card-count {
+    display: inline-block;
+    transition: color 0.2s ease;
+}
+
+/* --------------------------------------------------------------------
+ * Chart empty states
+ * ------------------------------------------------------------------
+ * A bar chart of all zeroes renders as a blank grid, which reads as a
+ * broken widget. These sit in the same fixed-height chart body and are
+ * toggled by dashboard_live.js when a panel has nothing to plot.
+ * ------------------------------------------------------------------ */
+.chart-empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-align: center;
+    padding: 12px;
+}
+
+.chart-empty-state p {
+    font-size: 13px;
+    color: #9a9a9a;
+}
+
+.chart-empty-state .chart-empty-hint {
+    font-size: 11px;
+    color: #b5b5b5;
+}
+
+.chart-card-subtitle {
+    font-size: 12px;
+    color: #787777;
+    font-weight: 500;
+}
+
+/* --------------------------------------------------------------------
+ * Admin dashboard — Recent Ticket History (below chart grid)
+ * ------------------------------------------------------------------ */
+body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+}
+
+#page-dashboard.admin-dashboard-page .status-cards,
+#page-dashboard.admin-dashboard-page .dashboard-charts-grid,
+#page-dashboard.admin-dashboard-page .admin-dashboard-toolbar {
+    flex-shrink: 0;
+}
+
+#page-dashboard.admin-dashboard-page .admin-dashboard-toolbar {
+    margin-top: 25px;
+}
+
+#page-dashboard.admin-dashboard-page .admin-dashboard-history-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+#page-dashboard.admin-dashboard-page .admin-dashboard-history-list {
+    flex: 1;
+    min-height: 0;
+    margin-top: 0;
+}
+
+#page-dashboard.admin-dashboard-page .admin-dashboard-history-list .tickets-list-body {
+    overflow-y: auto;
+}
+
+/* History preview: no Actions column — hide the extra header cell footprint */
+#page-dashboard.admin-dashboard-page .admin-history-row .tcol-assigned {
+    flex: 0 0 18%;
+}
+
+/* --------------------------------------------------------------------
+ * Ticket requesters panel
+ * ------------------------------------------------------------------
+ * Column widths follow the same flex-basis pattern as .ucol-* and
+ * .ttcol-* so the header line and the rows stay aligned.
+ * ------------------------------------------------------------------ */
+/* .tickets-list is written for the Tickets tab, where it is a flex
+   child that stretches to fill the page. On the Dashboard it sits in a
+   normal document flow, so the stretch is cancelled and the panel is
+   sized by its own content. */
+.dashboard-requesters {
+    flex: none;
+    margin: 0 15px 15px;
+}
+
+.dashboard-requesters-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 24px 14px;
+}
+
+.dashboard-requesters-head h2 {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1a1a1a;
+}
+
+/* The rounded top corners belong to the panel's own header above it,
+   not to the column-label strip that now sits in the middle. */
+.dashboard-requesters .tickets-list-header {
+    border-radius: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.rcol-avatar   { flex: 0 0 8%; }
+.rcol-name     { flex: 0 0 32%; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rcol-total    { flex: 0 0 13%; text-align: center; font-weight: 700; }
+.rcol-open     { flex: 0 0 13%; text-align: center; }
+.rcol-resolved { flex: 0 0 13%; text-align: center; }
+.rcol-last     { flex: 0 0 21%; text-align: center; color: #787777; }
+
+.requester-initials {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #610107;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.requester-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.requester-email {
+    font-size: 11px;
+    color: #9a9a9a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Scrolls once the list outgrows the panel, so a long roster never
+   pushes the rest of the dashboard off screen. */
+.dashboard-requesters-body {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+/* --------------------------------------------------------------------
+ * User-side rating form (feeds the satisfaction chart)
+ * ------------------------------------------------------------------ */
+/* The user Tickets table gained a sixth column. Description gives up
+   the width rather than letting the row overflow — it is a truncated
+   preview anyway, while the rating control needs a fixed footprint. */
+.rating-cell {
+    flex: 0 0 20%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Grid layout overrides flex footprint when tickets-list-user--actions is set. */
+.tickets-list-user--actions .rating-cell {
+    flex: unset;
+}
+
+.tickets-list-header .tickets-col-description,
+.ticket-row .tickets-col-description {
+    flex: 1 1 24%;
+}
+
+.tickets-list-user .tickets-list-header .tickets-col-description,
+.tickets-list-user .ticket-row .tickets-col-description {
+    flex: unset;
+}
+
+.rating-form {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Radio inputs are visually hidden but still focusable, so the control
+   stays keyboard and screen-reader usable while looking like stars. */
+.rating-stars {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 2px;
+}
+
+.rating-stars input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.rating-stars label {
+    cursor: pointer;
+    font-size: 17px;
+    line-height: 1;
+    color: #d9d9d9;
+    transition: color 0.12s ease;
+}
+
+/* row-reverse plus the sibling selector is what makes hovering the
+   3rd star light stars 1 through 3 rather than only the one hovered. */
+.rating-stars input:checked ~ label,
+.rating-stars label:hover,
+.rating-stars label:hover ~ label {
+    color: #F5A623;
+}
+
+.rating-stars input:focus-visible + label {
+    outline: 2px solid #610107;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.btn-submit-rating {
+    background-color: #610107;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-submit-rating:hover { background-color: #7d0209; }
+
+.rating-given {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #787777;
+}
+
+.rating-given-stars { color: #F5A623; font-size: 14px; letter-spacing: 1px; }
+
+.rating-pending {
+    font-size: 11px;
+    color: #b5b5b5;
+    font-style: italic;
+}
+
+/* Notices for the rating flow, matching the existing ticket notices. */
+.rating-notice-success,
+.rating-notice-error {
+    margin: 0 24px 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.rating-notice-success {
+    background-color: #E7F7EC;
+    border: 1px solid #A8DFBA;
+    color: #1f6b38;
+}
+
+.rating-notice-error {
+    background-color: #FDECEC;
+    border: 1px solid #F3B4B4;
+    color: #8c1c1c;
+}
+
+@media (max-width: 900px) {
+    .rcol-avatar,
+    .rcol-last { display: none; }
+    .rcol-name { flex: 0 0 46%; }
+    .rcol-total,
+    .rcol-open,
+    .rcol-resolved { flex: 0 0 18%; }
+}
+
+/* Screen-reader-only text: the star row is decorative (aria-hidden),
+   so the numeric value has to be exposed some other way. */
+.visually-hidden-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ====================================================================
+ * PERFORMANCE TAB
+ * ==================================================================== */
+
+/* Team-wide averages above the two tables. */
+.perf-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    padding: 0 15px 15px;
+}
+
+.perf-summary-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.perf-summary-label {
+    font-size: 12px;
+    color: #787777;
+    font-weight: 600;
+}
+
+.perf-summary-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #610107;
+    line-height: 1.2;
+}
+
+.perf-summary-hint {
+    font-size: 11px;
+    color: #b5b5b5;
+}
+
+.perf-updated {
+    font-size: 12px;
+    color: #9a9a9a;
+    margin-left: auto;
+    margin-right: 12px;
+}
+
+.perf-log-count {
+    font-size: 12px;
+    color: #787777;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+/* .tickets-list is a stretching flex child on the Tickets tab. On the
+   Performance tab the two tables sit in normal flow one after the
+   other, so the stretch is cancelled. */
+.perf-list {
+    flex: none;
+}
+
+/* Team ID cell now carries the technician's name underneath, so the
+   admin does not have to memorise which id is who. */
+.pcol-teamid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.perf-team-id {
+    font-weight: 700;
+}
+
+.perf-team-name {
+    font-size: 11px;
+    color: #9a9a9a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.perf-of-total {
+    font-size: 11px;
+    color: #9a9a9a;
+    font-weight: 500;
+}
+
+/* --------------------------------------------------------------------
+ * Filter dropdowns
+ * ------------------------------------------------------------------
+ * The three filter buttons were previously inert. The menu is injected
+ * by performance_live.js into this wrapper, positioned relative to the
+ * button rather than the page so it follows the button on resize.
+ * ------------------------------------------------------------------ */
+.perf-dropdown-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.perf-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 40;
+    min-width: 180px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.perf-dropdown-menu[hidden] { display: none; }
+
+.perf-dropdown-item {
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1a1a1a;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.perf-dropdown-item:hover { background-color: #f2f2f2; }
+
+.perf-dropdown-item.active {
+    background-color: #610107;
+    color: #fff;
+    font-weight: 600;
+}
+
+/* The severity badge gains a fourth state: a ticket the AI has not
+   prioritised yet. Grey rather than a traffic-light colour, because it
+   is an absence of a value, not a low one. */
+.severity-badge.unassigned {
+    background-color: #B9BDC6;
+    color: #fff;
+}
+
+.perf-view-all { cursor: pointer; }
+
+@media (max-width: 900px) {
+    .perf-summary-cards { grid-template-columns: 1fr; }
+}
+
+/* --------------------------------------------------------------------
+ * FIX: missing .priority-badge.moderate
+ * ------------------------------------------------------------------
+ * The tickets.severity ENUM is low / moderate / critical, but the
+ * priority badge only had colours for critical, high, medium and low.
+ * "moderate" matched none of them, so it fell through to the base
+ * .priority-badge rule — white text on no background, i.e. an
+ * invisible label on every moderate ticket in the admin Tickets tab.
+ * Same orange the severity badge already uses for moderate.
+ * ------------------------------------------------------------------ */
+.priority-badge.moderate { background-color: #FF8D28; }
+
+/* Matching state for a ticket with no priority assigned yet, so the
+   Performance log and the Tickets tab describe it the same way. */
+.priority-badge.unassigned,
+.severity-badge.unassigned {
+    background-color: #B9BDC6;
+    color: #fff;
+}
+
+/* ====================================================================
+ * USER CONFIRMATION WORKFLOW (v1.4)
+ * ====================================================================
+ * A ticket now stops at "awaiting_confirmation" between the technician
+ * finishing and the reporter closing it. The technician can no longer
+ * mark their own work resolved.
+ * ==================================================================== */
+
+/* Purple, deliberately outside the existing traffic-light set. This
+   status is neither in-progress nor done, it is waiting on a person,
+   and it should not be mistaken at a glance for either. */
+.status-badge.awaitingconfirmation,
+.priority-badge.awaitingconfirmation {
+    background-color: #7B61FF;
+    color: #fff;
+}
+
+/* The admin dashboard now has 5 status cards (chronological lifecycle). */
+.status-cards {
+    flex-wrap: wrap;
+}
+
+.status-card {
+    min-width: 170px;
+}
+
+/* Decision control on the reporter's own ticket row. */
+.confirm-form {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn-confirm-solved,
+.btn-confirm-reopen {
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-confirm-solved {
+    background-color: #34C759;
+    color: #fff;
+}
+
+.btn-confirm-solved:hover { background-color: #2aa74a; }
+
+/* Outlined rather than filled: reopening is the less common answer, and
+   it should not sit next to Solved looking equally like the default. */
+.btn-confirm-reopen {
+    background-color: #fff;
+    color: #8c1c1c;
+    border: 1px solid #e0b4b4;
+}
+
+.btn-confirm-reopen:hover {
+    background-color: #FDECEC;
+    border-color: #d99a9a;
+}
+
+/* Priority is a dropdown now, not a read-only badge. Sized to match the
+   status and assignee selects already in the same row. */
+.admin-ticket-select-priority {
+    max-width: 100%;
+}
+
+/* Shown only when an AI value exists and overrides the manual one, so
+   the dropdown appearing to disagree with the badge is explained. */
+.priority-ai-tag {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 10px;
+    padding: 2px 6px;
+}
+
+/* Profile / settings forms — canonical rules live in main_interface.css */
+
+/* Priority queue panel on admin Tickets tab */
+.priority-queue-panel {
+    margin: 0 24px 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #f5f5f5;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    flex-shrink: 0;
+}
+
+/* Tickets tab: lock page height; only the ticket rows scroll. */
+body[data-page="tickets"] {
+    overflow: hidden;
+}
+
+body[data-page="tickets"] .main-wrap {
+    height: 100%;
+}
+
+body[data-page="tickets"] .showcase {
+    min-height: 0;
+    overflow: hidden;
+}
+
+body[data-page="tickets"] #page-tickets .utilities-notice,
+body[data-page="tickets"] #page-tickets .utilities-notice-error {
+    flex-shrink: 0;
+}
+
+body[data-page="tickets"] #page-tickets .tickets-list-body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.priority-queue-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.priority-queue-note {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 12px;
+}
+
+.priority-queue-bands {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.priority-queue-band {
+    padding: 10px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    text-align: left;
+}
+
+.priority-queue-band-tier {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: #888;
+    margin-top: 2px;
+}
+
+.priority-queue-borrow-hint {
+    display: block;
+    margin-top: 4px;
+    font-weight: 600;
+    color: #610107;
+}
+
+.priority-queue-band-label {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.priority-queue-band-count {
+    float: right;
+    font-size: 12px;
+    color: #666;
+}
+
+.priority-queue-borrowed-tag {
+    font-size: 11px;
+    color: #610107;
+    font-weight: 600;
+}
+
+.priority-queue-bar {
+    height: 6px;
+    background: #eee;
+    border-radius: 4px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.priority-queue-bar-fill {
+    display: block;
+    height: 100%;
+    background: #610107;
+    border-radius: 4px;
+}
+
+.priority-queue-band.priority-critical .priority-queue-bar-fill { background: #ff3b30; }
+.priority-queue-band.priority-moderate .priority-queue-bar-fill { background: #ff8d28; }
+.priority-queue-band.priority-low .priority-queue-bar-fill { background: #34c759; }
+
+.priority-queue-band.is-full {
+    border-color: #ff3b30;
+}
+
+/* In-app notifications on profile */
+.profile-notifications-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #610107;
+    background: rgba(97, 1, 7, 0.08);
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.notification-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+}
+
+.notification-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    font-size: 13px;
+}
+
+.notification-item.unread .notification-message {
+    font-weight: 700;
+}
+
+.notification-time {
+    color: #888;
+    white-space: nowrap;
+    font-size: 11px;
+}
+
+.btn-link-mark-read {
+    background: none;
+    border: none;
+    color: #610107;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 8px;
+}
+
+/* ====================================================================
+ * TICKETS TABLE — centered grid, no horizontal scroll (user + admin)
+ * ==================================================================== */
+
+body[data-page="tickets"] #page-tickets {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin,
+body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user {
+    overflow-x: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.tickets-list-admin .tickets-list-header,
+.tickets-list-admin .ticket-row,
+.tickets-list-user .tickets-list-header,
+.tickets-list-user .ticket-row {
+    display: grid;
+    align-items: center;
+    justify-items: stretch;
+    column-gap: 10px;
+    row-gap: 8px;
+    padding-left: 16px;
+    padding-right: 16px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.tickets-list-admin .tickets-list-header,
+.tickets-list-user .tickets-list-header {
+    padding-top: 16px;
+    padding-bottom: 16px;
+}
+
+.tickets-list-admin .ticket-row,
+.tickets-list-user .ticket-row {
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+.tickets-list-admin .tickets-list-header,
+.tickets-list-admin .ticket-row {
+    grid-template-columns:
+        72px
+        minmax(0, 1.25fr)
+        minmax(0, 0.9fr)
+        minmax(0, 0.95fr)
+        minmax(0, 0.9fr)
+        minmax(0, 1.05fr)
+        minmax(200px, 1.75fr);
+}
+
+.tickets-list-user.tickets-list-user--actions .tickets-list-header,
+.tickets-list-user.tickets-list-user--actions .ticket-row {
+    grid-template-columns:
+        72px
+        minmax(0, 1.25fr)
+        minmax(0, 1.55fr)
+        minmax(0, 0.95fr)
+        minmax(0, 1.35fr)
+        44px;
+}
+
+.tickets-list-user:not(.tickets-list-user--actions) .tickets-list-header,
+.tickets-list-user:not(.tickets-list-user--actions) .ticket-row {
+    grid-template-columns:
+        72px
+        minmax(0, 1.45fr)
+        minmax(0, 2fr)
+        minmax(0, 1fr)
+        44px;
+}
+
+.tickets-list-admin .tickets-list-header > span,
+.tickets-list-admin .ticket-row > span,
+.tickets-list-user .tickets-list-header > span,
+.tickets-list-user .ticket-row > span {
+    flex: unset !important;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/* Text/data columns — fill the grid track and center under the header label */
+.tickets-list-user .tickets-col-id,
+.tickets-list-user .tickets-col-subject,
+.tickets-list-user .tickets-col-description,
+.tickets-list-admin .tcol-id,
+.tickets-list-admin .tcol-subject,
+.tickets-list-admin .tcol-category {
+    display: block;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tickets-list-user .tickets-col-status,
+.tickets-list-admin .tcol-status,
+.tickets-list-admin .tcol-priority,
+.tickets-list-admin .tcol-assigned,
+.tickets-list-admin .tcol-action,
+.tickets-list-user--actions .rating-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.tickets-list-admin .tcol-priority .admin-ticket-select,
+.tickets-list-admin .tcol-assigned .admin-ticket-select {
+    margin: 0 auto;
+}
+
+.tickets-list-user--actions .rating-cell {
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.tickets-list-user .rating-form,
+.tickets-list-user .confirm-form {
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tickets-list-admin .tcol-action {
+    --ticket-action-control-gap: 8px;
+    --ticket-action-group-gap: 10px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--ticket-action-group-gap);
+    justify-content: center;
+    align-items: center;
+}
+
+.tickets-list-admin .admin-ticket-form {
+    display: inline-flex;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: var(--ticket-action-control-gap);
+    min-width: 0;
+    margin: 0;
+}
+
+.tickets-list-admin .admin-ticket-form .admin-ticket-select {
+    flex: 0 0 auto;
+}
+
+.tickets-list-admin .admin-ticket-form .btn-save-ticket {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.tickets-list-admin .admin-ticket-select {
+    max-width: 92px;
+    min-width: 0;
+}
+
+.tickets-list-admin .admin-ticket-select-assign {
+    max-width: 120px;
+}
+
+.tickets-list-admin .tcol-action .ticket-delete-form {
+    flex: 0 0 auto;
+    display: inline-flex;
+    margin: 0;
+    justify-content: center;
+    align-items: center;
+}
+
+.tickets-list-user .tickets-col-delete,
+.tickets-list-user .tickets-col-delete--header-spacer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tickets-list-user .tickets-col-delete--header-spacer {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.tickets-list-admin .tickets-list-header span,
+.tickets-list-user .tickets-list-header span {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.tickets-list-admin .tickets-list-header .tcol-assigned,
+.tickets-list-admin .tickets-list-header .tcol-action,
+.tickets-list-user .tickets-list-header .rating-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
