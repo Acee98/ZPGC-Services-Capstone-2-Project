@@ -122,6 +122,28 @@
                         <div class="profile-circle"></div>
                     </header>
                 </div>
+                <div class="tickets-toolbar">
+                    <a href="../pages/ticket.php" class="btn-new-ticket">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                            viewBox="0 0 24 24">
+                            <path d="M3 13h8v8h2v-8h8v-2h-8V3h-2v8H3z"></path>
+                        </svg>
+                        New Ticket
+                    </a>
+                </div>
+                <div class="tickets-list">
+                <div class="tickets-list-header">
+                    <span class="tickets-col-id">ID</span>
+                    <span class="tickets-col-subject">Subject</span>
+                    <span class="tickets-col-description">Description</span>
+                    <span class="tickets-col-status">Status</span>
+                </div>
+                <div class="tickets-list-body" id="user-tickets-body">
+                    <div class="tickets-empty-state">
+                        <p>No tickets submitted yet.</p>
+                    </div>
+                </div>
+            </div>
             </div>
             <div class="page-content" id="page-messages">
                 <div class="head">
