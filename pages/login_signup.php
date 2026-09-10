@@ -1,5 +1,13 @@
 <?php
 session_start();
+
+function showError($error) {
+    if ($error !== '') {
+        return '<div class="form-error">' . htmlspecialchars($error, ENT_QUOTES, 'UTF-8') . '</div>';
+    }
+    return '';
+}
+
 $login_error = $_SESSION['login_error'] ?? '';
 unset($_SESSION['login_error']);
 ?>
@@ -25,7 +33,7 @@ unset($_SESSION['login_error']);
         <div class="form-box active" id="login-form">
             <form action="../logic/user_mngmnt.php" method="post">
                 <h1>LOGIN</h1>
-                <?php if ($login_error !== '') {echo '<p>' . htmlspecialchars($login_error) . '<p>'; } ?>
+                <?php echo showError($login_error); ?>
                 <h5>Enter your credentials to access, create, or track your tickets</h5>
                 <input type="email" name="email" placeholder="Email" required>
                 <input type="password" name="password" placeholder="Password" required>

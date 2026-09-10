@@ -1,3 +1,21 @@
+<?php
+require_once '../logic/config.php';
+
+$all_users = [];
+$result = $conn->query('SELECT id, first_name, last_name, email, role, status FROM users');
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $all_users[] = $row;
+    }
+}
+
+$role_labels = [
+    'user' => 'User',
+    'techn' => 'Technician',
+    'admin' => 'Administrator',
+];
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,8 +23,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/main_interface.css">
-    <title>ZPGC Services | Administrator
-    </title>
+    <title>ZPGC Services | Administrator</title>
 </head>
 
 <body data-page="dashboard">
@@ -37,6 +54,18 @@
                                 </a>
                             </li>
                             <li class="nav-list-item" data-nav="tickets">
+                                <a href="#" class="nav-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path
+                                            d="M21 8h-2V3a1 1 0 0 0-1.37-.93l-15 6c-.09.04-.16.1-.24.16-.03.02-.06.03-.09.06-.04.04-.05.08-.08.12-.05.06-.1.12-.13.19-.01.02 0 .05-.02.08-.03.1-.06.2-.06.31v3.55c0 .48.33.89.8.98a1.499 1.499 0 0 1 0 2.94c-.47.09-.8.5-.8.98v3.55c0 .55.45 1 1 1h18c.55 0 1-.45 1-1v-3.55c0-.48-.33-.89-.8-.98a1.499 1.499 0 0 1 0-2.94c.47-.09.8-.5.8-.98V8.99c0-.55-.45-1-1-1Zm-4 0H8.19L17 4.48zm3 3.84c-1.2.57-2 1.79-2 3.16s.8 2.59 2 3.16V20h-4v-2h-1v2H4v-1.84c1.2-.57 2-1.79 2-3.16s-.8-2.59-2-3.16V10h11v1h1v-1h4z">
+                                        </path>
+                                        <path d="M15 12h1v2h-1zm0 3h1v2h-1z"></path>
+                                    </svg>
+                                    <span class="link-text">Tickets</span>
+                                </a>
+                            </li>
+                            <li class="nav-list-item" data-nav="utilities">
                                 <a href="#" class="nav-link">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                                         viewBox="0 0 24 24">
@@ -99,20 +128,166 @@
         </header>
         <div class="sidebar-spacer"></div>
         <section class="showcase">
-            <div class="head">
-                <header>
-                    <h1>Dashboard</h1>
-                    <div class="search-bar-wrapper">
-                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                            fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
-                            </path>
-                        </svg>
-                        <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+            <div class="page-content" id="page-dashboard">
+                <div class="head">
+                    <header>
+                        <h1>Dashboard</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <div class="profile-circle"></div>
+                    </header>
+                </div>
+            </div>
+            <div class="page-content" id="page-tickets">
+                <div class="head">
+                    <header>
+                        <h1>Tickets</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <div class="profile-circle"></div>
+                    </header>
+                </div>
+            </div>
+            <div class="page-content" id="page-utilities">
+                <div class="head">
+                    <header>
+                        <h1>Utilities</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <div class="profile-circle"></div>
+                    </header>
+                </div>
+                <div class="tickets-list">
+                    <div class="tickets-list-header">
+                        <span class="ucol-id">ID</span>
+                        <span class="ucol-name">Name</span>
+                        <span class="ucol-email">Email</span>
+                        <span class="ucol-role">Role</span>
+                        <span class="ucol-status">Status</span>
+                        <span class="ucol-action">Actions</span>
                     </div>
-                    <div class="profile-circle"></div>
-                </header>
+                    <div class="tickets-list-body" id="utilities-users-body">
+                        <?php if (empty($all_users)) { ?>
+                        <div class="tickets-empty-state">
+                            <p>No user accounts found.</p>
+                        </div>
+                        <?php } else { ?>
+                        <?php foreach ($all_users as $u) {
+                            $isActive = ($u['status'] === 'active');
+                            if (isset($role_labels[$u['role']])) {
+                                $roleLabel = $role_labels[$u['role']];
+                            } else {
+                                $roleLabel = ucfirst($u['role']);
+                            }
+                        ?>
+                        <div class="ticket-row">
+                            <span class="ucol-id">#
+                                <?php echo (int) $u['id']; ?>
+                            </span>
+                            <span class="ucol-name">
+                                <?php echo htmlspecialchars($u['first_name'] . ' ' . $u['last_name']); ?>
+                            </span>
+                            <span class="ucol-email">
+                                <?php echo htmlspecialchars($u['email']); ?>
+                            </span>
+                            <span class="ucol-role">
+                                <span class="profile-role-badge role-<?php echo htmlspecialchars($u['role']); ?>">
+                                    <?php echo htmlspecialchars($roleLabel); ?>
+                                </span>
+                            </span>
+                            <span class="ucol-status">
+                                <?php if ($isActive) { ?>
+                                <span class="status-badge active-account">Active</span>
+                                <?php } else { ?>
+                                <span class="status-badge inactive-account">Pending</span>
+                                <?php } ?>
+                            </span>
+                            <span class="ucol-action">
+                                <?php if (!$isActive) { ?>
+                                <form action="../logic/user_admin_mngmnt.php" method="post">
+                                    <input type="hidden" name="id" value="<?php echo (int) $u['id']; ?>">
+                                    <input type="hidden" name="status" value="active">
+                                    <button type="submit" name="set_status" class="btn-update-status">Activate</button>
+                                </form>
+                                <?php } ?>
+                            </span>
+                        </div>
+                        <?php } ?>
+                        <?php } ?>
+                    </div>
+                </div>
+            </div>
+            <div class="page-content" id="page-analytics">
+                <div class="head">
+                    <header>
+                        <h1>Analytics</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <div class="profile-circle"></div>
+                    </header>
+                </div>
+            </div>
+            <div class="page-content" id="page-messages">
+                <div class="head">
+                    <header>
+                        <h1>Mailbox</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <div class="profile-circle"></div>
+                    </header>
+                </div>
+            </div>
+            <div class="page-content" id="page-settings">
+                <div class="head">
+                    <header>
+                        <h1>Settings</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <div class="profile-circle"></div>
+                    </header>
+                </div>
             </div>
         </section>
     </main>
