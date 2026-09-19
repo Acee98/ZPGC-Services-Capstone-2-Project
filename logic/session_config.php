@@ -1,6 +1,6 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params(0, '/CP2_V1.3/');
+    session_set_cookie_params(0, '/CP2_V1.4/');
     session_start();
 }
 
@@ -54,7 +54,7 @@ function save_ui_theme($theme)
     $_SESSION['theme'] = $theme;
     setcookie('zpgc_theme', $theme, [
         'expires' => time() + 60 * 60 * 24 * 365,
-        'path' => '/CP2_V1.3/',
+        'path' => '/CP2_V1.4/',
         'httponly' => false,
         'samesite' => 'Lax',
     ]);

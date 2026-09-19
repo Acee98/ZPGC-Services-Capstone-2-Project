@@ -1,10 +1,15 @@
 <?php
 require_once '../logic/session_config.php';
 require_once '../logic/config.php';
+require_once '../logic/ticket_status.php';
 require_role('user');
 
 $current_user_id = current_user_id($conn);
 $tab = $_GET['tab'] ?? 'dashboard';
+
+$confirm_success = $_SESSION['confirm_success'] ?? '';
+$confirm_error = $_SESSION['confirm_error'] ?? '';
+unset($_SESSION['confirm_success'], $_SESSION['confirm_error']);
 
 $user_tickets = [];
 $stmt = $conn->prepare(
@@ -153,12 +158,19 @@ $mailbox_tickets = $user_tickets;
                         New Ticket
                     </a>
                 </div>
-                <div class="tickets-list">
+                <?php if ($confirm_success !== '') { ?>
+                <div class="utilities-notice"><?php echo htmlspecialchars($confirm_success); ?></div>
+                <?php } ?>
+                <?php if ($confirm_error !== '') { ?>
+                <div class="utilities-notice-error"><?php echo htmlspecialchars($confirm_error); ?></div>
+                <?php } ?>
+                <div class="tickets-list tickets-list-user tickets-list-user--actions">
                 <div class="tickets-list-header">
                     <span class="tickets-col-id">ID</span>
                     <span class="tickets-col-subject">Subject</span>
                     <span class="tickets-col-description">Description</span>
                     <span class="tickets-col-status">Status</span>
+                    <span class="tickets-col-confirm">Confirm</span>
                 </div>
                 <div class="tickets-list-body" id="user-tickets-body">
                     <?php if (empty($user_tickets)) { ?>
@@ -166,8 +178,11 @@ $mailbox_tickets = $user_tickets;
                         <p>No tickets submitted yet.</p>
                     </div>
                     <?php } else { ?>
-                    <?php foreach ($user_tickets as $ticket) { ?>
-                    <div class="ticket-row">
+                    <?php foreach ($user_tickets as $ticket) {
+                        $st = $ticket['status'];
+                        $needsConfirm = ticket_awaiting_confirmation($st);
+                    ?>
+                    <div class="ticket-row" data-status="<?php echo htmlspecialchars($st); ?>">
                         <span class="tickets-col-id">#
                             <?php echo (int) $ticket['id']; ?>
                         </span>
@@ -178,9 +193,25 @@ $mailbox_tickets = $user_tickets;
                             <?php echo htmlspecialchars($ticket['description']); ?>
                         </span>
                         <span class="tickets-col-status">
-                            <span class="status-badge <?php echo htmlspecialchars(preg_replace('/[^a-z]/', '', strtolower($ticket['status']))); ?>">
-                                <?php echo htmlspecialchars(ucfirst($ticket['status'])); ?>
+                            <span class="status-badge <?php echo htmlspecialchars(ticket_status_class($st)); ?>">
+                                <?php echo htmlspecialchars(ticket_status_label($st)); ?>
                             </span>
+                        </span>
+                        <span class="tickets-col-confirm">
+                            <?php if ($needsConfirm) { ?>
+                            <form class="confirm-form" action="../logic/ticket_confirm_mngmnt.php" method="post">
+                                <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
+                                <input type="hidden" name="decision" value="solved">
+                                <button type="submit" name="confirm_ticket" value="1" class="btn-confirm-solved">Solved</button>
+                            </form>
+                            <form class="confirm-form" action="../logic/ticket_confirm_mngmnt.php" method="post">
+                                <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
+                                <input type="hidden" name="decision" value="not_solved">
+                                <button type="submit" name="confirm_ticket" value="1" class="btn-confirm-reopen">Not Solved Yet</button>
+                            </form>
+                            <?php } else { ?>
+                            <span class="confirm-placeholder">—</span>
+                            <?php } ?>
                         </span>
                     </div>
                     <?php } ?>

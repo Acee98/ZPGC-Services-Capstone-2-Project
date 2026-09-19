@@ -3,7 +3,7 @@ require_once 'session_config.php';
 require_once 'config.php';
 require_role('admin');
 
-$allowed = ['pending', 'ongoing', 'processing', 'resolved'];
+$allowed = ticket_admin_allowed_statuses();
 
 if (isset($_POST['save_ticket'])) {
     $ticket_id = (int) ($_POST['ticket_id'] ?? 0);

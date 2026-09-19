@@ -1,6 +1,7 @@
 <?php
 require_once '../logic/session_config.php';
 require_once '../logic/config.php';
+require_once '../logic/ticket_status.php';
 require_role('techn');
 
 $current_user_id = current_user_id($conn);
@@ -18,6 +19,7 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 $mailbox_tickets = $tech_tickets;
+$techn_statuses = ticket_techn_allowed_statuses();
 ?>
 
 <!DOCTYPE html>
