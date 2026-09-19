@@ -1,6 +1,6 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params(0, '/CP2_V1.2/');
+    session_set_cookie_params(0, '/CP2_V1.3/');
     session_start();
 }
 
@@ -40,4 +40,22 @@ function current_user_id($conn)
     }
     $_SESSION['id'] = (int) $row['id'];
     return (int) $row['id'];
+}
+
+function current_ui_theme()
+{
+    $theme = $_SESSION['theme'] ?? ($_COOKIE['zpgc_theme'] ?? 'light');
+    return $theme === 'dark' ? 'dark' : 'light';
+}
+
+function save_ui_theme($theme)
+{
+    $theme = $theme === 'dark' ? 'dark' : 'light';
+    $_SESSION['theme'] = $theme;
+    setcookie('zpgc_theme', $theme, [
+        'expires' => time() + 60 * 60 * 24 * 365,
+        'path' => '/CP2_V1.3/',
+        'httponly' => false,
+        'samesite' => 'Lax',
+    ]);
 }

@@ -1,6 +1,7 @@
 <?php
 require_once '../logic/session_config.php';
 require_once '../logic/config.php';
+require_once '../logic/priority_queue.php';
 require_role('admin');
 
 $current_user_id = current_user_id($conn);
@@ -35,9 +36,14 @@ $role_labels = [
 
 $all_tickets = [];
 $ticket_result = $conn->query(
-    'SELECT t.id, t.subject, t.description, t.status, t.assigned_to, u.first_name, u.last_name 
-    FROM tickets t INNER JOIN users u ON t.user_id = u.id ORDER BY t.id DESC'
-    );
+    'SELECT t.id, t.subject, t.description, t.status, t.priority, t.assigned_to,
+            u.first_name, u.last_name,
+            tech.first_name AS tech_first, tech.last_name AS tech_last
+     FROM tickets t
+     INNER JOIN users u ON t.user_id = u.id
+     LEFT JOIN users tech ON t.assigned_to = tech.id
+     ORDER BY t.id DESC'
+);
 
 if ($ticket_result) {
     while ($row = $ticket_result->fetch_assoc()) {
@@ -46,15 +52,52 @@ if ($ticket_result) {
 }
 
 $mailbox_tickets = $all_tickets;
+$recent_tickets = $all_tickets;
+$queue_snapshot = priority_queue_snapshot($conn);
+
+$status_counts = [
+    'pending' => 0,
+    'ongoing' => 0,
+    'processing' => 0,
+    'awaiting_confirmation' => 0,
+    'resolved' => 0,
+];
+$count_result = $conn->query('SELECT status, COUNT(*) AS cnt FROM tickets GROUP BY status');
+if ($count_result) {
+    while ($row = $count_result->fetch_assoc()) {
+        $key = $row['status'];
+        if (isset($status_counts[$key])) {
+            $status_counts[$key] = (int) $row['cnt'];
+        }
+    }
+}
+
+$utilities_action = $_GET['action'] ?? '';
+$edit_id = (int) ($_GET['edit_id'] ?? 0);
+$editing_user = null;
+if ($edit_id > 0) {
+    foreach ($all_users as $u) {
+        if ((int) $u['id'] === $edit_id) {
+            $editing_user = $u;
+            break;
+        }
+    }
+}
+$utilities_success = $_SESSION['utilities_success'] ?? '';
+$utilities_error = $_SESSION['utilities_error'] ?? '';
+unset($_SESSION['utilities_success'], $_SESSION['utilities_error']);
+$ui_theme = current_ui_theme();
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="<?php echo htmlspecialchars($ui_theme); ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/main_interface.css">
+    <link rel="stylesheet" href="../css/dashboard_extra.css">
+    <link rel="stylesheet" href="../css/theme.css">
     <title>ZPGC Services | Administrator</title>
 </head>
 
@@ -108,14 +151,15 @@ $mailbox_tickets = $all_tickets;
                                     <span class="link-text">Utilities</span>
                                 </a>
                             </li>
-                            <li class="nav-list-item" data-nav="analytics">
+                            <li class="nav-list-item" data-nav="performance">
                                 <a href="#" class="nav-link">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                                         viewBox="0 0 24 24">
-                                        <path d="M4 2H2v19c0 .55.45 1 1 1h19v-2H4z"></path>
-                                        <path d="M17 12h2v6h-2zm-5-8h2v14h-2zM7 9h2v9H7z"></path>
+                                        <path
+                                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3m-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5m8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5">
+                                        </path>
                                     </svg>
-                                    <span class="link-text">Analytics</span>
+                                    <span class="link-text">Performance</span>
                                 </a>
                             </li>
                             <li class="nav-list-item" data-nav="messages">
@@ -176,6 +220,9 @@ $mailbox_tickets = $all_tickets;
                         <div class="profile-circle"></div>
                     </header>
                 </div>
+                <?php include __DIR__ . '/partials/dashboard_status_cards.php'; ?>
+                <?php include __DIR__ . '/partials/dashboard_charts.php'; ?>
+                <?php include __DIR__ . '/partials/admin_dashboard_history.php'; ?>
             </div>
             <div class="page-content" id="page-tickets">
                 <div class="head">
@@ -193,12 +240,23 @@ $mailbox_tickets = $all_tickets;
                         <div class="profile-circle"></div>
                     </header>
                 </div>
+                <div class="tickets-toolbar">
+                    <div class="tickets-filter-tabs" id="admin-tickets-filter-tabs">
+                        <button type="button" class="filter-tab active-tab" data-filter="all">All</button>
+                        <button type="button" class="filter-tab" data-filter="pending">Pending</button>
+                        <button type="button" class="filter-tab" data-filter="ongoing">Ongoing</button>
+                        <button type="button" class="filter-tab" data-filter="processing">Processing</button>
+                        <button type="button" class="filter-tab" data-filter="resolved">Resolved</button>
+                    </div>
+                </div>
+                <?php include __DIR__ . '/partials/priority_queue_panel.php'; ?>
                 <div class="tickets-list tickets-list-admin-five">
                     <div class="tickets-list-header">
                         <span class="tickets-col-id">ID</span>
                         <span class="tickets-col-subject">Subject</span>
                         <span class="tickets-col-description">Description</span>
                         <span class="tickets-col-status">Status</span>
+                        <span class="tickets-col-priority">Priority</span>
                         <span class="tickets-col-assigned">Assigned To</span>
                     </div>
                     <div class="tickets-list-body" id="admin-tickets-body">
@@ -211,8 +269,10 @@ $mailbox_tickets = $all_tickets;
                         <?php
                             $tid = (int) $ticket['id'];
                             $st = $ticket['status'];
+                            $pri = $ticket['priority'] ?? '';
                         ?>
-                        <form class="ticket-row" action="../logic/ticket_admin_mngmnt.php" method="post">
+                        <form class="ticket-row" action="../logic/ticket_admin_mngmnt.php" method="post"
+                            data-status="<?php echo htmlspecialchars($st); ?>">
                             <input type="hidden" name="ticket_id" value="<?php echo $tid; ?>">
                             <span class="tickets-col-id">#<?php echo $tid; ?></span>
                             <span class="tickets-col-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
@@ -222,6 +282,16 @@ $mailbox_tickets = $all_tickets;
                                     <?php foreach (['pending', 'ongoing', 'processing', 'resolved'] as $opt) { ?>
                                     <option value="<?php echo $opt; ?>" <?php echo ($st === $opt) ? 'selected' : ''; ?>>
                                         <?php echo ucfirst($opt); ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </span>
+                            <span class="tickets-col-priority">
+                                <select name="priority" class="admin-ticket-select" aria-label="Priority for ticket <?php echo $tid; ?>">
+                                    <option value="" <?php echo ($pri === '' || $pri === null) ? 'selected' : ''; ?>>None</option>
+                                    <?php foreach (['critical' => 'Critical', 'moderate' => 'Moderate', 'low' => 'Low'] as $pval => $plabel) { ?>
+                                    <option value="<?php echo $pval; ?>" <?php echo ($pri === $pval) ? 'selected' : ''; ?>>
+                                        <?php echo $plabel; ?>
                                     </option>
                                     <?php } ?>
                                 </select>
@@ -265,6 +335,115 @@ $mailbox_tickets = $all_tickets;
                         <div class="profile-circle"></div>
                     </header>
                 </div>
+
+                <?php if ($utilities_success !== '') { ?>
+                <div class="utilities-notice"><?php echo htmlspecialchars($utilities_success); ?></div>
+                <?php } ?>
+                <?php if ($utilities_error !== '') { ?>
+                <div class="utilities-notice-error"><?php echo htmlspecialchars($utilities_error); ?></div>
+                <?php } ?>
+
+                <?php if ($utilities_action === 'add') { ?>
+                <div class="user-form-card">
+                    <h2>Add User</h2>
+                    <p class="form-subtitle">Create a new account directly — it is active immediately.</p>
+                    <form class="user-form" action="../logic/user_admin_mngmnt.php" method="post">
+                        <div class="user-form-row">
+                            <div class="user-form-field">
+                                <label for="add_first_name">First Name</label>
+                                <input type="text" id="add_first_name" name="first_name" required>
+                            </div>
+                            <div class="user-form-field">
+                                <label for="add_last_name">Last Name</label>
+                                <input type="text" id="add_last_name" name="last_name" required>
+                            </div>
+                        </div>
+                        <div class="user-form-field">
+                            <label for="add_email">Email Address</label>
+                            <input type="email" id="add_email" name="email" required>
+                        </div>
+                        <div class="user-form-row">
+                            <div class="user-form-field">
+                                <label for="add_role">Role</label>
+                                <select id="add_role" name="role" required>
+                                    <option value="" disabled selected>Select a role</option>
+                                    <option value="user">User</option>
+                                    <option value="techn">Technician</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                            </div>
+                            <div class="user-form-field">
+                                <label for="add_password">Temporary Password</label>
+                                <input type="password" id="add_password" name="password" minlength="8" required>
+                                <small>At least 8 characters.</small>
+                            </div>
+                        </div>
+                        <div class="user-form-actions">
+                            <a href="?tab=utilities" class="btn-cancel-user">Cancel</a>
+                            <button type="submit" name="add_user" class="btn-new-ticket">Create Account</button>
+                        </div>
+                    </form>
+                </div>
+
+                <?php } elseif ($editing_user) { ?>
+                <div class="user-form-card">
+                    <h2>Edit User</h2>
+                    <p class="form-subtitle">Update this account's name, email, or role.</p>
+                    <form class="user-form" action="../logic/user_admin_mngmnt.php" method="post">
+                        <input type="hidden" name="id" value="<?php echo (int) $editing_user['id']; ?>">
+                        <div class="user-form-row">
+                            <div class="user-form-field">
+                                <label for="edit_first_name">First Name</label>
+                                <input type="text" id="edit_first_name" name="first_name"
+                                    value="<?php echo htmlspecialchars($editing_user['first_name']); ?>" required>
+                            </div>
+                            <div class="user-form-field">
+                                <label for="edit_last_name">Last Name</label>
+                                <input type="text" id="edit_last_name" name="last_name"
+                                    value="<?php echo htmlspecialchars($editing_user['last_name']); ?>" required>
+                            </div>
+                        </div>
+                        <div class="user-form-field">
+                            <label for="edit_email">Email Address</label>
+                            <input type="email" id="edit_email" name="email"
+                                value="<?php echo htmlspecialchars($editing_user['email']); ?>" required>
+                        </div>
+                        <div class="user-form-field">
+                            <label for="edit_role">Role</label>
+                            <select id="edit_role" name="role" required>
+                                <?php foreach ($role_labels as $val => $label) { ?>
+                                <option value="<?php echo htmlspecialchars($val); ?>"
+                                    <?php echo $editing_user['role'] === $val ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($label); ?>
+                                </option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                        <div class="user-form-actions">
+                            <a href="?tab=utilities" class="btn-cancel-user">Cancel</a>
+                            <button type="submit" name="edit_user" class="btn-new-ticket">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+
+                <?php } else { ?>
+                <div class="tickets-toolbar">
+                    <div class="tickets-filter-tabs" id="utilities-filter-tabs">
+                        <button type="button" class="filter-tab active-tab" data-filter="all">All</button>
+                        <button type="button" class="filter-tab" data-filter="user">User</button>
+                        <button type="button" class="filter-tab" data-filter="techn">Technician</button>
+                        <button type="button" class="filter-tab" data-filter="admin">Administrator</button>
+                        <button type="button" class="filter-tab" data-filter="pending">Pending Approval</button>
+                    </div>
+                    <a href="?tab=utilities&action=add" class="btn-new-ticket">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                            viewBox="0 0 24 24">
+                            <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"></path>
+                        </svg>
+                        Add User
+                    </a>
+                </div>
+
                 <div class="tickets-list">
                     <div class="tickets-list-header">
                         <span class="ucol-id">ID</span>
@@ -287,11 +466,15 @@ $mailbox_tickets = $all_tickets;
                             } else {
                                 $roleLabel = ucfirst($u['role']);
                             }
+                            $deleteConfirmName = htmlspecialchars(
+                                json_encode($u['first_name'] . ' ' . $u['last_name']),
+                                ENT_QUOTES
+                            );
                         ?>
-                        <div class="ticket-row">
-                            <span class="ucol-id">#
-                                <?php echo (int) $u['id']; ?>
-                            </span>
+                        <div class="ticket-row"
+                            data-role="<?php echo htmlspecialchars($u['role']); ?>"
+                            data-status="<?php echo htmlspecialchars($u['status']); ?>">
+                            <span class="ucol-id">#<?php echo (int) $u['id']; ?></span>
                             <span class="ucol-name">
                                 <?php echo htmlspecialchars($u['first_name'] . ' ' . $u['last_name']); ?>
                             </span>
@@ -304,31 +487,36 @@ $mailbox_tickets = $all_tickets;
                                 </span>
                             </span>
                             <span class="ucol-status">
-                                <?php if ($isActive) { ?>
-                                <span class="status-badge active-account">Active</span>
-                                <?php } else { ?>
-                                <span class="status-badge inactive-account">Pending</span>
-                                <?php } ?>
+                                <span class="status-badge <?php echo $isActive ? 'active-account' : 'inactive-account'; ?>">
+                                    <?php echo $isActive ? 'Active' : 'Pending'; ?>
+                                </span>
                             </span>
                             <span class="ucol-action">
-                                <?php if (!$isActive) { ?>
+                                <a href="?tab=utilities&edit_id=<?php echo (int) $u['id']; ?>" class="btn-assign">Edit</a>
                                 <form action="../logic/user_admin_mngmnt.php" method="post">
                                     <input type="hidden" name="id" value="<?php echo (int) $u['id']; ?>">
-                                    <input type="hidden" name="status" value="active">
-                                    <button type="submit" name="set_status" class="btn-update-status">Activate</button>
+                                    <input type="hidden" name="status" value="<?php echo $isActive ? 'inactive' : 'active'; ?>">
+                                    <button type="submit" name="set_status" class="btn-update-status">
+                                        <?php echo $isActive ? 'Deactivate' : 'Activate'; ?>
+                                    </button>
                                 </form>
-                                <?php } ?>
+                                <form action="../logic/user_admin_mngmnt.php" method="post"
+                                    onsubmit="return confirm('Permanently delete ' + <?php echo $deleteConfirmName; ?> + '\'s account? This can\'t be undone.');">
+                                    <input type="hidden" name="id" value="<?php echo (int) $u['id']; ?>">
+                                    <button type="submit" name="delete_user" class="btn-delete">Delete</button>
+                                </form>
                             </span>
                         </div>
                         <?php } ?>
                         <?php } ?>
                     </div>
                 </div>
+                <?php } ?>
             </div>
-            <div class="page-content" id="page-analytics">
+            <div class="page-content" id="page-performance">
                 <div class="head">
                     <header>
-                        <h1>Analytics</h1>
+                        <h1>Performance</h1>
                         <div class="search-bar-wrapper">
                             <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                 fill="currentColor" viewBox="0 0 24 24">
@@ -341,6 +529,70 @@ $mailbox_tickets = $all_tickets;
                         <div class="profile-circle"></div>
                     </header>
                 </div>
+                <div class="perf-section-header">
+                    <h2>Technician Record List</h2>
+                    <button class="perf-filter-btn" type="button" disabled title="Sample only">Date-Range</button>
+                </div>
+                <div class="tickets-list">
+                    <div class="tickets-list-header">
+                        <span class="pcol-teamid">Team ID</span>
+                        <span class="pcol-resolved">Ticket Resolved</span>
+                        <span class="pcol-critical">Critical</span>
+                        <span class="pcol-moderate">Moderate</span>
+                        <span class="pcol-low">Low</span>
+                    </div>
+                    <div class="tickets-list-body">
+                        <?php for ($i = 0; $i < 5; $i++) { ?>
+                        <div class="ticket-row">
+                            <span class="pcol-teamid">#0000</span>
+                            <span class="pcol-resolved">0</span>
+                            <span class="pcol-critical"><span class="perf-count critical">0</span></span>
+                            <span class="pcol-moderate"><span class="perf-count moderate">0</span></span>
+                            <span class="pcol-low"><span class="perf-count low">0</span></span>
+                        </div>
+                        <?php } ?>
+                    </div>
+                </div>
+                <div class="perf-table-spacer"></div>
+                <div class="perf-filters-row">
+                    <div class="search-bar-wrapper">
+                        <input type="search" class="search-bar" id="perf-log-search" placeholder="Search..." aria-label="Search ticket log">
+                    </div>
+                    <button class="perf-filter-btn" type="button" disabled>Severity Level</button>
+                    <button class="perf-filter-btn" type="button" disabled>Categories</button>
+                </div>
+                <div class="tickets-list">
+                    <div class="tickets-list-header">
+                        <span class="dcol-team">Team ID</span>
+                        <span class="dcol-ticket">Ticket ID</span>
+                        <span class="dcol-subject">Subject</span>
+                        <span class="dcol-description">Description</span>
+                        <span class="dcol-category">Category</span>
+                        <span class="dcol-reg">Registration Date &amp; Time</span>
+                        <span class="dcol-response">Response Time</span>
+                        <span class="dcol-resolution">Resolution Time</span>
+                        <span class="dcol-severity">Severity Level</span>
+                    </div>
+                    <div class="tickets-list-body">
+                        <?php
+                        $placeholder_severities = ['moderate', 'moderate', 'critical', 'critical', 'moderate', 'low'];
+                        foreach ($placeholder_severities as $sev) {
+                        ?>
+                        <div class="ticket-row">
+                            <span class="dcol-team">0000</span>
+                            <span class="dcol-ticket">0000</span>
+                            <span class="dcol-subject">The title of the issue</span>
+                            <span class="dcol-description">A brief summary of the request</span>
+                            <span class="dcol-category">Hardware</span>
+                            <span class="dcol-reg">08/15/2027 (11:11)</span>
+                            <span class="dcol-response">10 Minutes</span>
+                            <span class="dcol-resolution">1 Hour</span>
+                            <span class="dcol-severity"><span class="severity-badge <?php echo $sev; ?>"><?php echo ucfirst($sev); ?></span></span>
+                        </div>
+                        <?php } ?>
+                    </div>
+                </div>
+                <a href="#" class="perf-view-all">View all</a>
             </div>
             <div class="page-content" id="page-messages">
                 <div class="head">
@@ -376,10 +628,54 @@ $mailbox_tickets = $all_tickets;
                         <div class="profile-circle"></div>
                     </header>
                 </div>
+                <div class="settings-container">
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h2>Appearance</h2>
+                            <p>Stay in control of how the dashboard looks on this account.</p>
+                        </div>
+                        <form action="../logic/settings_mngmnt.php" method="post" class="settings-form">
+                            <div class="settings-pref-row">
+                                <span class="settings-pref-label">Theme</span>
+                                <select name="theme" class="settings-pref-select">
+                                    <option value="light" <?php echo $ui_theme === 'light' ? 'selected' : ''; ?>>Light</option>
+                                    <option value="dark" <?php echo $ui_theme === 'dark' ? 'selected' : ''; ?>>Dark</option>
+                                </select>
+                            </div>
+                            <button type="submit" name="save_appearance" class="btn-save-ticket settings-save-btn">Save appearance</button>
+                        </form>
+                    </div>
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h2>Security</h2>
+                        </div>
+                        <h3 class="settings-subheading">Change password</h3>
+                        <p class="settings-subtitle">Use at least 8 characters. You will stay signed in after updating.</p>
+                        <form action="../logic/settings_mngmnt.php" method="post" class="settings-form settings-password-form">
+                            <div class="settings-form-field">
+                                <label for="settings-current-password">Current password</label>
+                                <input type="password" id="settings-current-password" name="current_password" required autocomplete="current-password">
+                            </div>
+                            <div class="settings-form-field">
+                                <label for="settings-new-password">New password</label>
+                                <input type="password" id="settings-new-password" name="new_password" minlength="8" required autocomplete="new-password">
+                            </div>
+                            <div class="settings-form-field">
+                                <label for="settings-confirm-password">Confirm new password</label>
+                                <input type="password" id="settings-confirm-password" name="confirm_password" minlength="8" required autocomplete="new-password">
+                            </div>
+                            <button type="submit" name="change_password" class="btn-save-ticket settings-save-btn">Update password</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
     <script src="../js/behavior.js"></script>
+    <script src="../js/tickets_filter.js"></script>
+    <script src="../js/utilities_filter.js"></script>
+    <script src="../js/chart.umd.js"></script>
+    <script src="../js/dashboard_static_charts.js"></script>
 </body>
 
 </html>
