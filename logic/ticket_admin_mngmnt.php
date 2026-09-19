@@ -10,6 +10,9 @@ if (isset($_POST['save_ticket'])) {
     $assigned_raw = $_POST['assigned_to'] ?? '';
     $status = $_POST['status'] ?? 'pending';
 
+    $pri_raw = $_POST['priority'] ?? '';
+    $priority = in_array($pri_raw, ['critical', 'moderate', 'low'], true) ? $pri_raw : null;
+
     if ($ticket_id <= 0 || !in_array($status, $allowed, true)) {
         header('Location: ../pages/admin.php?tab=tickets');
         exit();
@@ -17,9 +20,9 @@ if (isset($_POST['save_ticket'])) {
 
     if ($assigned_raw === '' || $assigned_raw === '0') {
         $stmt = $conn->prepare(
-            'UPDATE tickets SET assigned_to = NULL, status = ? WHERE id = ?'
+            'UPDATE tickets SET assigned_to = NULL, status = ?, priority = ? WHERE id = ?'
         );
-        $stmt->bind_param('si', $status, $ticket_id);
+        $stmt->bind_param('ssi', $status, $priority, $ticket_id);
     } else {
         $assigned_to = (int) $assigned_raw;
         $check = $conn->prepare(
@@ -34,9 +37,9 @@ if (isset($_POST['save_ticket'])) {
             exit();
         }
         $stmt = $conn->prepare(
-            'UPDATE tickets SET assigned_to = ?, status = ? WHERE id = ?'
+            'UPDATE tickets SET assigned_to = ?, status = ?, priority = ? WHERE id = ?'
         );
-        $stmt->bind_param('isi', $assigned_to, $status, $ticket_id);
+        $stmt->bind_param('issi', $assigned_to, $status, $priority, $ticket_id);
     }
     $stmt->execute();
     $stmt->close();

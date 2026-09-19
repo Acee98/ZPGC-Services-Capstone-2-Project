@@ -543,12 +543,19 @@ a {
 
 body[data-page="dashboard"] .showcase #page-dashboard,
 body[data-page="utilities"] .showcase #page-utilities,
-body[data-page="analytics"] .showcase #page-analytics,
 body[data-page="performance"] .showcase #page-performance,
 body[data-page="messages"] .showcase #page-messages,
 body[data-page="profile"] .showcase #page-profile,
 body[data-page="settings"] .showcase #page-settings {
     display: block;
+}
+
+body[data-page="dashboard"] .showcase {
+    overflow: auto;
+}
+
+body[data-page="performance"] .showcase {
+    overflow: auto;
 }
 /* Tickets page specifically needs flex: 1 (to grow and fill the
    full height of its parent .showcase) plus flex-direction: column
@@ -978,9 +985,10 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
     grid-template-columns: 
         72px
         minmax(0, 1.1fr)
-        minmax(0, 2fr)
+        minmax(0, 1.6fr)
         110px
-        minmax(240px, 1fr);
+        120px
+        minmax(220px, 1fr);
     column-gap: 10px;
     align-items: center;
     padding-left: 16px;
@@ -998,7 +1006,7 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
     white-space: nowrap;
 }
 
-.tickets-list-admin-five .tickets-col-status, .tickets-list-admin-five .tickets-col-assigned {
+.tickets-list-admin-five .tickets-col-status, .tickets-list-admin-five .tickets-col-priority, .tickets-list-admin-five .tickets-col-assigned {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1010,7 +1018,7 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
     flex-wrap: wrap;
 }
 
-.tickets-list-admin-five .tickets-list-header .tickets-col-status, .tickets-list-admin-five .tickets-list-header .tickets-col-assigned {
+.tickets-list-admin-five .tickets-list-header .tickets-col-status, .tickets-list-admin-five .tickets-list-header .tickets-col-priority, .tickets-list-admin-five .tickets-list-header .tickets-col-assigned {
     text-align: center;
 }
 
