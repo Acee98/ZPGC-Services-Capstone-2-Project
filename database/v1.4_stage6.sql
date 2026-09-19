@@ -1,0 +1,25 @@
+-- Stage 6 / v1.4 — User confirmation (prefer phpMyAdmin Structure when possible).
+-- Database: users_db (same DB you used for V1.1–V1.3).
+--
+-- Goal status flow:
+--   pending → ongoing → processing → awaiting_confirmation → resolved
+--
+-- 1) tickets.status ENUM — add awaiting_confirmation (Structure → Change on status):
+--    pending, ongoing, processing, awaiting_confirmation, resolved
+--    Default: pending
+--
+-- Or SQL tab (only if Structure Save fails):
+--
+-- ALTER TABLE `tickets`
+--   MODIFY `status` ENUM(
+--     'pending',
+--     'ongoing',
+--     'processing',
+--     'awaiting_confirmation',
+--     'resolved'
+--   ) NOT NULL DEFAULT 'pending';
+--
+-- 2) Optional later: reopen_count INT UNSIGNED DEFAULT 0
+--    (counts how many times the reporter said "Not Solved Yet").
+--
+-- Do NOT run this blindly if your ENUM values differ — Change the column in Structure first.

@@ -1336,6 +1336,62 @@ body[data-page="messages"] .showcase #page-messages {
 .status-badge.processing { background-color: #FF8D28; }
 .status-badge.resolved   { background-color: #34C759; }
 .status-badge.pending    { background-color: #818181; }
+.status-badge.awaitingconfirmation { background-color: #8B5CF6; }
+
+/* Stage 6 — user Confirm column + Solved / Not Solved Yet */
+.tickets-list-user--actions .tickets-list-header,
+.tickets-list-user--actions .ticket-row {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1.2fr) minmax(0, 1.6fr) 120px minmax(200px, 1fr);
+    column-gap: 10px;
+    align-items: center;
+}
+.tickets-col-confirm {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-start;
+}
+.confirm-form { display: inline; margin: 0; }
+.btn-confirm-solved,
+.btn-confirm-reopen {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: "Inter", sans-serif;
+    border: 1.5px solid transparent;
+}
+.btn-confirm-solved {
+    background-color: #34C759;
+    color: #fff;
+    border-color: #34C759;
+}
+.btn-confirm-reopen {
+    background-color: transparent;
+    color: #c0392b;
+    border-color: #c0392b;
+}
+.confirm-placeholder { color: #818181; font-size: 13px; }
+
+/* Stage 6 — technician status Save row */
+.tickets-list-techn-actions .tickets-list-header,
+.tickets-list-techn-actions .ticket-row {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1.2fr) minmax(0, 1.6fr) 160px 100px;
+    column-gap: 10px;
+    align-items: center;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+.tickets-list-techn-actions .tickets-col-action {
+    display: flex;
+    justify-content: center;
+}
 
 /* Account status (Utilities user table) — separate names from the
    ticket-status modifiers above (ongoing/processing/resolved/pending)

@@ -246,6 +246,7 @@ $ui_theme = current_ui_theme();
                         <button type="button" class="filter-tab" data-filter="pending">Pending</button>
                         <button type="button" class="filter-tab" data-filter="ongoing">Ongoing</button>
                         <button type="button" class="filter-tab" data-filter="processing">Processing</button>
+                        <button type="button" class="filter-tab" data-filter="awaiting_confirmation">Confirming</button>
                         <button type="button" class="filter-tab" data-filter="resolved">Resolved</button>
                     </div>
                 </div>
@@ -279,9 +280,15 @@ $ui_theme = current_ui_theme();
                             <span class="tickets-col-description"><?php echo htmlspecialchars($ticket['description']); ?></span>
                             <span class="tickets-col-status">
                                 <select name="status" class="admin-ticket-select" aria-label="Status for ticket <?php echo $tid; ?>">
-                                    <?php foreach (['pending', 'ongoing', 'processing', 'resolved'] as $opt) { ?>
+                                    <?php foreach (['pending', 'ongoing', 'processing', 'awaiting_confirmation', 'resolved'] as $opt) { ?>
                                     <option value="<?php echo $opt; ?>" <?php echo ($st === $opt) ? 'selected' : ''; ?>>
-                                        <?php echo ucfirst($opt); ?>
+                                        <?php
+                                        if ($opt === 'awaiting_confirmation') {
+                                            echo 'Confirming';
+                                        } else {
+                                            echo ucfirst($opt);
+                                        }
+                                        ?>
                                     </option>
                                     <?php } ?>
                                 </select>
