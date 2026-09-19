@@ -1,0 +1,46 @@
+<?php
+require_once 'session_config.php';
+require_once 'config.php';
+require_role('admin');
+
+$allowed = ['pending', 'ongoing', 'processing', 'resolved'];
+
+if (isset($_POST['save_ticket'])) {
+    $ticket_id = (int) ($_POST['ticket_id'] ?? 0);
+    $assigned_raw = $_POST['assigned_to'] ?? '';
+    $status = $_POST['status'] ?? 'pending';
+
+    if ($ticket_id <= 0 || !in_array($status, $allowed, true)) {
+        header('Location: ../pages/admin.php?tab=tickets');
+        exit();
+    }
+
+    if ($assigned_raw === '' || $assigned_raw === '0') {
+        $stmt = $conn->prepare(
+            'UPDATE tickets SET assigned_to = NULL, status = ? WHERE id = ?'
+        );
+        $stmt->bind_param('si', $status, $ticket_id);
+    } else {
+        $assigned_to = (int) $assigned_raw;
+        $check = $conn->prepare(
+            "SELECT id FROM users WHERE id = ? AND role = 'techn' AND status = 'active' LIMIT 1"
+        );
+        $check->bind_param('i', $assigned_to);
+        $check->execute();
+        $ok = $check->get_result()->fetch_assoc();
+        $check->close();
+        if (!$ok) {
+            header('Location: ../pages/admin.php?tab=tickets');
+            exit();
+        }
+        $stmt = $conn->prepare(
+            'UPDATE tickets SET assigned_to = ?, status = ? WHERE id = ?'
+        );
+        $stmt->bind_param('isi', $assigned_to, $status, $ticket_id);
+    }
+    $stmt->execute();
+    $stmt->close();
+}
+
+header('Location: ../pages/admin.php?tab=tickets');
+exit();

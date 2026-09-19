@@ -1,3 +1,25 @@
+<?php
+require_once '../logic/session_config.php';
+require_once '../logic/config.php';
+require_role('techn');
+
+$current_user_id = current_user_id($conn);
+$tab = $_GET['tab'] ?? 'dashboard';
+
+$tech_tickets = [];
+$stmt = $conn->prepare(
+    'SELECT id, subject, description, status FROM tickets WHERE assigned_to = ? ORDER BY id DESC'
+);
+$stmt->bind_param('i', $current_user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $tech_tickets[] = $row;
+}
+$stmt->close();
+$mailbox_tickets = $tech_tickets;
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -8,7 +30,7 @@
     <title>ZPGC Services | Technician</title>
 </head>
 
-<body data-page="dashboard">
+<body data-page="<?php echo htmlspecialchars($tab); ?>">
     <main class="main-wrap">
         <header class="main-head">
             <div class="main-nav">
@@ -73,7 +95,7 @@
                                 </a>
                             </li>
                             <li class="nav-list-item">
-                                <a href="../pages/login_signup.php" class="nav-link">
+                                <a href="../logic/logout.php" class="nav-link">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                                         viewBox="0 0 24 24">
                                         <path d="M9 13h7v-2H9V7l-6 5 6 5z"></path>
@@ -89,20 +111,108 @@
         </header>
         <div class="sidebar-spacer"></div>
         <section class="showcase">
-            <div class="head">
-                <header>
-                    <h1>Dashboard</h1>
-                    <div class="search-bar-wrapper">
-                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                            fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
-                            </path>
-                        </svg>
-                        <input type="search" class="search-bar" placeholder="Search" aria-label = "Search">
+            <div class="page-content" id="page-dashboard">
+                <div class="head">
+                    <header>
+                        <h1>Dashboard</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <div class="profile-circle"></div>
+                    </header>
+                </div>
+            </div>
+            <div class="page-content" id="page-tickets">
+                <div class="head">
+                    <header>
+                        <h1>Tickets</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <div class="profile-circle"></div>
+                    </header>
+                </div>
+                <div class="tickets-list">
+                <div class="tickets-list-header">
+                    <span class="tickets-col-id">ID</span>
+                    <span class="tickets-col-subject">Subject</span>
+                    <span class="tickets-col-description">Description</span>
+                    <span class="tickets-col-status">Status</span>
+                </div>
+                <div class="tickets-list-body" id="techn-tickets-body">
+                    <?php if (empty($tech_tickets)) { ?>
+                    <div class="tickets-empty-state">
+                        <p>No tickets assigned yet.</p>
                     </div>
-                    <div class="profile-circle"></div>
-                </header>
+                    <?php } else { ?>
+                    <?php foreach ($tech_tickets as $ticket) { ?>
+                    <div class="ticket-row">
+                        <span class="tickets-col-id">#
+                            <?php echo (int) $ticket['id']; ?>
+                        </span>
+                        <span class="tickets-col-subject">
+                            <?php echo htmlspecialchars($ticket['subject']); ?>
+                        </span>
+                        <span class="tickets-col-description">
+                            <?php echo htmlspecialchars($ticket['description']); ?>
+                        </span>
+                        <span class="tickets-col-status">
+                            <span class="status-badge <?php echo htmlspecialchars(preg_replace('/[^a-z]/', '', strtolower($ticket['status']))); ?>">
+                                <?php echo htmlspecialchars(ucfirst($ticket['status'])); ?>
+                            </span>
+                        </span>
+                    </div>
+                    <?php } ?>
+                    <?php } ?>
+                </div>
+            </div>
+            </div>
+            <div class="page-content" id="page-messages">
+                <div class="head">
+                    <header>
+                        <h1>Mailbox</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <div class="profile-circle"></div>
+                    </header>
+                </div>
+                <?php include 'mailbox_panel.php'; ?>
+            </div>
+            <div class="page-content" id="page-settings">
+                <div class="head">
+                    <header>
+                        <h1>Settings</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <div class="profile-circle"></div>
+                    </header>
+                </div>
             </div>
         </section>
     </main>

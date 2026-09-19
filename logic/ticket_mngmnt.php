@@ -1,8 +1,7 @@
 <?php
-session_set_cookie_params(0, 'CP2_V1.1/logic/');
-session_start();
-
+require_once 'session_config.php';
 require_once 'config.php';
+require_role('user');
 
 if (isset($_POST['submit-ticket'])) {
     $category = trim($_POST['category']);
