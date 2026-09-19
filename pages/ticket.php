@@ -1,3 +1,8 @@
+<?php
+require_once '../logic/session_config.php';
+require_once '../logic/config.php';
+require_role('user');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

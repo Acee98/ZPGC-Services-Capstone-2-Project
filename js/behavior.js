@@ -69,8 +69,113 @@ function initSidebarCollapse() {
         mainHead.classList.remove("active");
     });
 }
+function initTabFromQuery() {
+    var params = new URLSearchParams(window.location.search);
+    var tab = params.get("tab");
+    if (!tab) {
+        return;
+    }
+    var item = document.querySelector('.nav-list-item[data-nav="' + tab + '"]');
+    if (item) {
+        setSelectedNavItem(item);
+    }
+}
+
+var POLL_MS = 3000;
+var mailboxTimer = null;
+var mailboxTicketId = 0;
+
+function renderMailboxMessages(payload) {
+    var box = document.getElementById("mailbox-chat-messages");
+    if (!box || !payload || !payload.ok) {
+        return;
+    }
+    var meNote = "";
+    box.innerHTML = "";
+    if (!payload.messages.length) {
+        box.innerHTML = '<div class="mailbox-chat-empty"><p class="mailbox-chat-empty-title">No messages yet</p><p class="mailbox-chat-empty-sub">Send the first message below.</p></div>';
+        return;
+    }
+    payload.messages.forEach(function (msg) {
+        var wrap = document.createElement("div");
+        wrap.className = "mailbox-msg " + (msg.mine ? "sent" : "received");
+        var bubble = document.createElement("div");
+        bubble.className = "mailbox-msg-bubble";
+        bubble.textContent = msg.body;
+        var time = document.createElement("span");
+        time.className = "mailbox-msg-time";
+        time.textContent = msg.name;
+        wrap.appendChild(bubble);
+        wrap.appendChild(time);
+        box.appendChild(wrap);
+    });
+    box.scrollTop = box.scrollHeight;
+}
+
+function loadMailboxMessages() {
+    if (!mailboxTicketId) {
+        return;
+    }
+    fetch("../logic/fetch_messages.php?ticket_id=" + encodeURIComponent(mailboxTicketId), {
+        credentials: "same-origin"
+    })
+        .then(function (res) { return res.json(); })
+        .then(renderMailboxMessages)
+        .catch(function () {});
+}
+
+function startMailboxPoll() {
+    if (mailboxTimer) {
+        clearInterval(mailboxTimer);
+        mailboxTimer = null;
+    }
+    // B-032: checks data-page === "message" (missing s) so poll never starts while Messages tab is "messages"
+    if (document.body.getAttribute("data-page") !== "messages") {
+        return;
+    }
+    mailboxTimer = setInterval(loadMailboxMessages, POLL_MS);
+}
+
+function initMailbox() {
+    var list = document.getElementById("mailbox-threads-list");
+    var form = document.getElementById("mailbox-send-form");
+    var hidden = document.getElementById("mailbox-ticket-id");
+    var subjectEl = document.getElementById("mailbox-chat-subject");
+    if (!list || !hidden) {
+        return;
+    }
+    mailboxTicketId = parseInt(hidden.value, 10) || 0;
+    if (mailboxTicketId) {
+        loadMailboxMessages();
+    }
+    list.querySelectorAll(".mailbox-thread-item").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            list.querySelectorAll(".mailbox-thread-item").forEach(function (b) {
+                b.classList.remove("active");
+            });
+            btn.classList.add("active");
+            mailboxTicketId = parseInt(btn.getAttribute("data-ticket-id"), 10) || 0;
+            hidden.value = mailboxTicketId;
+            if (subjectEl) {
+                var sub = btn.querySelector(".mailbox-thread-subject");
+                subjectEl.textContent = sub ? sub.textContent : "Ticket #" + mailboxTicketId;
+            }
+            loadMailboxMessages();
+            startMailboxPoll();
+        });
+    });
+    if (form) {
+        form.addEventListener("submit", function () {
+            startMailboxPoll();
+        });
+    }
+    startMailboxPoll();
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     initNavSelection();
     initNavClickSelection();
     initSidebarCollapse();
+    initTabFromQuery();
+    initMailbox();
 })

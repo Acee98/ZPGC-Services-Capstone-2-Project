@@ -1,8 +1,7 @@
 <?php
-session_set_cookie_params(0, 'CP2_V1.1/logic/');
-session_start();
-
+require_once 'session_config.php';
 require_once 'config.php';
+require_role('admin');
 
 if (isset($_POST['set_status'])) {
     $id = (int) $_POST['id'];

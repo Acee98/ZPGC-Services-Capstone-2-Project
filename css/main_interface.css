@@ -958,12 +958,60 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
 }
 
 .tickets-col-description {
-    flex: 1 1 40%;
+    flex: 1 1 30%;
 }
 
 .tickets-col-status {
-    flex: 0 0 15%;
+    flex: 0 0 12%;
     text-align: right;
+}
+
+.tickets-col-assigned {
+    flex: 0 0 18%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tickets-list-admin-five .tickets-list-header, .tickets-list-admin-five .ticket-row{
+    display: grid;
+    grid-template-columns: 
+        72px
+        minmax(0, 1.1fr)
+        minmax(0, 2fr)
+        110px
+        minmax(240px, 1fr);
+    column-gap: 10px;
+    align-items: center;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.tickets-list-admin-five .tickets-list-header > span, .tickets-list-admin-five .ticket-row > span {
+    flex: unset !important;
+    min-width: 0;
+}
+
+.tickets-list-admin-five .tickets-col-subject, .tickets-list-admin-five .tickets-col-description {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tickets-list-admin-five .tickets-col-status, .tickets-list-admin-five .tickets-col-assigned {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: visible;
+}
+
+.tickets-list-admin-five .admin-ticket-form {
+    flex-wrap: wrap;
+}
+
+.tickets-list-admin-five .tickets-list-header .tickets-col-status, .tickets-list-admin-five .tickets-list-header .tickets-col-assigned {
+    text-align: center;
 }
 
 .tickets-list-user .tickets-col-status {

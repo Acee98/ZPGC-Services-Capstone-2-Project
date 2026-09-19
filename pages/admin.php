@@ -1,5 +1,10 @@
 <?php
+require_once '../logic/session_config.php';
 require_once '../logic/config.php';
+require_role('admin');
+
+$current_user_id = current_user_id($conn);
+$tab = $_GET['tab'] ?? 'dashboard';
 
 $all_users = [];
 $result = $conn->query('SELECT id, first_name, last_name, email, role, status FROM users');
@@ -9,11 +14,38 @@ if ($result) {
     }
 }
 
+$technicians = [];
+$tech_result = $conn->query(
+    "SELECT id, first_name, last_name 
+    FROM users WHERE role = 'techn' AND status = 'active' 
+    ORDER BY last_name, first_name"
+    );
+
+if ($tech_result) {
+    while($row = $tech_result->fetch_assoc()) {
+        $technicians[] =$row;
+    }
+}
+
 $role_labels = [
     'user' => 'User',
     'techn' => 'Technician',
     'admin' => 'Administrator',
 ];
+
+$all_tickets = [];
+$ticket_result = $conn->query(
+    'SELECT t.id, t.subject, t.description, t.status, t.assigned_to, u.first_name, u.last_name 
+    FROM tickets t INNER JOIN users u ON t.user_id = u.id ORDER BY t.id DESC'
+    );
+
+if ($ticket_result) {
+    while ($row = $ticket_result->fetch_assoc()) {
+        $all_tickets[] = $row;
+    }
+}
+
+$mailbox_tickets = $all_tickets;
 ?>
 
 <!DOCTYPE html>
@@ -26,7 +58,7 @@ $role_labels = [
     <title>ZPGC Services | Administrator</title>
 </head>
 
-<body data-page="dashboard">
+<body data-page="<?php echo htmlspecialchars($tab); ?>">
     <main class="main-wrap">
         <header class="main-head">
             <div class="main-nav">
@@ -112,7 +144,7 @@ $role_labels = [
                                 </a>
                             </li>
                             <li class="nav-list-item">
-                                <a href="../pages/login_signup.php" class="nav-link">
+                                <a href="../logic/logout.php" class="nav-link">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                                         viewBox="0 0 24 24">
                                         <path d="M9 13h7v-2H9V7l-6 5 6 5z"></path>
@@ -160,6 +192,61 @@ $role_labels = [
                         </div>
                         <div class="profile-circle"></div>
                     </header>
+                </div>
+                <div class="tickets-list tickets-list-admin-five">
+                    <div class="tickets-list-header">
+                        <span class="tickets-col-id">ID</span>
+                        <span class="tickets-col-subject">Subject</span>
+                        <span class="tickets-col-description">Description</span>
+                        <span class="tickets-col-status">Status</span>
+                        <span class="tickets-col-assigned">Assigned To</span>
+                    </div>
+                    <div class="tickets-list-body" id="admin-tickets-body">
+                        <?php if (empty($all_tickets)) {?>
+                        <div class="tickets-empty-state">
+                            <p>No tickets found.</p>
+                        </div>
+                        <?php } else {?>
+                        <?php foreach ($all_tickets as $ticket) {?>
+                        <?php
+                            $tid = (int) $ticket['id'];
+                            $st = $ticket['status'];
+                        ?>
+                        <form class="ticket-row" action="../logic/ticket_admin_mngmnt.php" method="post">
+                            <input type="hidden" name="ticket_id" value="<?php echo $tid; ?>">
+                            <span class="tickets-col-id">#<?php echo $tid; ?></span>
+                            <span class="tickets-col-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
+                            <span class="tickets-col-description"><?php echo htmlspecialchars($ticket['description']); ?></span>
+                            <span class="tickets-col-status">
+                                <select name="status" class="admin-ticket-select" aria-label="Status for ticket <?php echo $tid; ?>">
+                                    <?php foreach (['pending', 'ongoing', 'processing', 'resolved'] as $opt) { ?>
+                                    <option value="<?php echo $opt; ?>" <?php echo ($st === $opt) ? 'selected' : ''; ?>>
+                                        <?php echo ucfirst($opt); ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </span>
+                            <span class="tickets-col-assigned">
+                                <span class="admin-ticket-form">
+                                    <select name="assigned_to" class="admin-ticket-select admin-ticket-select-assign"
+                                        aria-label="Assign technician for ticket <?php echo $tid; ?>">
+                                        <option value="" <?php echo empty($ticket['assigned_to']) ? 'selected' : ''; ?>>
+                                            Unassigned
+                                        </option>
+                                        <?php foreach ($technicians as $tech) { ?>
+                                        <option value="<?php echo (int) $tech['id']; ?>"
+                                            <?php echo ((int) ($ticket['assigned_to'] ?? 0) === (int) $tech['id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($tech['first_name'] . ' ' . $tech['last_name']); ?>
+                                        </option>
+                                        <?php } ?>
+                                    </select>
+                                    <button type="submit" name="save_ticket" class="btn-save-ticket">Save</button>
+                                </span>
+                            </span>
+                        </form>
+                        <?php }?>
+                        <?php }?>
+                    </div>
                 </div>
             </div>
             <div class="page-content" id="page-utilities">
@@ -271,6 +358,7 @@ $role_labels = [
                         <div class="profile-circle"></div>
                     </header>
                 </div>
+                <?php include 'mailbox_panel.php'; ?>
             </div>
             <div class="page-content" id="page-settings">
                 <div class="head">

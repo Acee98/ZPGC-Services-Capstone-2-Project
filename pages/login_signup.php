@@ -53,7 +53,6 @@ unset($_SESSION['login_error']);
                 <select name="role" required>
                     <option value="" disabled selected>Role</option>
                     <option value="user">User</option>
-                    <option value="admin">Admin</option>
                     <option value="techn">Technician</option>
                 </select>
                 <button type="submit" name="signup">Signup</button>

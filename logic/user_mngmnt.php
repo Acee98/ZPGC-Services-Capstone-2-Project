@@ -1,7 +1,5 @@
 <?php
-session_set_cookie_params(0, 'CP2_V1.1/logic/');
-session_start();
-
+require_once 'session_config.php';
 require_once 'config.php';
 
 if (isset($_POST['login'])) {
@@ -9,7 +7,7 @@ if (isset($_POST['login'])) {
     $password = $_POST['password'];
 
     $stmt = $conn->prepare(
-        'SELECT first_name, last_name, email, password, role, status
+        'SELECT id, first_name, last_name, email, password, role, status
         FROM users WHERE email = ?'
     );
     $stmt->bind_param('s', $email);
@@ -23,6 +21,7 @@ if (isset($_POST['login'])) {
             header('Location: ../pages/login_signup.php');
             exit();
         }
+        $_SESSION['id'] = (int) $user['id'];
         $_SESSION['first_name'] = $user['first_name'];
         $_SESSION['last_name'] = $user['last_name'];
         $_SESSION['email'] = $user['email'];
@@ -49,7 +48,7 @@ if (isset($_POST['signup'])) {
     $password = $_POST['password'];
     $role = $_POST['role'];
 
-    $allowed = array('user', 'admin', 'techn');
+    $allowed = array('user', 'techn');
     if (!in_array($role, $allowed, true)) {
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
