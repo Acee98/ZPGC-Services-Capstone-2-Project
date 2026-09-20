@@ -1,6 +1,7 @@
 <?php
 require_once 'session_config.php';
 require_once 'config.php';
+require_once 'ticket_status.php';
 require_role('admin');
 
 $allowed = ticket_admin_allowed_statuses();

@@ -1,5 +1,5 @@
 -- =====================================================================
--- ZPGC Services — User confirmation patch (v1.4)
+-- ZPGC Services — User confirmation patch (v1.5)
 -- =====================================================================
 -- Run this ONCE in phpMyAdmin, AFTER patch_dashboard_v1_3.sql.
 --

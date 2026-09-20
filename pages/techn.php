@@ -146,12 +146,13 @@ $techn_statuses = ticket_techn_allowed_statuses();
                         <div class="profile-circle"></div>
                     </header>
                 </div>
-                <div class="tickets-list">
+                <div class="tickets-list tickets-list-techn-actions">
                 <div class="tickets-list-header">
                     <span class="tickets-col-id">ID</span>
                     <span class="tickets-col-subject">Subject</span>
                     <span class="tickets-col-description">Description</span>
                     <span class="tickets-col-status">Status</span>
+                    <span class="tickets-col-action">Action</span>
                 </div>
                 <div class="tickets-list-body" id="techn-tickets-body">
                     <?php if (empty($tech_tickets)) { ?>
@@ -159,23 +160,47 @@ $techn_statuses = ticket_techn_allowed_statuses();
                         <p>No tickets assigned yet.</p>
                     </div>
                     <?php } else { ?>
-                    <?php foreach ($tech_tickets as $ticket) { ?>
-                    <div class="ticket-row">
-                        <span class="tickets-col-id">#
-                            <?php echo (int) $ticket['id']; ?>
-                        </span>
-                        <span class="tickets-col-subject">
-                            <?php echo htmlspecialchars($ticket['subject']); ?>
-                        </span>
-                        <span class="tickets-col-description">
-                            <?php echo htmlspecialchars($ticket['description']); ?>
-                        </span>
+                    <?php foreach ($tech_tickets as $ticket) {
+                        $st = $ticket['status'];
+                        $tid = (int) $ticket['id'];
+                        $canEditStatus = in_array($st, $techn_statuses, true);
+                    ?>
+                    <?php if ($canEditStatus) { ?>
+                    <form class="ticket-row" action="../logic/ticket_techn_mngmnt.php" method="post"
+                        data-status="<?php echo htmlspecialchars($st); ?>">
+                        <input type="hidden" name="ticket_id" value="<?php echo $tid; ?>">
+                        <span class="tickets-col-id">#<?php echo $tid; ?></span>
+                        <span class="tickets-col-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
+                        <span class="tickets-col-description"><?php echo htmlspecialchars($ticket['description']); ?></span>
                         <span class="tickets-col-status">
-                            <span class="status-badge <?php echo htmlspecialchars(preg_replace('/[^a-z]/', '', strtolower($ticket['status']))); ?>">
-                                <?php echo htmlspecialchars(ucfirst($ticket['status'])); ?>
+                            <select name="status" class="admin-ticket-select" aria-label="Status for ticket <?php echo $tid; ?>">
+                                <?php foreach ($techn_statuses as $opt) { ?>
+                                <option value="<?php echo htmlspecialchars($opt); ?>"
+                                    <?php echo ($st === $opt) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars(ticket_status_label($opt)); ?>
+                                </option>
+                                <?php } ?>
+                            </select>
+                        </span>
+                        <span class="tickets-col-action">
+                            <button type="submit" name="save_tech_ticket" class="btn-save-ticket">Save</button>
+                        </span>
+                    </form>
+                    <?php } else { ?>
+                    <div class="ticket-row" data-status="<?php echo htmlspecialchars($st); ?>">
+                        <span class="tickets-col-id">#<?php echo $tid; ?></span>
+                        <span class="tickets-col-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
+                        <span class="tickets-col-description"><?php echo htmlspecialchars($ticket['description']); ?></span>
+                        <span class="tickets-col-status">
+                            <span class="status-badge <?php echo htmlspecialchars(ticket_status_class($st)); ?>">
+                                <?php echo htmlspecialchars(ticket_status_label($st)); ?>
                             </span>
                         </span>
+                        <span class="tickets-col-action">
+                            <span class="techn-status-readonly">Closed by reporter</span>
+                        </span>
                     </div>
+                    <?php } ?>
                     <?php } ?>
                     <?php } ?>
                 </div>

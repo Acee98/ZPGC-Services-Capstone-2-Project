@@ -544,7 +544,7 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
 }
 
 /* ====================================================================
- * USER CONFIRMATION WORKFLOW (v1.4)
+ * USER CONFIRMATION WORKFLOW (v1.5)
  * ====================================================================
  * A ticket now stops at "awaiting_confirmation" between the technician
  * finishing and the reporter closing it. The technician can no longer
