@@ -1,4 +1,4 @@
--- Stage 6 / v1.4 — User confirmation (prefer phpMyAdmin Structure when possible).
+-- Stage 6 / v1.5 — User confirmation (prefer phpMyAdmin Structure when possible).
 -- Database: users_db (same DB you used for V1.1–V1.3).
 --
 -- Goal status flow:

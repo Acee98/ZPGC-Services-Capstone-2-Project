@@ -1392,6 +1392,12 @@ body[data-page="messages"] .showcase #page-messages {
     display: flex;
     justify-content: center;
 }
+.techn-status-readonly {
+    font-size: 12px;
+    font-weight: 600;
+    color: #818181;
+    text-align: center;
+}
 
 /* Account status (Utilities user table) — separate names from the
    ticket-status modifiers above (ongoing/processing/resolved/pending)

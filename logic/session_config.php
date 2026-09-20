@@ -1,6 +1,11 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params(0, '/CP2_V1.4/');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/CP2_V1.5/',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     session_start();
 }
 
@@ -15,7 +20,9 @@ function require_login()
 function require_role($role)
 {
     require_login();
-    if (($_SESSION['role'] ?? '') !== $role) {
+    $current = strtolower(trim((string) ($_SESSION['role'] ?? '')));
+    $need = strtolower(trim((string) $role));
+    if ($current !== $need) {
         header('Location: ../pages/login_signup.php');
         exit();
     }
@@ -54,7 +61,7 @@ function save_ui_theme($theme)
     $_SESSION['theme'] = $theme;
     setcookie('zpgc_theme', $theme, [
         'expires' => time() + 60 * 60 * 24 * 365,
-        'path' => '/CP2_V1.4/',
+        'path' => '/CP2_V1.5/',
         'httponly' => false,
         'samesite' => 'Lax',
     ]);

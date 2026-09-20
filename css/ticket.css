@@ -13,65 +13,25 @@
     font-family: "Inter";
 }
 
-/* Light gray page background (matches the #ebebeb/#f5f5f5 neutral
-   tones used elsewhere) so the white cards stand out, and centers
-   the ticket form on the page. */
-html,
-body {
-    height: 100%;
+/* Page layout: block + horizontal center (no vertical flex).
+   Tall AI form used to clip the title when body was flex-centered. */
+html {
+    height: auto;
 }
 
 body {
+    margin: 0;
     background-color: #ebebeb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 20px;
+    padding: 32px 20px 48px;
+    overflow-y: auto;
 }
 
-/*
- * TICKET CONTAINER
- * ------------------------------------------------------------------
- * Outer wrapper that stacks the header card and form card vertically,
- * matching the two-card layout from the Figma reference. Fixed max
- * width keeps the form a comfortable reading width on large screens
- * while still shrinking on smaller ones.
- */
 .ticket-container {
     width: 100%;
     max-width: 560px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    margin: 0 auto;
 }
 
-/*
- * HEADER CARD
- * ------------------------------------------------------------------
- * White rounded card holding just the "Submit New Ticket" title,
- * matching the top card in the Figma design. Shadow/radius language
- * matches .main-head / .status-card elsewhere in the project.
- */
-.ticket-header {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    padding: 16px 20px;
-}
-
-.ticket-header h1 {
-    font-size: 22px;
-    font-weight: 800;
-    color: #1a1a1a;
-}
-
-/*
- * FORM CARD
- * ------------------------------------------------------------------
- * Second white rounded card holding the intro sentence and the 3
- * requested fields (category dropdown, subject input, description
- * textarea), plus the submit button.
- */
 .ticket-form {
     background-color: #fff;
     border-radius: 10px;
@@ -80,6 +40,14 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+.ticket-form-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1.3;
+    margin: 0;
 }
 
 /* Intro helper line ("Please provide the details..."), muted gray
@@ -239,4 +207,62 @@ body {
 
 .btn-cancel-ticket:hover {
     background-color: #f0f0f0;
+}
+
+/* Stage 7 — AI suggest controls */
+.ai-suggest-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-ai-suggest {
+    background-color: #fff;
+    color: #610107;
+    border: 1px solid #610107;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+}
+
+.btn-ai-suggest:hover:not(:disabled) {
+    background-color: #f5d5d8;
+}
+
+.btn-ai-suggest:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.ai-suggest-status {
+    font-size: 13px;
+    color: #5a5a5a;
+}
+
+.ai-suggest-status.is-error {
+    color: #7e030b;
+    font-weight: 600;
+}
+
+.ai-suggest-box {
+    background-color: #f7f0f1;
+    border: 1px solid #e0c4c7;
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.ai-suggest-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #610107;
+    margin-bottom: 4px;
+}
+
+.ai-suggest-detail {
+    font-size: 13px;
+    color: #3a3a3a;
 }

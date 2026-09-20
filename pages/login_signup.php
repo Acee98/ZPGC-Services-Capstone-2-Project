@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once '../logic/session_config.php';
 
 function showError($error) {
     if ($error !== '') {
