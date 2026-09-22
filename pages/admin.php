@@ -2,6 +2,7 @@
 require_once '../logic/session_config.php';
 require_once '../logic/config.php';
 require_once '../logic/priority_queue.php';
+require_once '../logic/dashboard_stats.php';
 require_role('admin');
 
 $current_user_id = current_user_id($conn);
@@ -54,6 +55,7 @@ if ($ticket_result) {
 $mailbox_tickets = $all_tickets;
 $recent_tickets = $all_tickets;
 $queue_snapshot = priority_queue_snapshot($conn);
+$dashboard_charts = dashboard_chart_data($conn);
 
 $status_counts = [
     'pending' => 0,
@@ -681,8 +683,11 @@ $ui_theme = current_ui_theme();
     <script src="../js/behavior.js"></script>
     <script src="../js/tickets_filter.js"></script>
     <script src="../js/utilities_filter.js"></script>
-    <script src="../js/chart.umd.js"></script>
-    <script src="../js/dashboard_static_charts.js"></script>
+        <script src="../js/chart.umd.js"></script>
+    <script>
+        window.DASHBOARD_CHART_DATA = <?php echo json_encode($dashboard_charts, JSON_UNESCAPED_UNICODE); ?>;
+    </script>
+    <script src="../js/dashboard_static_charts.js?v=20260920js-live3"></script>
 </body>
 
 </html>

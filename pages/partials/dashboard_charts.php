@@ -1,8 +1,8 @@
-                <div class="dashboard-charts-grid dashboard-charts-static">
+                <div class="dashboard-charts-grid dashboard-charts-live">
                     <div class="chart-card">
                         <div class="chart-card-header">
                             <h2>Tickets Report</h2>
-                            <button class="perf-filter-btn" type="button" disabled title="Sample data only">This Week</button>
+                            <button class="perf-filter-btn" type="button" disabled title="Live counts for the current week">This Week</button>
                         </div>
                         <div class="chart-card-body">
                             <canvas id="ticketsReportChart"></canvas>

@@ -9,11 +9,21 @@ $tab = $_GET['tab'] ?? 'dashboard';
 
 $confirm_success = $_SESSION['confirm_success'] ?? '';
 $confirm_error = $_SESSION['confirm_error'] ?? '';
-unset($_SESSION['confirm_success'], $_SESSION['confirm_error']);
+$ticket_flash = $_SESSION['ticket_flash'] ?? '';
+unset($_SESSION['confirm_success'], $_SESSION['confirm_error'], $_SESSION['ticket_flash']);
+
+$has_ai_guidance = false;
+$colCheck = $conn->query("SHOW COLUMNS FROM tickets LIKE 'ai_guidance'");
+if ($colCheck && $colCheck->num_rows > 0) {
+    $has_ai_guidance = true;
+}
 
 $user_tickets = [];
+$selectCols = $has_ai_guidance
+    ? 'id, subject, description, status, priority, assigned_to, ai_guidance'
+    : 'id, subject, description, status, priority, assigned_to';
 $stmt = $conn->prepare(
-    'SELECT id, subject, description, status FROM tickets WHERE user_id = ? ORDER BY id DESC'
+    "SELECT {$selectCols} FROM tickets WHERE user_id = ? ORDER BY id DESC"
 );
 $stmt->bind_param('i', $current_user_id);
 $stmt->execute();
@@ -158,6 +168,9 @@ $mailbox_tickets = $user_tickets;
                         New Ticket
                     </a>
                 </div>
+                <?php if ($ticket_flash !== '') { ?>
+                <div class="utilities-notice"><?php echo htmlspecialchars($ticket_flash); ?></div>
+                <?php } ?>
                 <?php if ($confirm_success !== '') { ?>
                 <div class="utilities-notice"><?php echo htmlspecialchars($confirm_success); ?></div>
                 <?php } ?>
@@ -181,6 +194,9 @@ $mailbox_tickets = $user_tickets;
                     <?php foreach ($user_tickets as $ticket) {
                         $st = $ticket['status'];
                         $needsConfirm = ticket_awaiting_confirmation($st);
+                        $guidance = trim((string) ($ticket['ai_guidance'] ?? ''));
+                        $unassigned = empty($ticket['assigned_to']);
+                        $showSelfHelp = ($guidance !== '' && $unassigned && $st !== 'resolved');
                     ?>
                     <div class="ticket-row" data-status="<?php echo htmlspecialchars($st); ?>">
                         <span class="tickets-col-id">#
@@ -188,6 +204,25 @@ $mailbox_tickets = $user_tickets;
                         </span>
                         <span class="tickets-col-subject">
                             <?php echo htmlspecialchars($ticket['subject']); ?>
+                            <?php if ($showSelfHelp) { ?>
+                            <details class="ai-selfhelp">
+                                <summary>AI troubleshooting tips</summary>
+                                <pre class="ai-selfhelp-body"><?php echo htmlspecialchars($guidance); ?></pre>
+                                <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
+                                    <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
+                                    <button type="submit" name="request_technician" value="1" class="btn-request-tech">
+                                        Still not fixed — Request Technician
+                                    </button>
+                                </form>
+                            </details>
+                            <?php } elseif ($unassigned && ($ticket['priority'] ?? '') === 'low') { ?>
+                            <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
+                                <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
+                                <button type="submit" name="request_technician" value="1" class="btn-request-tech">
+                                    Request Technician
+                                </button>
+                            </form>
+                            <?php } ?>
                         </span>
                         <span class="tickets-col-description">
                             <?php echo htmlspecialchars($ticket['description']); ?>

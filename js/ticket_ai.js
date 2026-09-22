@@ -59,6 +59,9 @@
         if (data.confidence != null) {
           parts.push('Confidence: ' + Math.round(Number(data.confidence) * 100) + '%');
         }
+        if (data.method) {
+          parts.push('Via: ' + data.method + (data.model ? ' (' + data.model + ')' : ''));
+        }
         detail.textContent = parts.join(' · ');
         box.hidden = false;
 

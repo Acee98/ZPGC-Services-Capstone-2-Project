@@ -1,10 +1,7 @@
 /**
- * dashboard_static_charts.js
- * ----------------------------------------------------------------------
- * Chart.js sample charts for the admin Dashboard. Uses local chart.umd.js
- * (not CDN). Re-runs when body[data-page] becomes "dashboard" so switching
- * tabs does not leave empty cards.
- * ----------------------------------------------------------------------
+ * Admin dashboard charts — original Chart.js look, live MySQL data
+ * from window.DASHBOARD_CHART_DATA (admin.php + dashboard_stats.php).
+ * Matplotlib PNGs remain available via logic/dashboard_chart_png.php for the paper requirement.
  */
 (function () {
     function destroyIfAny(canvas) {
@@ -17,7 +14,26 @@
         }
     }
 
-    function initStaticCharts() {
+    function payload() {
+        return window.DASHBOARD_CHART_DATA || {
+            report: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                submitted: [0, 0, 0, 0, 0, 0, 0],
+                resolved: [0, 0, 0, 0, 0, 0, 0],
+            },
+            categories: {
+                labels: ['Hardware', 'Software', 'Network', 'Account', 'Other'],
+                data: [0, 0, 0, 0, 0],
+            },
+            severity: { labels: ['Critical', 'Moderate', 'Low'], data: [0, 0, 0] },
+            satisfaction: {
+                labels: ['Very satisfied', 'Satisfied', 'Not sure', 'Not satisfied', 'Hate it'],
+                data: [0, 0, 0, 0, 0],
+            },
+        };
+    }
+
+    function initLiveCharts() {
         if (typeof Chart === 'undefined') {
             return;
         }
@@ -33,8 +49,8 @@
             return;
         }
 
+        var data = payload();
         var maroon = '#610107';
-        var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
         destroyIfAny(reportCtx);
         destroyIfAny(catCtx);
@@ -45,11 +61,11 @@
             new Chart(reportCtx, {
                 type: 'line',
                 data: {
-                    labels: days,
+                    labels: data.report.labels,
                     datasets: [
                         {
                             label: 'Submitted',
-                            data: [10, 22, 28, 35, 40, 48, 50],
+                            data: data.report.submitted,
                             borderColor: maroon,
                             backgroundColor: maroon,
                             tension: 0.35,
@@ -57,7 +73,7 @@
                         },
                         {
                             label: 'Resolved',
-                            data: [15, 18, 30, 45, 45, 45, 50],
+                            data: data.report.resolved,
                             borderColor: '#5BC8E8',
                             backgroundColor: '#5BC8E8',
                             tension: 0.35,
@@ -74,7 +90,7 @@
                             labels: { boxWidth: 10, font: { size: 11 } },
                         },
                     },
-                    scales: { y: { beginAtZero: true } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
                 },
             });
         }
@@ -83,10 +99,10 @@
             new Chart(catCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Hardware', 'Software', 'Network', 'Account', 'Other'],
+                    labels: data.categories.labels,
                     datasets: [{
                         label: 'Tickets',
-                        data: [70, 85, 65, 95, 45],
+                        data: data.categories.data,
                         backgroundColor: maroon,
                         borderRadius: 4,
                         maxBarThickness: 42,
@@ -96,19 +112,20 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
                 },
             });
         }
 
         if (satCtx) {
             var satColors = ['#7ED9A8', '#2E8B8B', '#5BC8E8', '#F5A623', '#D9435E'];
+            var satMax = Math.max.apply(null, (data.satisfaction.data || []).concat([10]));
             new Chart(satCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Very satisfied', 'Satisfied', 'Not sure', 'Not satisfied', 'Hate it'],
+                    labels: data.satisfaction.labels,
                     datasets: [{
-                        data: [35, 30, 20, 10, 5],
+                        data: data.satisfaction.data,
                         backgroundColor: satColors,
                         borderRadius: 4,
                         maxBarThickness: 36,
@@ -117,25 +134,12 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function (ctx) {
-                                    return ctx.parsed.y + '%';
-                                },
-                            },
-                        },
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 40,
-                            ticks: {
-                                callback: function (v) {
-                                    return v + '%';
-                                },
-                            },
+                            max: Math.ceil(satMax * 1.2) || 40,
+                            ticks: { precision: 0 },
                         },
                     },
                 },
@@ -146,9 +150,9 @@
             new Chart(sevCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Critical', 'Moderate', 'Low'],
+                    labels: data.severity.labels,
                     datasets: [{
-                        data: [30, 40, 30],
+                        data: data.severity.data,
                         backgroundColor: ['#FF3B30', '#FF8D28', '#34C759'],
                         borderWidth: 0,
                     }],
@@ -167,7 +171,6 @@
             });
         }
 
-        // Chart.js needs a second layout pass after the dashboard block is display:block.
         window.setTimeout(function () {
             [reportCtx, catCtx, satCtx, sevCtx].forEach(function (canvas) {
                 var chart = canvas && Chart.getChart ? Chart.getChart(canvas) : null;
@@ -179,11 +182,10 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        initStaticCharts();
-        // Re-draw when returning to Dashboard after visiting another tab.
+        initLiveCharts();
         var observer = new MutationObserver(function () {
             if (document.body.getAttribute('data-page') === 'dashboard') {
-                initStaticCharts();
+                initLiveCharts();
             }
         });
         observer.observe(document.body, { attributes: true, attributeFilter: ['data-page'] });
