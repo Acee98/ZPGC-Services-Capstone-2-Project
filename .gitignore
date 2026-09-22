@@ -1,3 +1,9 @@
 docs/
 .cursor/
 .vscode/
+.env
+ai/.env
+API Key/
+**/api_key.txt
+**/__pycache__/
+*.pyc
