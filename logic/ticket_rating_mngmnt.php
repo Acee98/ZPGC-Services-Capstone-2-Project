@@ -20,15 +20,17 @@ if ($ticketId <= 0 || !isset($labels[$score]) || $userId <= 0) {
     header('Location: ../pages/user.php?tab=tickets');
     exit();
 }
-$col = $conn->query("SHOW COLUMNS FROM tickets LIKE 'satisfaction'");
-if (
-    (!$col || $col->num_rows === 0)
-    && (!function_exists('zpgc_runtime_ddl_allowed') || zpgc_runtime_ddl_allowed())
-) {
-    $conn->query('ALTER TABLE tickets ADD COLUMN satisfaction TINYINT NULL DEFAULT NULL');
+
+if (!ticket_ensure_satisfaction_column($conn)) {
+    $_SESSION['ticket_flash'] = 'Satisfaction ratings are unavailable until the database migration is applied.';
+    unset($_SESSION['rate_ticket_id']);
+    header('Location: ../pages/user.php?tab=tickets');
+    exit();
 }
+
 $stmt = $conn->prepare(
-    "UPDATE tickets SET satisfaction = ? WHERE id = ? AND user_id = ? AND status = 'resolved'"
+    "UPDATE tickets SET satisfaction = ? WHERE id = ? AND user_id = ? AND status = 'resolved'
+     AND (satisfaction IS NULL OR satisfaction < 1 OR satisfaction > 5)"
 );
 $stmt->bind_param('iii', $score, $ticketId, $userId);
 $stmt->execute();
@@ -39,7 +41,7 @@ if ($saved) {
 }
 $_SESSION['ticket_flash'] = $saved
     ? 'Thanks. Ticket #' . $ticketId . ' was marked ' . $labels[$score] . ' and archived from your active list.'
-    : 'Only a resolved ticket that you own can be rated.';
+    : 'Only a resolved ticket that you own can be rated once.';
 unset($_SESSION['rate_ticket_id']);
 header('Location: ../pages/user.php?tab=tickets');
 exit();

@@ -1,13 +1,22 @@
 <?php
 /**
  * Read-only resolved / archived ticket history.
- * Expects $history_tickets (array). Optional: $history_title, $history_empty, $history_show_assigned.
+ * Expects $history_tickets (array). Optional: $history_title, $history_empty, $history_show_assigned,
+ * $history_show_satisfaction, $history_rating_labels.
  */
 $history_tickets = $history_tickets ?? [];
 $history_title = $history_title ?? 'Ticket History';
 $history_subtitle = $history_subtitle ?? 'Resolved and archived tickets';
 $history_empty = $history_empty ?? 'No resolved tickets in history yet.';
 $history_show_assigned = !empty($history_show_assigned);
+$history_show_satisfaction = !empty($history_show_satisfaction);
+$history_rating_labels = $history_rating_labels ?? [
+    5 => 'Very satisfied',
+    4 => 'Satisfied',
+    3 => 'Not sure',
+    2 => 'Not satisfied',
+    1 => 'Hate it',
+];
 ?>
 <section class="ticket-history-section">
     <div class="ticket-history-head">
@@ -16,7 +25,7 @@ $history_show_assigned = !empty($history_show_assigned);
             <p class="ticket-history-subtitle"><?php echo htmlspecialchars($history_subtitle); ?></p>
         </header>
     </div>
-    <div class="tickets-list ticket-history-list<?php echo $history_show_assigned ? ' ticket-history-list--assigned' : ''; ?>">
+    <div class="tickets-list ticket-history-list<?php echo $history_show_assigned ? ' ticket-history-list--assigned' : ''; ?><?php echo $history_show_satisfaction ? ' ticket-history-list--satisfaction' : ''; ?>">
         <div class="tickets-list-header">
             <span class="tickets-col-id">ID</span>
             <span class="tickets-col-subject">Subject</span>
@@ -25,6 +34,9 @@ $history_show_assigned = !empty($history_show_assigned);
             <span class="tickets-col-priority">Priority</span>
             <?php if ($history_show_assigned) { ?>
             <span class="tickets-col-assigned">Assigned To</span>
+            <?php } ?>
+            <?php if ($history_show_satisfaction) { ?>
+            <span class="tickets-col-satisfaction">Satisfaction</span>
             <?php } ?>
         </div>
         <div class="tickets-list-body">
@@ -45,6 +57,8 @@ $history_show_assigned = !empty($history_show_assigned);
                         $assignedLabel = 'Tech #' . $techId;
                     }
                 }
+                $satScore = (int) ($ticket['satisfaction'] ?? 0);
+                $satLabel = $history_rating_labels[$satScore] ?? '';
             ?>
             <div class="ticket-row ticket-history-row" data-status="<?php echo htmlspecialchars($st); ?>">
                 <span class="tickets-col-id">#<?php echo (int) $ticket['id']; ?></span>
@@ -66,6 +80,17 @@ $history_show_assigned = !empty($history_show_assigned);
                 </span>
                 <?php if ($history_show_assigned) { ?>
                 <span class="tickets-col-assigned"><?php echo htmlspecialchars($assignedLabel); ?></span>
+                <?php } ?>
+                <?php if ($history_show_satisfaction) { ?>
+                <span class="tickets-col-satisfaction">
+                    <?php if ($satLabel !== '') { ?>
+                    <span class="confirm-placeholder"><?php echo htmlspecialchars($satLabel); ?></span>
+                    <?php } elseif ($st === 'resolved') { ?>
+                    <a class="btn-rate-visit" href="user.php?tab=tickets&amp;rate=<?php echo (int) $ticket['id']; ?>">Rate visit</a>
+                    <?php } else { ?>
+                    <span class="confirm-placeholder">—</span>
+                    <?php } ?>
+                </span>
                 <?php } ?>
             </div>
             <?php } ?>

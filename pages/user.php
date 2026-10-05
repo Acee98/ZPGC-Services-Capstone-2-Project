@@ -9,6 +9,27 @@ require_once '../logic/ticket_retention.php';
 require_role('user');
 
 $current_user_id = current_user_id($conn);
+
+// Allow reopening the CSAT survey from Ticket History (?rate=ID).
+// Must run before tab persist redirect so the query is not stripped.
+if (isset($_GET['rate'])) {
+    $wantRate = (int) $_GET['rate'];
+    if ($wantRate > 0 && $current_user_id > 0) {
+        $chk = $conn->prepare(
+            "SELECT id FROM tickets WHERE id = ? AND user_id = ? AND status = 'resolved' LIMIT 1"
+        );
+        $chk->bind_param('ii', $wantRate, $current_user_id);
+        $chk->execute();
+        $ok = $chk->get_result()->fetch_assoc();
+        $chk->close();
+        if ($ok) {
+            $_SESSION['rate_ticket_id'] = $wantRate;
+        }
+    }
+    header('Location: user.php?tab=tickets');
+    exit();
+}
+
 $tab = zpgc_ui_resolve_tab('user', 'dashboard');
 zpgc_ui_persist_redirect($tab);
 
@@ -22,13 +43,7 @@ $colCheck = $conn->query("SHOW COLUMNS FROM tickets LIKE 'ai_guidance'");
 if ($colCheck && $colCheck->num_rows > 0) {
     $has_ai_guidance = true;
 }
-if (empty($_SESSION['_zpgc_sat_col'])) {
-    $satCol = $conn->query("SHOW COLUMNS FROM tickets LIKE 'satisfaction'");
-    if (!$satCol || $satCol->num_rows === 0) {
-        $conn->query('ALTER TABLE tickets ADD COLUMN satisfaction TINYINT NULL DEFAULT NULL');
-    }
-    $_SESSION['_zpgc_sat_col'] = 1;
-}
+$has_satisfaction = ticket_ensure_satisfaction_column($conn);
 ticket_ensure_archived_column($conn);
 ticket_ensure_indexes($conn);
 ticket_retention_maybe_backfill($conn, 1);
@@ -42,10 +57,13 @@ $rating_labels = [
 
 $user_tickets = [];
 $selectCols = $has_ai_guidance
-    ? 'id, subject, description, status, priority, assigned_to, ai_guidance, satisfaction, archived_at'
-    : 'id, subject, description, status, priority, assigned_to, satisfaction, archived_at';
-if (!ticket_has_column($conn, 'archived_at')) {
-    $selectCols = str_replace(', archived_at', '', $selectCols);
+    ? 'id, subject, description, status, priority, assigned_to, ai_guidance'
+    : 'id, subject, description, status, priority, assigned_to';
+if ($has_satisfaction) {
+    $selectCols .= ', satisfaction';
+}
+if (ticket_has_column($conn, 'archived_at')) {
+    $selectCols .= ', archived_at';
 }
 $stmt = $conn->prepare(
     "SELECT {$selectCols} FROM tickets WHERE user_id = ? ORDER BY id DESC LIMIT 200"
@@ -69,8 +87,8 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.6">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.6">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.9">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.9">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | User</title>
 </head>
@@ -280,6 +298,8 @@ $ui_theme = current_ui_theme();
                             </form>
                             <?php } elseif ($st === 'resolved' && isset($rating_labels[(int) ($ticket['satisfaction'] ?? 0)])) { ?>
                             <span class="confirm-placeholder"><?php echo htmlspecialchars($rating_labels[(int) $ticket['satisfaction']]); ?></span>
+                            <?php } elseif ($st === 'resolved' && $has_satisfaction) { ?>
+                            <a class="btn-rate-visit" href="user.php?tab=tickets&amp;rate=<?php echo (int) $ticket['id']; ?>">Rate visit</a>
                             <?php } else { ?>
                             <span class="confirm-placeholder">—</span>
                             <?php } ?>
@@ -303,6 +323,8 @@ $ui_theme = current_ui_theme();
                 $history_show_assigned = false;
                 $history_title = 'Ticket History';
                 $history_subtitle = 'Resolved and archived tickets';
+                $history_show_satisfaction = $has_satisfaction;
+                $history_rating_labels = $rating_labels;
                 include __DIR__ . '/partials/ticket_history_list.php';
                 ?>
             </div>
@@ -351,14 +373,23 @@ $ui_theme = current_ui_theme();
     <?php
     $rateId = (int) ($_SESSION['rate_ticket_id'] ?? 0);
     $rateTicket = null;
-    if ($rateId > 0) {
-        foreach ($user_tickets as $rateRow) {
-            $already = (int) ($rateRow['satisfaction'] ?? 0);
-            if ((int) $rateRow['id'] === $rateId && ($rateRow['status'] ?? '') === 'resolved' && !isset($rating_labels[$already])) {
-                $rateTicket = $rateRow;
-                break;
-            }
+    if ($rateId > 0 && $has_satisfaction && $current_user_id > 0) {
+        $rateStmt = $conn->prepare(
+            "SELECT id, subject, status, satisfaction FROM tickets
+             WHERE id = ? AND user_id = ? AND status = 'resolved' LIMIT 1"
+        );
+        $rateStmt->bind_param('ii', $rateId, $current_user_id);
+        $rateStmt->execute();
+        $rateRow = $rateStmt->get_result()->fetch_assoc();
+        $rateStmt->close();
+        $already = (int) ($rateRow['satisfaction'] ?? 0);
+        if ($rateRow && !isset($rating_labels[$already])) {
+            $rateTicket = $rateRow;
+        } else {
+            unset($_SESSION['rate_ticket_id']);
         }
+    } elseif ($rateId > 0 && !$has_satisfaction) {
+        unset($_SESSION['rate_ticket_id']);
     }
     ?>
     <?php if ($rateTicket) { ?>
@@ -380,8 +411,8 @@ $ui_theme = current_ui_theme();
         </form>
     </div>
     <?php } ?>
-    <script src="../js/lazy_load.js?v=1.6.6"></script>
-    <script src="../js/behavior.js?v=1.6.7" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.9"></script>
+    <script src="../js/behavior.js?v=1.6.9" defer></script>
 </body>
 
 </html>

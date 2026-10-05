@@ -112,21 +112,22 @@ if (!function_exists('dashboard_chart_data')) {
         }
         $totalSat = max(1, $resolvedN + $openN);
         $buckets = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
-        $satCol = $conn->query("SHOW COLUMNS FROM tickets LIKE 'satisfaction'");
-        if (
-            (!$satCol || $satCol->num_rows === 0)
-            && (!function_exists('zpgc_runtime_ddl_allowed') || zpgc_runtime_ddl_allowed())
-        ) {
-            $conn->query('ALTER TABLE tickets ADD COLUMN satisfaction TINYINT NULL DEFAULT NULL');
+        $satNote = 'Counts of ratings users saved on resolved tickets.';
+        if (function_exists('ticket_ensure_satisfaction_column')) {
+            ticket_ensure_satisfaction_column($conn);
         }
-        if ($res = $conn->query(
-            'SELECT satisfaction, COUNT(*) AS cnt FROM tickets
-             WHERE satisfaction BETWEEN 1 AND 5
-             GROUP BY satisfaction'
-        )) {
-            while ($row = $res->fetch_assoc()) {
-                $buckets[(int) $row['satisfaction']] = (int) $row['cnt'];
+        if (function_exists('ticket_has_column') && ticket_has_column($conn, 'satisfaction')) {
+            if ($res = $conn->query(
+                'SELECT satisfaction, COUNT(*) AS cnt FROM tickets
+                 WHERE satisfaction BETWEEN 1 AND 5
+                 GROUP BY satisfaction'
+            )) {
+                while ($row = $res->fetch_assoc()) {
+                    $buckets[(int) $row['satisfaction']] = (int) $row['cnt'];
+                }
             }
+        } else {
+            $satNote = 'Apply database/v1.6_satisfaction.sql so ratings can be stored.';
         }
         $sat = [$buckets[5], $buckets[4], $buckets[3], $buckets[2], $buckets[1]];
 
@@ -149,7 +150,7 @@ if (!function_exists('dashboard_chart_data')) {
             'satisfaction' => [
                 'labels' => ['Very satisfied', 'Satisfied', 'Not sure', 'Not satisfied', 'Hate it'],
                 'data' => $sat,
-                'note' => 'Counts of ratings users saved on resolved tickets.',
+                'note' => $satNote,
             ],
         ];
     }

@@ -2863,7 +2863,7 @@ body[data-page="utilities"] #page-utilities .tickets-list-body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 90;
+    z-index: 10050;
     padding: 20px;
 }
 .survey-card {
@@ -2874,6 +2874,7 @@ body[data-page="utilities"] #page-utilities .tickets-list-body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
 }
 .survey-card h2 { margin: 0; font-size: 20px; }
 .survey-card p { margin: 0; color: #5a5a5a; }
@@ -2885,6 +2886,30 @@ body[data-page="utilities"] #page-utilities .tickets-list-body {
     border: 1px solid #e4e4e4;
     border-radius: 8px;
     padding: 10px 12px;
+    cursor: pointer;
+}
+.survey-option:hover {
+    border-color: #610107;
+    background: #faf6f6;
+}
+.btn-rate-visit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #610107;
+    color: #fff !important;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.btn-rate-visit:hover {
+    background: #4a0105;
+}
+.tickets-col-satisfaction {
+    min-width: 120px;
 }
 
 /* ===== Global UI polish (uniform spacing) ===== */

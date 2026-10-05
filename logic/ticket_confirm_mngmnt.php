@@ -46,7 +46,8 @@ $upd->bind_param('sii', $newStatus, $ticket_id, $user_id);
 $upd->execute();
 $upd->close();
 if ($newStatus === 'resolved') {
-    ticket_mark_resolved($conn, $ticket_id);
+    // Defer soft-archive until CSAT is submitted so the survey can always resolve the row.
+    ticket_mark_resolved($conn, $ticket_id, false);
     $_SESSION['rate_ticket_id'] = $ticket_id;
 }
 

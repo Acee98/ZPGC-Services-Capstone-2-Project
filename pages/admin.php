@@ -16,6 +16,7 @@ $tab = zpgc_ui_resolve_tab('admin', 'dashboard');
 zpgc_ui_persist_redirect($tab);
 
 ticket_ensure_archived_column($conn);
+ticket_ensure_satisfaction_column($conn);
 ticket_ensure_indexes($conn);
 ticket_retention_maybe_backfill($conn, 1);
 $purge_rules = ticket_retention_rules_summary();
@@ -250,9 +251,9 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.6">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.6">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.6">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.9">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.9">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.9">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -975,8 +976,8 @@ $ui_theme = current_ui_theme();
     <script>
         window.DASHBOARD_CHART_DATA = <?php echo json_encode($dashboard_charts, JSON_UNESCAPED_UNICODE); ?>;
     </script>
-    <script src="../js/lazy_load.js?v=1.6.6"></script>
-    <script src="../js/behavior.js?v=1.6.7" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.9"></script>
+    <script src="../js/behavior.js?v=1.6.9" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var input = document.getElementById('perf-log-search');

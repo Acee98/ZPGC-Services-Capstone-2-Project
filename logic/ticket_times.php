@@ -32,6 +32,23 @@ if (!function_exists('ticket_has_column')) {
     }
 
     /**
+     * CSAT score 1–5 on resolved tickets (Customer Satisfaction chart + survey).
+     */
+    function ticket_ensure_satisfaction_column(mysqli $conn)
+    {
+        if (ticket_has_column($conn, 'satisfaction')) {
+            return true;
+        }
+        if (function_exists('zpgc_runtime_ddl_allowed') && !zpgc_runtime_ddl_allowed()) {
+            return false;
+        }
+        $conn->query(
+            'ALTER TABLE tickets ADD COLUMN satisfaction TINYINT NULL DEFAULT NULL'
+        );
+        return ticket_has_column($conn, 'satisfaction', true);
+    }
+
+    /**
      * Ensure common ticket/message indexes exist (skips if already present).
      */
     function ticket_ensure_indexes(mysqli $conn)
@@ -121,7 +138,11 @@ if (!function_exists('ticket_has_column')) {
         $stmt->close();
     }
 
-    function ticket_mark_resolved(mysqli $conn, $ticket_id)
+    /**
+     * @param bool $archive Immediately soft-archive. Pass false when the user still
+     *                      needs to submit the satisfaction survey (archive after rating).
+     */
+    function ticket_mark_resolved(mysqli $conn, $ticket_id, $archive = true)
     {
         $ticket_id = (int) $ticket_id;
         if ($ticket_id <= 0) {
@@ -135,8 +156,10 @@ if (!function_exists('ticket_has_column')) {
             $stmt->execute();
             $stmt->close();
         }
-        // Soft-archive immediately when resolved so active queues stay clean.
-        ticket_mark_archived($conn, $ticket_id);
+        if ($archive) {
+            // Soft-archive so active queues stay clean.
+            ticket_mark_archived($conn, $ticket_id);
+        }
     }
 
     /**

@@ -23,6 +23,7 @@ CREATE DATABASE zpgc_services_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_c
 6. Import schema from this repo (phpMyAdmin / Workbench / `mysql` CLI), in order:
    - base `zpgc_services_db` dump (current V1.6 data/schema)
    - then `database/v1.6_ticket_archive.sql` if `tickets.archived_at` is missing
+   - then `database/v1.6_satisfaction.sql` if `tickets.satisfaction` is missing (Customer Satisfaction survey + chart)
    - optional: `database/v1.6_performance_indexes.sql` for faster ticket queries
    - any other feature SQL your team already documented in `database/`
 
@@ -129,14 +130,10 @@ Prefer Azure/Hostinger **Application settings** for `DB_PASSWORD` and `MAIL_PASS
 
 ## 5. Package for an external IT reviewer
 
-Prefer a **git clone** of this repository (or `git archive`). If zipping a working copy:
+Zip or clone the app without local-only folders:
 
 - Exclude `docs/`, `API Key/`, `backup_db/`, `database/backups/`
 - Exclude secret files: `ai/.env`, `logic/mail.env`, `Flexible_Server_Creds.txt`, `Google SMTP Pass.txt`
 - Include runtime code under `pages/`, `logic/`, `css/`, `js/`, `database/`, `ai/` (without `.env`)
-- Point reviewers to root **`README.md`**, **`DEPLOY.md`**, and **`database/README.md`**
-- Explain that `ai/` is the product classifier (see `ai/README.md`), not an editor tool
 
 OpenAI / Luna classification is an intentional product feature — keep those files.
-
-Also provide your team’s **base MySQL dump** separately (not committed to git).
