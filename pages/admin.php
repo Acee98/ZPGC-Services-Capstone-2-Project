@@ -976,7 +976,7 @@ $ui_theme = current_ui_theme();
         window.DASHBOARD_CHART_DATA = <?php echo json_encode($dashboard_charts, JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <script src="../js/lazy_load.js?v=1.6.6"></script>
-    <script src="../js/behavior.js?v=1.6.6" defer></script>
+    <script src="../js/behavior.js?v=1.6.7" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var input = document.getElementById('perf-log-search');

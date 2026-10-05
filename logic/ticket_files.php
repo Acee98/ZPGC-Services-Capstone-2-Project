@@ -212,8 +212,12 @@ if (!function_exists('ticket_files_ready')) {
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             return 'Choose an image first.';
         }
-        if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-            return 'The image could not be uploaded.';
+        $err = (int) ($file['error'] ?? UPLOAD_ERR_OK);
+        if ($err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE) {
+            return 'Image is too large. Use JPG or PNG under 2 MB.';
+        }
+        if ($err !== UPLOAD_ERR_OK) {
+            return 'The image could not be uploaded (error ' . $err . '). Try JPG or PNG under 2 MB.';
         }
         if (($file['size'] ?? 0) > 2 * 1024 * 1024) {
             return 'Images must be 2 MB or smaller.';

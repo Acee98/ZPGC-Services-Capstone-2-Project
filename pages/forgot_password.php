@@ -13,7 +13,7 @@ if (isset($_POST['forgot_password'])) {
     $email = strtolower(trim((string) ($_POST['email'] ?? '')));
     // Always show the same message so accounts are not revealed.
     $_SESSION['forgot_success'] = 'If that email is registered, a reset link was sent. Check your inbox.';
-    if (auth_mail_is_deliverable_email($email) && mail_ready()) {
+    if (auth_mail_is_tsu_email($email) && mail_ready()) {
         $stmt = $conn->prepare(
             'SELECT id, first_name, email_verified, status FROM users WHERE email = ? LIMIT 1'
         );

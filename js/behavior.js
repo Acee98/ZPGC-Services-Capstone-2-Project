@@ -604,11 +604,38 @@ function initMailbox() {
             startMailboxPoll();
         });
     }
+    var attachForm = document.getElementById("mailbox-attach-form");
+    var attachFile = document.getElementById("mailbox-attach-file");
+    if (attachForm && attachFile) {
+        attachFile.addEventListener("change", function () {
+            if (!attachFile.files || !attachFile.files.length) {
+                return;
+            }
+            var tid = parseInt(
+                (document.getElementById("mailbox-attach-ticket-id") || {}).value || mailboxTicketId,
+                10
+            ) || 0;
+            if (tid <= 0) {
+                attachFile.value = "";
+                window.alert("Select a ticket from the list before attaching an image.");
+                return;
+            }
+            var attachId = document.getElementById("mailbox-attach-ticket-id");
+            if (attachId) {
+                attachId.value = String(tid);
+            }
+            attachForm.submit();
+        });
+    }
     if (mailboxTicketId) {
         setMailboxMobileChat(true);
         zpgcSyncUiUrl("messages", mailboxTicketId);
     } else {
         setMailboxMobileChat(false);
+        var firstThread = list.querySelector(".mailbox-thread-item:not([hidden])");
+        if (firstThread && document.body.getAttribute("data-page") === "messages") {
+            firstThread.click();
+        }
     }
     // Defer mailbox network work until the Messages tab is shown.
     if (window.ZpgcLazy && typeof window.ZpgcLazy.whenTab === "function") {

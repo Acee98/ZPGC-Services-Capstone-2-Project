@@ -1,8 +1,23 @@
 <?php
 require_once 'session_config.php';
 require_once 'config.php';
-zpgc_csrf_require();
 require_once 'ticket_files.php';
+
+$roleEarly = strtolower((string) ($_SESSION['role'] ?? ''));
+$ticketEarly = (int) ($_POST['ticket_id'] ?? 0);
+$backEarly = zpgc_web_path('pages/user.php') . '?tab=messages&ticket_id=' . $ticketEarly;
+if ($roleEarly === 'techn') {
+    $backEarly = zpgc_web_path('pages/techn.php') . '?tab=messages&ticket_id=' . $ticketEarly;
+} elseif ($roleEarly === 'admin') {
+    $backEarly = zpgc_web_path('pages/admin.php') . '?tab=messages&ticket_id=' . $ticketEarly;
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST['_csrf']) && empty($_FILES['ticket_image']['name'])) {
+    $_SESSION['ticket_flash'] = 'Upload failed (file too large or missing). Use JPG/PNG under 2 MB and pick a ticket first.';
+    header('Location: ' . $backEarly);
+    exit();
+}
+
+zpgc_csrf_require();
 require_login();
 
 $ticketId = (int) ($_POST['ticket_id'] ?? 0);

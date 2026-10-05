@@ -27,13 +27,12 @@ if (isset($_POST['login'])) {
         }
         if (!$verified) {
             $_SESSION['pending_verify_email'] = (string) $user['email'];
-            $_SESSION['signup_success'] = 'Verify your email before logging in. Check Inbox and Spam, or resend below. '
-                . 'An admin can also Activate you in Utilities.';
+            $_SESSION['signup_success'] = 'Enter the 6-digit code we sent to your TSU Outlook. You can resend a new code below.';
             header('Location: ../pages/verify_pending.php');
             exit();
         }
         if ($user['status'] !== 'active') {
-            $_SESSION['login_error'] = 'Your email is verified. Wait for an administrator to activate your account.';
+            $_SESSION['login_error'] = 'Your account is not active. Complete email verification or contact an administrator.';
             header('Location: ../pages/login_signup.php');
             exit();
         }
@@ -159,7 +158,7 @@ if (isset($_POST['signup'])) {
     $sent = auth_mail_send_verify($conn, $userId, $email, $first_name);
     if ($sent['ok']) {
         $_SESSION['signup_success'] = 'Account created. Check ' . $email
-            . ' (and Spam) for the verification link. An admin must still Activate you after that.';
+            . ' for a 6-digit verification code (TSU Outlook). Paste it on the next screen to activate your account.';
     } else {
         $_SESSION['signup_error'] = 'Account created, but email failed: ' . $sent['error']
             . ' Use Resend below, or ask an admin to Activate you in Utilities.';
@@ -189,7 +188,7 @@ if (isset($_POST['resend_verify'])) {
     $user = $stmt->get_result()->fetch_assoc();
     $stmt->close();
     // Same generic message whether or not the account exists (avoid account enumeration).
-    $generic = 'If that email still needs verification, we sent a new link. Check Inbox and Spam.';
+    $generic = 'If that email still needs verification, we sent a new 6-digit code. Check your TSU Outlook inbox.';
     if (
         $user
         && (int) ($user['email_verified'] ?? 0) !== 1
@@ -211,6 +210,33 @@ if (isset($_POST['resend_verify'])) {
         $_SESSION['signup_success'] = $generic;
     }
     header('Location: ../pages/verify_pending.php');
+    exit();
+}
+
+if (isset($_POST['verify_code'])) {
+    $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+    $code = trim((string) ($_POST['code'] ?? ''));
+    $_SESSION['pending_verify_email'] = $email;
+    if ($email === '' || !auth_mail_is_tsu_email($email)) {
+        $_SESSION['signup_error'] = auth_mail_tsu_email_hint();
+        header('Location: ../pages/verify_pending.php');
+        exit();
+    }
+    if ($code === '') {
+        $_SESSION['signup_error'] = 'Enter the 6-digit code from your email.';
+        header('Location: ../pages/verify_pending.php');
+        exit();
+    }
+    $userId = auth_mail_consume_verify_code($conn, $email, $code);
+    if (!$userId) {
+        $_SESSION['signup_error'] = 'That code is invalid or expired. Request a new code below.';
+        header('Location: ../pages/verify_pending.php');
+        exit();
+    }
+    auth_mail_activate_verified_user($conn, $userId);
+    unset($_SESSION['pending_verify_email']);
+    $_SESSION['login_success'] = 'Email verified and account activated. You can log in now.';
+    header('Location: ../pages/login_signup.php');
     exit();
 }
 

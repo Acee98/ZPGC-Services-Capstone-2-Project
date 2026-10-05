@@ -29,7 +29,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.1">
+    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.7">
     <title>ZPGC Services | Login/Signup</title>
 </head>
 
@@ -48,7 +48,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
                 <?php echo showError($login_error); ?>
                 <?php echo showSuccess($login_success); ?>
                 <h5>Enter your credentials to access, create, or track your tickets</h5>
-                <input type="email" name="email" placeholder="Email (full address, e.g. name@gmail.com)" autocomplete="email" required title="Use your full email, not a username">
+                <input type="email" name="email" placeholder="TSU email (student or staff)" autocomplete="email" required title="Use your @student.tsu.edu.ph or @tsu.edu.ph address">
                 <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
                 <button type="submit" name="login">Login</button>
                 <p><a href="forgot_password.php">Forgot Password?</a></p>
@@ -61,10 +61,10 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
 <?php echo zpgc_csrf_field(); ?>
                 <h1>SIGNUP</h1>
                 <?php echo showError($signup_error); ?>
-                <h5>Use a real email you can open. We send a verification link before an admin activates you.</h5>
+                <h5>Use your TSU Outlook only. We email a 6-digit code — paste it to verify and activate your account.</h5>
                 <input type="text" name="first_name" placeholder="First Name" required>
                 <input type="text" name="last_name" placeholder="Last Name" required>
-                <input type="email" name="email" placeholder="Email" required>
+                <input type="email" name="email" placeholder="student00000@student.tsu.edu.ph or name@tsu.edu.ph" required>
                 <input type="password" name="password" placeholder="Password (8+ characters)" minlength="8" required>
                 <select name="role" required>
                     <option value="" disabled selected>Role</option>
@@ -80,7 +80,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
             </form>
         </div>
     </div>
-    <script src="../js/script.js?v=1.6.1"></script>
+    <script src="../js/script.js?v=1.6.7"></script>
     <?php if ($openSignup) { ?>
     <script>showForm('signup-form');</script>
     <?php } ?>

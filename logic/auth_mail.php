@@ -32,22 +32,33 @@ if (!function_exists('auth_mail_ready')) {
         );
     }
 
-    function auth_mail_is_deliverable_email($email)
+    /**
+     * Signup / password reset: TSU Outlook only (no personal Gmail, etc.).
+     */
+    function auth_mail_is_tsu_email($email)
     {
         $email = strtolower(trim((string) $email));
         if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return false;
         }
-        $domain = substr(strrchr($email, '@'), 1);
-        if ($domain === false || $domain === '') {
-            return false;
+        if (str_ends_with($email, '@student.tsu.edu.ph')) {
+            return true;
         }
-        // Block obvious local-only placeholders used in early demos.
-        $blocked = ['example.com', 'example.org', 'test.local', 'localhost'];
-        if (in_array($domain, $blocked, true)) {
-            return false;
+        if (str_ends_with($email, '@tsu.edu.ph')) {
+            return true;
         }
-        return true;
+        return false;
+    }
+
+    /** @deprecated Use auth_mail_is_tsu_email */
+    function auth_mail_is_deliverable_email($email)
+    {
+        return auth_mail_is_tsu_email($email);
+    }
+
+    function auth_mail_tsu_email_hint()
+    {
+        return 'Use your TSU email only: student00000@student.tsu.edu.ph (students) or name@tsu.edu.ph (staff). Gmail and other domains are not allowed.';
     }
 
     function auth_mail_create_token(mysqli $conn, $userId, $purpose, $hoursValid = 24)
@@ -141,17 +152,112 @@ if (!function_exists('auth_mail_ready')) {
         return [$plain, $html];
     }
 
+    function auth_mail_create_verify_code(mysqli $conn, $userId, $hoursValid = 48)
+    {
+        auth_mail_ready($conn);
+        $purpose = 'verify_email';
+        $userId = (int) $userId;
+        $hoursValid = max(1, (int) $hoursValid);
+        $code = (string) random_int(100000, 999999);
+        $hash = hash('sha256', $code);
+        $clear = $conn->prepare(
+            'UPDATE auth_tokens SET used_at = NOW()
+             WHERE user_id = ? AND purpose = ? AND used_at IS NULL'
+        );
+        $clear->bind_param('is', $userId, $purpose);
+        $clear->execute();
+        $clear->close();
+        $ins = $conn->prepare(
+            'INSERT INTO auth_tokens (user_id, purpose, token_hash, expires_at)
+             VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL ' . $hoursValid . ' HOUR))'
+        );
+        $ins->bind_param('iss', $userId, $purpose, $hash);
+        $ins->execute();
+        $ins->close();
+        return $code;
+    }
+
+    function auth_mail_consume_verify_code(mysqli $conn, $email, $rawCode)
+    {
+        auth_mail_ready($conn);
+        $email = strtolower(trim((string) $email));
+        $code = preg_replace('/\D+/', '', (string) $rawCode);
+        if ($email === '' || strlen($code) < 6) {
+            return null;
+        }
+        $hash = hash('sha256', $code);
+        $purpose = 'verify_email';
+        $stmt = $conn->prepare(
+            'SELECT t.id AS token_id, u.id AS user_id
+             FROM auth_tokens t
+             INNER JOIN users u ON u.id = t.user_id
+             WHERE LOWER(u.email) = ? AND t.purpose = ? AND t.token_hash = ?
+               AND t.used_at IS NULL AND t.expires_at > NOW()
+             LIMIT 1'
+        );
+        $stmt->bind_param('sss', $email, $purpose, $hash);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$row) {
+            return null;
+        }
+        $tokenId = (int) $row['token_id'];
+        $userId = (int) $row['user_id'];
+        $upd = $conn->prepare('UPDATE auth_tokens SET used_at = NOW() WHERE id = ? AND used_at IS NULL');
+        $upd->bind_param('i', $tokenId);
+        $upd->execute();
+        $ok = $upd->affected_rows > 0;
+        $upd->close();
+        return $ok ? $userId : null;
+    }
+
+    function auth_mail_activate_verified_user(mysqli $conn, $userId)
+    {
+        $userId = (int) $userId;
+        if ($userId <= 0) {
+            return false;
+        }
+        $stmt = $conn->prepare(
+            "UPDATE users SET email_verified = 1, status = 'active' WHERE id = ?"
+        );
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $ok = $stmt->affected_rows >= 0;
+        $stmt->close();
+        return $ok;
+    }
+
+    function auth_mail_code_bodies($name, $intro, $code, $hours)
+    {
+        $safeName = trim((string) $name);
+        $safeCode = preg_replace('/\D+/', '', (string) $code);
+        $plain = "Hello {$safeName},\n\n"
+            . "{$intro}\n\n"
+            . "Verification code: {$safeCode}\n\n"
+            . "Copy and paste this code on the ZPGC verify page. It expires in {$hours} hours.\n"
+            . "If you did not sign up, ignore this message.\n\n"
+            . "ZPGC Services";
+        $html = '<p>Hello ' . htmlspecialchars($safeName, ENT_QUOTES, 'UTF-8') . ',</p>'
+            . '<p>' . htmlspecialchars($intro, ENT_QUOTES, 'UTF-8') . '</p>'
+            . '<p style="font-size:28px;font-weight:700;letter-spacing:0.2em;margin:16px 0;">'
+            . htmlspecialchars($safeCode, ENT_QUOTES, 'UTF-8') . '</p>'
+            . '<p>Copy and paste this code on the ZPGC verify page. It expires in ' . (int) $hours
+            . ' hours. If you did not sign up, ignore this message.</p>'
+            . '<p>ZPGC Services</p>';
+        return [$plain, $html];
+    }
+
     function auth_mail_send_verify(mysqli $conn, $userId, $email, $firstName)
     {
-        $token = auth_mail_create_token($conn, $userId, 'verify_email', 48);
-        $link = mail_app_url('pages/verify_email.php?token=' . rawurlencode($token));
-        [$plain, $html] = auth_mail_link_bodies(
+        $code = auth_mail_create_verify_code($conn, $userId, 48);
+        [$plain, $html] = auth_mail_code_bodies(
             $firstName,
-            'Confirm this email for your ZPGC Services account:',
-            $link,
+            'Enter this code to verify your ZPGC Services account:',
+            $code,
             48
         );
-        return mail_send($email, 'Verify your ZPGC Services email', $plain, $html);
+        return mail_send($email, 'Your ZPGC Services verification code', $plain, $html);
     }
 
     function auth_mail_send_reset(mysqli $conn, $userId, $email, $firstName)
