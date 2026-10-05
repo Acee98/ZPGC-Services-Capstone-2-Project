@@ -1,0 +1,335 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Inter";
+}
+
+html {
+    height: auto;
+}
+
+body {
+    margin: 0;
+    background-color: #ebebeb;
+    padding: 40px 20px 56px;
+    overflow-y: auto;
+}
+
+.ticket-container {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.ticket-form {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ticket-field {
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ticket-form-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.ticket-hint,
+.ticket-count {
+    margin: 0;
+    font-size: 12px;
+    color: #787777;
+    font-weight: 500;
+}
+
+.ticket-count.is-over {
+    color: #7e030b;
+    font-weight: 700;
+}
+
+.ticket-notice-error {
+    padding: 12px;
+    background-color: #f5d5d8;
+    color: #7e030b;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    width: 100%;
+}
+
+.ticket-field label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.ticket-field select,
+.ticket-field input[type="text"],
+.ticket-field textarea {
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-family: "Inter";
+    color: #1a1a1a;
+    outline: none;
+}
+
+.ticket-field textarea {
+    resize: vertical;
+    min-height: 70px;
+    line-height: 1.5;
+}
+
+.ticket-field input::placeholder,
+.ticket-field textarea::placeholder {
+    color: #9c9c9c;
+}
+
+.ticket-field select:focus,
+.ticket-field input[type="text"]:focus,
+.ticket-field textarea:focus {
+    border-color: #7e030b;
+    box-shadow: 0 0 0 3px rgba(126, 3, 11, 0.12);
+}
+
+.subject-combo {
+    position: relative;
+}
+
+.subject-combo input[type="text"] {
+    padding-right: 40px;
+}
+
+.subject-open {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    height: calc(100% - 2px);
+    width: 36px;
+    border: none;
+    background: transparent;
+    color: #5a5a5a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.subject-menu {
+    position: absolute;
+    z-index: 5;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    max-height: 240px;
+    overflow: auto;
+    background: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+.subject-menu-label {
+    margin: 8px 8px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #787777;
+}
+
+.subject-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    color: #1a1a1a;
+    cursor: pointer;
+}
+
+.subject-option:hover,
+.subject-option.is-active {
+    background: #f7f0f1;
+}
+
+.subject-option-custom {
+    color: #610107;
+    font-weight: 700;
+    margin-top: 4px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.ticket-field select {
+    cursor: pointer;
+}
+
+.ticket-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.btn-submit-ticket {
+    background-color: #610107;
+    color: #f5f5f5;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 26px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: 0.2s ease-in-out;
+}
+
+.btn-submit-ticket:hover {
+    background-color: #bd8084;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    color: #610107;
+}
+
+.btn-cancel-ticket {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    color: #5a5a5a;
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    padding: 10px 26px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+}
+
+.btn-cancel-ticket:visited {
+    color: #5a5a5a;
+}
+
+.btn-cancel-ticket:hover {
+    background-color: #f0f0f0;
+}
+
+.ai-suggest-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-ai-suggest {
+    background-color: #fff;
+    color: #610107;
+    border: 1px solid #610107;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+}
+
+.btn-ai-suggest:hover:not(:disabled) {
+    background-color: #f5d5d8;
+}
+
+.btn-ai-suggest:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.ai-suggest-status {
+    font-size: 13px;
+    color: #5a5a5a;
+}
+
+.ai-suggest-status.is-error {
+    color: #7e030b;
+    font-weight: 600;
+}
+
+.ai-suggest-box {
+    background-color: #f7f0f1;
+    border: 1px solid #e0c4c7;
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.ai-suggest-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #610107;
+    margin-bottom: 4px;
+}
+
+.ai-suggest-detail {
+    font-size: 13px;
+    color: #3a3a3a;
+}
+
+/* ---- Responsive: ticket form ---- */
+@media (max-width: 768px) {
+    body {
+        padding: 24px 14px 40px;
+    }
+
+    .ticket-form {
+        padding: 20px 16px;
+    }
+
+    .ticket-form-title {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 16px 10px 32px;
+    }
+
+    .ticket-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-submit-ticket,
+    .btn-cancel-ticket {
+        width: 100%;
+        text-align: center;
+    }
+
+    .ai-suggest-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

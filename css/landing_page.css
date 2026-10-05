@@ -1,0 +1,202 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+* {
+    box-sizing: border-box;
+    text-decoration: none;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-size: 12pt;
+}
+
+body {
+    background-image: url("../images/Hero\ Section.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.navbar {
+    background-color: rgba(11, 12, 22, 0.99);
+    font-family: "Inter";
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.navdiv {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.navdiv ul {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    list-style: none;
+}
+
+.logo {
+    width: 80px;
+    padding: 15px;
+    margin-left: 30px;
+}
+
+.logo img {
+    width: 80px;
+    height: auto;
+}
+
+.btnW {
+    background-color: #f5f5f5;
+    border: none;
+    border-radius: 4px;
+    margin-right: 30px;
+    padding: 4px 20px;
+}
+
+.btnW a {
+    color: #610107;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#header {
+    font-family: "Inter";
+    color: #f5f5f5;
+    text-align: center;
+    margin: 0;
+    font-size: 55px;
+}
+
+#subhead {
+    font-family: "Inter";
+    color: #f5f5f5;
+    text-align: center;
+    max-width: 700px;
+    margin: 0;
+    font-weight: 380;
+    font-size: 18px;
+}
+
+.btnR {
+    display: block;
+    margin-top: 4px;
+    background-color: #7e030b;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 24px;
+    font-weight: bold;
+}
+
+.btnR a {
+    text-decoration: none;
+    padding: 4px 20px;
+    font-size: 15px;
+    color: #f5f5f5;
+}
+
+.btnR a:visited {
+    text-decoration: none;
+    padding: 4px 20px;
+    font-size: 15px;
+    color: #f5f5f5;
+}
+
+.hero {
+    min-height: calc(100vh - 50px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 24px 20px 40px;
+    box-sizing: border-box;
+}
+
+/* ---- Responsive: landing ---- */
+@media (max-width: 768px) {
+    .logo {
+        width: 64px;
+        padding: 12px;
+        margin-left: 12px;
+    }
+
+    .logo img {
+        width: 64px;
+    }
+
+    .btnW {
+        margin-right: 12px;
+        padding: 4px 14px;
+    }
+
+    #header {
+        font-size: clamp(32px, 8vw, 44px);
+        line-height: 1.15;
+        padding: 0 8px;
+    }
+
+    #subhead {
+        font-size: 16px;
+        max-width: 34rem;
+        padding: 0 8px;
+    }
+
+    .hero {
+        min-height: calc(100vh - 72px);
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .navdiv {
+        gap: 8px;
+    }
+
+    .logo {
+        margin-left: 4px;
+        padding: 10px;
+    }
+
+    .btnW {
+        margin-right: 8px;
+        padding: 4px 12px;
+    }
+
+    .btnW a {
+        font-size: 13px;
+    }
+
+    #header {
+        font-size: 30px;
+    }
+
+    #subhead {
+        font-size: 14px;
+        line-height: 1.45;
+    }
+
+    .btnR {
+        padding: 8px 18px;
+    }
+
+    .btnR a,
+    .btnR a:visited {
+        font-size: 14px;
+        padding: 4px 12px;
+    }
+
+    body {
+        background-position: 60% center;
+    }
+}
