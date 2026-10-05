@@ -100,6 +100,7 @@ form {
 
 [name="login"],
 [name="signup"],
+[name="verify_code"],
 [name="resend_verify"],
 [name="forgot_password"],
 [name="reset_password"] {
@@ -117,6 +118,17 @@ form {
     margin-bottom: 8px;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+[name="login"]:hover,
+[name="signup"]:hover,
+[name="verify_code"]:hover,
+[name="resend_verify"]:hover,
+[name="forgot_password"]:hover,
+[name="reset_password"]:hover {
+    background-color: #610107;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
 }
 [name="forgot_password"]:disabled,
 [name="reset_password"]:disabled {

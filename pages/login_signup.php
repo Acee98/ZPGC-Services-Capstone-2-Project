@@ -29,7 +29,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.7">
+    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.8">
     <title>ZPGC Services | Login/Signup</title>
 </head>
 
