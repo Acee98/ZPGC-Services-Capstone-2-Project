@@ -29,7 +29,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.9">
+    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.17">
     <title>ZPGC Services | Login/Signup</title>
 </head>
 
@@ -61,10 +61,11 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
 <?php echo zpgc_csrf_field(); ?>
                 <h1>SIGNUP</h1>
                 <?php echo showError($signup_error); ?>
-                <h5>Use your TSU Outlook only. We email a 6-digit code to verify. Users activate automatically; technician accounts need admin Activate after verification.</h5>
+                <h5>Use your <strong>real</strong> TSU Outlook email only (the inbox you can open). Made-up addresses like fake@student.tsu.edu.ph will never receive a code. Users auto-activate after the code; technicians still need admin Activate.</h5>
                 <input type="text" name="first_name" placeholder="First Name" required>
                 <input type="text" name="last_name" placeholder="Last Name" required>
-                <input type="email" name="email" placeholder="student00000@student.tsu.edu.ph or name@tsu.edu.ph" required>
+                <input type="email" name="email" placeholder="your.real.tsu@student.tsu.edu.ph" required
+                    title="Must be a real @student.tsu.edu.ph or @tsu.edu.ph mailbox you can open">
                 <input type="password" name="password" id="signup-password" placeholder="Password (8+ characters)" minlength="8" autocomplete="new-password" required>
                 <input type="password" name="confirm_password" id="signup-confirm-password" placeholder="Confirm password" minlength="8" autocomplete="new-password" required>
                 <select name="role" required>

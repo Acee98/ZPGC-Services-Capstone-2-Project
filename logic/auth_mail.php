@@ -55,6 +55,65 @@ if (!function_exists('auth_mail_ready')) {
         return false;
     }
 
+    /**
+     * Reject made-up / placeholder local-parts that still match @student.tsu.edu.ph.
+     * SMTP often accepts these and the UI falsely says "code sent".
+     */
+    function auth_mail_is_plausible_tsu_mailbox($email)
+    {
+        $email = strtolower(trim((string) $email));
+        if (!auth_mail_is_tsu_email($email)) {
+            return false;
+        }
+        $local = explode('@', $email, 2)[0] ?? '';
+        if ($local === '' || strlen($local) < 5 || strlen($local) > 64) {
+            return false;
+        }
+        // Must be normal mailbox characters only.
+        if (!preg_match('/^[a-z0-9][a-z0-9._+-]*[a-z0-9]$/', $local) && !preg_match('/^[a-z0-9]{5,64}$/', $local)) {
+            return false;
+        }
+        if (str_contains($local, '..') || str_starts_with($local, '.') || str_ends_with($local, '.')) {
+            return false;
+        }
+
+        $blockedExact = [
+            'test', 'testing', 'tester', 'fake', 'asdf', 'asdfgh', 'qwerty', 'demo', 'sample',
+            'example', 'nowhere', 'junk', 'temp', 'temporary', 'admin', 'administrator',
+            'root', 'noreply', 'no-reply', 'null', 'void', 'guest', 'user', 'abcde', 'abcdef',
+            'xxxxxx', 'student00000', 'student12345', 'firstname.lastname', 'name',
+            'cb00000', 'cb00008', 'aa00000', 'test00000', 'fake00000',
+        ];
+        if (in_array($local, $blockedExact, true)) {
+            return false;
+        }
+
+        $blockedPrefixes = [
+            'fake', 'test', 'asdf', 'qwerty', 'demo', 'sample', 'example', 'temp', 'junk',
+            'nowhere', 'xxx', 'aaa', 'abcabc',
+        ];
+        foreach ($blockedPrefixes as $prefix) {
+            if (str_starts_with($local, $prefix)) {
+                return false;
+            }
+        }
+
+        // All identical characters / obvious keyboard spam.
+        if (preg_match('/^(.)\1{4,}$/', $local)) {
+            return false;
+        }
+        // Mostly zeros (e.g. xx00000 / cb00008-style invented IDs with zero padding).
+        $digits = preg_replace('/\D+/', '', $local);
+        if ($digits !== '' && strlen($digits) >= 4 && preg_match('/^0+$/', $digits)) {
+            return false;
+        }
+        if ($digits !== '' && strlen($digits) >= 5 && substr_count($digits, '0') >= (strlen($digits) - 1)) {
+            return false;
+        }
+
+        return true;
+    }
+
     /** @deprecated Use auth_mail_is_tsu_email */
     function auth_mail_is_deliverable_email($email)
     {
@@ -63,8 +122,66 @@ if (!function_exists('auth_mail_ready')) {
 
     function auth_mail_tsu_email_hint()
     {
-        return 'Use your TSU email only: student00000@student.tsu.edu.ph (students) or name@tsu.edu.ph (staff). Gmail and other domains are not allowed.';
+        return 'Use your real TSU Outlook email only (the inbox you can open): '
+            . 'yourname@student.tsu.edu.ph or name@tsu.edu.ph. '
+            . 'Made-up or Gmail addresses are blocked — you will never receive a verification code.';
     }
+
+    function auth_mail_delete_user(mysqli $conn, $userId)
+    {
+        $userId = (int) $userId;
+        if ($userId <= 0) {
+            return;
+        }
+        $tok = $conn->prepare('DELETE FROM auth_tokens WHERE user_id = ?');
+        if ($tok) {
+            $tok->bind_param('i', $userId);
+            $tok->execute();
+            $tok->close();
+        }
+        $del = $conn->prepare(
+            "DELETE FROM users WHERE id = ? AND email_verified = 0 AND status = 'inactive' AND role IN ('user','techn')"
+        );
+        if ($del) {
+            $del->bind_param('i', $userId);
+            $del->execute();
+            $del->close();
+        }
+    }
+
+    /**
+     * Remove abandoned unverified signups (fake emails that never got a code).
+     */
+    function auth_mail_purge_stale_unverified(mysqli $conn)
+    {
+        // Simple sweep: inactive + unverified tech/user with no unused unexpired verify token.
+        $ids = [];
+        $res = $conn->query(
+            "SELECT u.id
+             FROM users u
+             WHERE u.email_verified = 0
+               AND u.status = 'inactive'
+               AND u.role IN ('user','techn')
+               AND NOT EXISTS (
+                    SELECT 1 FROM auth_tokens t
+                    WHERE t.user_id = u.id
+                      AND t.purpose = 'verify_email'
+                      AND t.used_at IS NULL
+                      AND t.expires_at > NOW()
+               )
+             ORDER BY u.id ASC
+             LIMIT 40"
+        );
+        if ($res) {
+            while ($row = $res->fetch_assoc()) {
+                $ids[] = (int) $row['id'];
+            }
+        }
+        foreach ($ids as $id) {
+            auth_mail_delete_user($conn, $id);
+        }
+    }
+
 
     function auth_mail_create_token(mysqli $conn, $userId, $purpose, $hoursValid = 24)
     {

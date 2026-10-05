@@ -32,7 +32,7 @@ if ($email === '' && $error === '' && $success === '') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.8">
+    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.17">
     <title>ZPGC Services | Verify Email</title>
 </head>
 
@@ -53,11 +53,11 @@ if ($email === '' && $error === '' && $success === '') {
                 $msg = $success;
                 if ($msg === '' && $email !== '' && $error === '') {
                     $msg = 'Enter the 6-digit code emailed to ' . $email
-                        . '. If nothing arrived, check Junk/Spam, then tap Resend code.';
+                        . '. If nothing arrived, that address may not be a real TSU mailbox — go back and sign up with your real Outlook email.';
                 }
                 echo showSuccess($msg);
                 ?>
-                <h5>Users activate automatically after the code. Technician accounts stay pending until an admin clicks Activate in Utilities — they cannot log in with the code alone.</h5>
+                <h5>Codes only arrive in a real TSU Outlook inbox. Users activate automatically after a valid code. Technicians stay pending until an admin Activates them in Utilities.</h5>
                 <input type="email" name="email" placeholder="TSU email used at signup" autocomplete="email" required
                     value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>">
                 <input type="text" name="code" placeholder="6-digit verification code" inputmode="numeric"
@@ -69,7 +69,7 @@ if ($email === '' && $error === '' && $success === '') {
                 <input type="hidden" name="email" value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>">
                 <button type="submit" name="resend_verify">Resend code</button>
                 <p><a href="login_signup.php?form=login">Back to Login</a></p>
-                <p><a href="login_signup.php?form=signup">Back to Signup</a></p>
+                <p><a href="login_signup.php?form=signup">Use a different (real) email</a></p>
             </form>
         </div>
     </div>

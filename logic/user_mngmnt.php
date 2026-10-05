@@ -126,7 +126,25 @@ if (isset($_POST['signup'])) {
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }
-    if (!auth_mail_is_tsu_email($email)) {
+
+    // Rate-limit signup bursts (testers inventing emails).
+    $now = time();
+    $attempts = $_SESSION['signup_attempt_times'] ?? [];
+    if (!is_array($attempts)) {
+        $attempts = [];
+    }
+    $attempts = array_values(array_filter($attempts, static function ($t) use ($now) {
+        return is_int($t) && ($now - $t) < 3600;
+    }));
+    if (count($attempts) >= 5) {
+        $_SESSION['signup_error'] = 'Too many signup attempts from this browser. Wait a bit, then use your real TSU Outlook email.';
+        header('Location: ../pages/login_signup.php?form=signup');
+        exit();
+    }
+    $attempts[] = $now;
+    $_SESSION['signup_attempt_times'] = $attempts;
+
+    if (!auth_mail_is_tsu_email($email) || !auth_mail_is_plausible_tsu_mailbox($email)) {
         $_SESSION['signup_error'] = auth_mail_tsu_email_hint();
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
@@ -137,8 +155,10 @@ if (isset($_POST['signup'])) {
         exit();
     }
 
+    auth_mail_purge_stale_unverified($conn);
+
     $check = $conn->prepare(
-        'SELECT id, first_name, email_verified, status FROM users WHERE email = ? LIMIT 1'
+        'SELECT id, first_name, email_verified, status, role FROM users WHERE email = ? LIMIT 1'
     );
     $check->bind_param('s', $email);
     $check->execute();
@@ -159,16 +179,17 @@ if (isset($_POST['signup'])) {
             $email,
             (string) ($existing['first_name'] ?? $first_name)
         );
-        $_SESSION['pending_verify_email'] = $email;
         if ($resent['ok']) {
+            $_SESSION['pending_verify_email'] = $email;
             $_SESSION['signup_success'] = 'That email is already signed up but not verified. '
-                . 'We sent a new 6-digit code to ' . $email . '. Check your TSU Outlook inbox.';
+                . 'If ' . $email . ' is a real TSU Outlook mailbox you can open, check Inbox and Junk for a new 6-digit code. '
+                . 'Invented emails never receive a code — go back and use your real address.';
             header('Location: ../pages/verify_pending.php');
             exit();
         }
-        $_SESSION['signup_error'] = 'That email is already signed up but not verified, and email failed ('
-            . $resent['error'] . '). Use Resend code, or ask an admin to Activate the account.';
-        header('Location: ../pages/verify_pending.php');
+        $_SESSION['signup_error'] = 'Could not email a verification code to ' . $email . ' ('
+            . $resent['error'] . '). Use a real TSU Outlook inbox, or ask an admin for help.';
+        header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }
 
@@ -192,19 +213,26 @@ if (isset($_POST['signup'])) {
     $userId = (int) $conn->insert_id;
     $stmt->close();
 
-    $_SESSION['pending_verify_email'] = $email;
     $sent = auth_mail_send_verify($conn, $userId, $email, $first_name);
-    if ($sent['ok']) {
-        if ($role === 'techn') {
-            $_SESSION['signup_success'] = 'Account created. Check ' . $email
-                . ' (TSU Outlook Inbox and Junk) for a 6-digit code. After you verify, an administrator must still Activate your technician account.';
-        } else {
-            $_SESSION['signup_success'] = 'Account created. Check ' . $email
-                . ' (TSU Outlook Inbox and Junk) for a 6-digit code, then paste it on the next screen to activate.';
-        }
+    if (!$sent['ok']) {
+        // Foolproof: never leave a half-created account claiming "check your email".
+        auth_mail_delete_user($conn, $userId);
+        unset($_SESSION['pending_verify_email']);
+        $_SESSION['signup_error'] = 'Could not send the verification code to ' . $email
+            . ' (' . $sent['error'] . '). No account was kept. '
+            . 'Use your real TSU Outlook email and try again.';
+        header('Location: ../pages/login_signup.php?form=signup');
+        exit();
+    }
+
+    $_SESSION['pending_verify_email'] = $email;
+    if ($role === 'techn') {
+        $_SESSION['signup_success'] = 'Verification code sent to ' . $email
+            . '. Open that real TSU Outlook inbox (and Junk). After the code, an administrator must still Activate your technician account — inventing an email will not work.';
     } else {
-        $_SESSION['signup_error'] = 'Account created, but email failed: ' . $sent['error']
-            . ' Use Resend below, or ask an admin to Activate you in Utilities.';
+        $_SESSION['signup_success'] = 'Verification code sent to ' . $email
+            . '. Open that real TSU Outlook inbox (and Junk), then enter the 6-digit code. '
+            . 'If you made up this address, go back and sign up with your real TSU email — you will not get a code.';
     }
     header('Location: ../pages/verify_pending.php');
     exit();
@@ -213,9 +241,9 @@ if (isset($_POST['signup'])) {
 if (isset($_POST['resend_verify'])) {
     $email = strtolower(trim((string) ($_POST['email'] ?? '')));
     $_SESSION['pending_verify_email'] = $email;
-    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $_SESSION['signup_error'] = 'Enter the email you used at signup to resend verification.';
-        header('Location: ../pages/verify_pending.php');
+    if ($email === '' || !auth_mail_is_tsu_email($email) || !auth_mail_is_plausible_tsu_mailbox($email)) {
+        $_SESSION['signup_error'] = auth_mail_tsu_email_hint();
+        header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }
     if (!mail_ready()) {
@@ -230,8 +258,7 @@ if (isset($_POST['resend_verify'])) {
     $stmt->execute();
     $user = $stmt->get_result()->fetch_assoc();
     $stmt->close();
-    // Same generic message whether or not the account exists (avoid account enumeration).
-    $generic = 'If that email still needs verification, we sent a new 6-digit code. Check TSU Outlook Inbox and Junk.';
+
     if (
         $user
         && (int) ($user['email_verified'] ?? 0) !== 1
@@ -244,13 +271,16 @@ if (isset($_POST['resend_verify'])) {
             (string) ($user['first_name'] ?? '')
         );
         if ($sent['ok']) {
-            $_SESSION['signup_success'] = $generic;
+            $_SESSION['signup_success'] = 'If ' . $email
+                . ' is a real TSU Outlook mailbox, a new 6-digit code was sent (check Inbox and Junk). '
+                . 'Made-up addresses never receive mail — sign up again with your real TSU email.';
         } else {
             $_SESSION['signup_error'] = 'Could not send verification email (' . $sent['error']
-                . '). Ask an admin to Activate your account in Utilities.';
+                . '). Use a real TSU Outlook inbox, or ask an admin for help.';
         }
     } else {
-        $_SESSION['signup_success'] = $generic;
+        // Avoid account enumeration, but steer testers away from inventing emails.
+        $_SESSION['signup_success'] = 'If that address still needs verification and is a real TSU mailbox, check Inbox/Junk for a code. Invented emails will not work.';
     }
     header('Location: ../pages/verify_pending.php');
     exit();
