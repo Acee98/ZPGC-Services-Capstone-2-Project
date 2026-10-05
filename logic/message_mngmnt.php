@@ -43,9 +43,19 @@ if (isset($_POST['send_message'])) {
         $stmt = $conn->prepare(
             'INSERT INTO messages (ticket_id, sender_id, body) VALUES (?, ?, ?)'
         );
-        $stmt->bind_param('iis', $ticket_id, $me, $body);
-        $stmt->execute();
-        $stmt->close();
+        if (!$stmt) {
+            $_SESSION['ticket_flash'] = 'Could not send that message. Try again.';
+        } else {
+            $stmt->bind_param('iis', $ticket_id, $me, $body);
+            if (!$stmt->execute()) {
+                $_SESSION['ticket_flash'] = 'Could not send that message. Try again.';
+            }
+            $stmt->close();
+        }
+    } else {
+        $_SESSION['ticket_flash'] = $ticket_id <= 0
+            ? 'Select a ticket before sending a message.'
+            : ($body === '' ? 'Message cannot be empty.' : 'You cannot message that ticket.');
     }
     $back = zpgc_web_path('pages/user.php') . '?tab=messages';
     if ($role === 'admin') {

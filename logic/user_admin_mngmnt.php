@@ -62,11 +62,17 @@ if (isset($_POST['add_user'])) {
 
     $password = password_hash($password_plain, PASSWORD_DEFAULT);
     $status = 'active';
+    // Admin-provisioned accounts are trusted — mark verified so login is not blocked.
+    $emailVerified = 1;
     $insert = $conn->prepare(
-        'INSERT INTO users (first_name, last_name, email, password, role, status) VALUES (?, ?, ?, ?, ?, ?)'
+        'INSERT INTO users (first_name, last_name, email, password, role, status, email_verified)
+         VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
-    $insert->bind_param('ssssss', $first_name, $last_name, $email, $password, $role, $status);
-    $insert->execute();
+    $insert->bind_param('ssssssi', $first_name, $last_name, $email, $password, $role, $status, $emailVerified);
+    if (!$insert->execute()) {
+        $insert->close();
+        utilities_fail('Could not create that account. Try again.', 'tab=utilities&action=add');
+    }
     $newId = (int) $conn->insert_id;
     $insert->close();
     utilities_audit($conn, 'add_user', $newId, 'Created account ' . $email . ' as ' . $role . '.');

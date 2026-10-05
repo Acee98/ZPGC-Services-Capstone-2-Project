@@ -48,6 +48,7 @@ if (isset($_POST['save_ticket'])) {
         $ok = $check->get_result()->fetch_assoc();
         $check->close();
         if (!$ok) {
+            $_SESSION['ticket_flash'] = 'Pick an active technician, or Unassigned.';
             header('Location: ../pages/admin.php?tab=tickets');
             exit();
         }
@@ -56,7 +57,14 @@ if (isset($_POST['save_ticket'])) {
         );
         $stmt->bind_param('issi', $assigned_to, $status, $priority, $ticket_id);
     }
-    $stmt->execute();
+    if (!$stmt || !$stmt->execute()) {
+        if ($stmt) {
+            $stmt->close();
+        }
+        $_SESSION['ticket_flash'] = 'Could not save ticket #' . $ticket_id . '.';
+        header('Location: ../pages/admin.php?tab=tickets');
+        exit();
+    }
     $stmt->close();
     if ($assigned_raw !== '' && $assigned_raw !== '0') {
         ticket_mark_responded($conn, $ticket_id);
@@ -109,6 +117,8 @@ if (isset($_POST['save_ticket'])) {
             );
         }
     }
+
+    $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id . ' saved.';
 }
 
 header('Location: ../pages/admin.php?tab=tickets');

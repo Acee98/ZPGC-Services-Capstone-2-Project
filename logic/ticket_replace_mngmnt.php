@@ -32,6 +32,11 @@ if (!$ticket) {
 $exists = $conn->prepare(
     "SELECT id FROM replacement_requests WHERE ticket_id = ? AND techn_id = ? AND status = 'pending' LIMIT 1"
 );
+if (!$exists) {
+    $_SESSION['ticket_flash'] = 'Replacement requests are unavailable (database table missing). Ask an admin to run migrations.';
+    header('Location: ../pages/techn.php?tab=tickets');
+    exit();
+}
 $exists->bind_param('ii', $ticketId, $techId);
 $exists->execute();
 $already = $exists->get_result()->fetch_assoc();
@@ -44,8 +49,18 @@ if ($already) {
 $insert = $conn->prepare(
     "INSERT INTO replacement_requests (ticket_id, techn_id, status) VALUES (?, ?, 'pending')"
 );
+if (!$insert) {
+    $_SESSION['ticket_flash'] = 'Replacement requests are unavailable (database table missing). Ask an admin to run migrations.';
+    header('Location: ../pages/techn.php?tab=tickets');
+    exit();
+}
 $insert->bind_param('ii', $ticketId, $techId);
-$insert->execute();
+if (!$insert->execute()) {
+    $insert->close();
+    $_SESSION['ticket_flash'] = 'Could not send the replacement request. Try again.';
+    header('Location: ../pages/techn.php?tab=tickets');
+    exit();
+}
 $insert->close();
 $_SESSION['ticket_flash'] = 'The admin was notified to assign another technician for ticket #' . $ticketId . '.';
 header('Location: ../pages/techn.php?tab=tickets');

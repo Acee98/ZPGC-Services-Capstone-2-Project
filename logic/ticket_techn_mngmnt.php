@@ -37,8 +37,15 @@ if (!$owned) {
 
 $upd = $conn->prepare('UPDATE tickets SET status = ? WHERE id = ? AND assigned_to = ?');
 $upd->bind_param('sii', $status, $ticket_id, $tech_id);
-$upd->execute();
+if (!$upd->execute()) {
+    $upd->close();
+    $_SESSION['ticket_flash'] = 'Could not update ticket #' . $ticket_id . '.';
+    header('Location: ../pages/techn.php?tab=tickets');
+    exit();
+}
 $upd->close();
+
+$_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id . ' updated to ' . ticket_status_label($status) . '.';
 
 if ($status === 'awaiting_confirmation') {
     $info = $conn->prepare('SELECT user_id, subject FROM tickets WHERE id = ? LIMIT 1');
@@ -59,7 +66,9 @@ if ($status === 'awaiting_confirmation') {
 
 if (isset($_FILES['ticket_image']) && (int) ($_FILES['ticket_image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
     $error = ticket_save_upload($conn, $ticket_id, $tech_id);
-    $_SESSION['ticket_flash'] = $error !== '' ? $error : 'Image attached to ticket #' . $ticket_id . '.';
+    $_SESSION['ticket_flash'] = $error !== ''
+        ? $error
+        : ('Ticket #' . $ticket_id . ' updated to ' . ticket_status_label($status) . ' and image attached.');
 }
 
 header('Location: ../pages/techn.php?tab=tickets');

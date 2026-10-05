@@ -30,6 +30,13 @@ if (isset($_GET['rate'])) {
     exit();
 }
 
+// Let users dismiss the CSAT overlay and rate later from History.
+if (isset($_GET['defer_rate'])) {
+    unset($_SESSION['rate_ticket_id']);
+    header('Location: user.php?tab=tickets');
+    exit();
+}
+
 $tab = zpgc_ui_resolve_tab('user', 'dashboard');
 zpgc_ui_persist_redirect($tab);
 
@@ -403,11 +410,12 @@ $ui_theme = current_ui_theme();
                 <?php } ?>
             </div>
             <button type="submit" class="btn-save-ticket">Submit rating</button>
+            <a class="survey-defer" href="user.php?tab=tickets&amp;defer_rate=1">Rate later</a>
         </form>
     </div>
     <?php } ?>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.19" defer></script>
+    <script src="../js/behavior.js?v=1.6.20" defer></script>
 </body>
 
 </html>

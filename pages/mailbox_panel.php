@@ -60,7 +60,7 @@ $can_attach = in_array(strtolower((string) ($_SESSION['role'] ?? '')), ['user', 
                                 <p class="mailbox-chat-empty-sub">Pick a ticket on the left to view messages.</p>
                             </div>
                         </div>
-                        <?php if ($can_attach) { ?>
+                        <?php if ($can_attach && !empty($mailbox_tickets)) { ?>
                         <div class="mailbox-compose" id="mailbox-compose">
                             <form class="mailbox-attach-form" id="mailbox-attach-form" action="<?php echo htmlspecialchars(zpgc_web_path('logic/ticket_attachment_mngmnt.php'), ENT_QUOTES, 'UTF-8'); ?>" method="post" enctype="multipart/form-data">
                                 <?php echo zpgc_csrf_field(); ?>
@@ -73,12 +73,15 @@ $can_attach = in_array(strtolower((string) ($_SESSION['role'] ?? '')), ['user', 
                             <form class="mailbox-chat-input-row" id="mailbox-send-form" action="<?php echo htmlspecialchars(zpgc_web_path('logic/message_mngmnt.php'), ENT_QUOTES, 'UTF-8'); ?>" method="post">
                                 <?php echo zpgc_csrf_field(); ?>
                                 <input type="hidden" name="ticket_id" id="mailbox-ticket-id" value="<?php echo $active_tid; ?>">
-                                <input type="text" name="body" id="mailbox-body" class="mailbox-chat-input" placeholder="Type a message" autocomplete="off">
+                                <input type="text" name="body" id="mailbox-body" class="mailbox-chat-input" placeholder="<?php echo $active_tid > 0 ? 'Type a message' : 'Pick a ticket, then type a message'; ?>" autocomplete="off">
                                 <button type="submit" name="send_message" class="mailbox-chat-send" aria-label="Send">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
                                 </button>
                             </form>
                         </div>
+                        <?php } elseif ($can_attach) { ?>
+                        <p class="mailbox-readonly-note">No active tickets to message yet.</p>
+                        <input type="hidden" id="mailbox-ticket-id" value="0">
                         <?php } else { ?>
                         <p class="mailbox-readonly-note">Only the user and the assigned technician can send messages on a ticket.</p>
                         <input type="hidden" id="mailbox-ticket-id" value="<?php echo $active_tid; ?>">

@@ -21,6 +21,11 @@ ticket_ensure_satisfaction_column($conn);
 if ($tab === 'utilities') {
     ticket_ensure_indexes($conn);
     ticket_retention_maybe_backfill($conn, 6);
+    // Repair admin-created accounts that were Active but still unverified (blocked login).
+    @$conn->query(
+        "UPDATE users SET email_verified = 1
+         WHERE status = 'active' AND COALESCE(email_verified, 0) = 0"
+    );
 }
 $purge_rules = ticket_retention_rules_summary();
 $purge_eligible = 0;
@@ -254,7 +259,8 @@ if ($edit_id > 0 && $tab === 'utilities') {
 }
 $utilities_success = $_SESSION['utilities_success'] ?? '';
 $utilities_error = $_SESSION['utilities_error'] ?? '';
-unset($_SESSION['utilities_success'], $_SESSION['utilities_error']);
+$ticket_flash = $_SESSION['ticket_flash'] ?? '';
+unset($_SESSION['utilities_success'], $_SESSION['utilities_error'], $_SESSION['ticket_flash']);
 $ui_theme = current_ui_theme();
 ?>
 
@@ -456,6 +462,9 @@ $ui_theme = current_ui_theme();
                         <button type="button" class="filter-tab" data-filter="replacement">Replacement</button>
                     </div>
                 </div>
+                <?php if ($ticket_flash !== '') { ?>
+                <div class="utilities-notice"><?php echo htmlspecialchars($ticket_flash); ?></div>
+                <?php } ?>
                 <?php include __DIR__ . '/partials/priority_queue_panel.php'; ?>
                 <div class="tickets-list tickets-list-admin-five">
                     <div class="tickets-list-header">
@@ -991,7 +1000,7 @@ $ui_theme = current_ui_theme();
     </script>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
     <script src="../js/utilities_filter.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.19" defer></script>
+    <script src="../js/behavior.js?v=1.6.20" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var input = document.getElementById('perf-log-search');
