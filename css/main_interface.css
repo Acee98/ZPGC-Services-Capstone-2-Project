@@ -3453,8 +3453,8 @@ body[data-page="messages"] .mailbox-container {
 .ticket-history-list .tickets-col-satisfaction {
     display: flex !important;
     align-items: center;
-    justify-content: flex-start;
-    text-align: left;
+    justify-content: center;
+    text-align: center;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -3462,14 +3462,10 @@ body[data-page="messages"] .mailbox-container {
 
 .ticket-history-list .tickets-list-header .tickets-col-status,
 .ticket-history-list .tickets-list-header .tickets-col-priority,
-.ticket-history-list .tickets-list-header .tickets-col-assigned {
+.ticket-history-list .tickets-list-header .tickets-col-assigned,
+.ticket-history-list .tickets-list-header .tickets-col-satisfaction {
     justify-content: center;
     text-align: center;
-}
-
-.ticket-history-list .tickets-list-header .tickets-col-satisfaction {
-    justify-content: flex-start;
-    text-align: left;
 }
 
 .ticket-history-list .tickets-list-body {

@@ -34,8 +34,8 @@ html[data-theme="dark"] .showcase .head header h1 {
 .ticket-history-list .tickets-col-satisfaction {
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    text-align: left !important;
+    justify-content: center !important;
+    text-align: center !important;
     min-width: 0 !important;
     max-width: 100% !important;
     white-space: nowrap !important;
@@ -43,8 +43,8 @@ html[data-theme="dark"] .showcase .head header h1 {
     text-overflow: ellipsis !important;
 }
 .ticket-history-list .tickets-list-header .tickets-col-satisfaction {
-    justify-content: flex-start !important;
-    text-align: left !important;
+    justify-content: center !important;
+    text-align: center !important;
 }
 
 /* Cards / panels / lists */
