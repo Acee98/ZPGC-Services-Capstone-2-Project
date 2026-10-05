@@ -958,6 +958,11 @@ body[data-page="messages"] .showcase #page-messages {
 }
 
 /* Utilities users table — same control rhythm as Admin Tickets */
+.tickets-list-utilities .ticket-row.ticket-row-filtered-out,
+.tickets-list-utilities .ticket-row[hidden] {
+    display: none !important;
+}
+
 .tickets-list-utilities .tickets-list-header,
 .tickets-list-utilities .ticket-row {
     display: grid;
@@ -4520,6 +4525,11 @@ body[data-page="messages"] .mailbox-container {
         width: 900px !important;
         max-width: none !important;
         box-sizing: border-box;
+    }
+
+    .tickets-list-utilities .ticket-row.ticket-row-filtered-out,
+    .tickets-list-utilities .ticket-row[hidden] {
+        display: none !important;
     }
 
     .admin-dashboard-history-list .tickets-list-header,

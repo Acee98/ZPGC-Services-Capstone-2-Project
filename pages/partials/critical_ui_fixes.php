@@ -640,6 +640,11 @@ html[data-theme="dark"] .ticket-row {
         box-sizing: border-box !important;
     }
 
+    .tickets-list-utilities .ticket-row.ticket-row-filtered-out,
+    .tickets-list-utilities .ticket-row[hidden] {
+        display: none !important;
+    }
+
     .admin-dashboard-history-list .tickets-list-header,
     .admin-dashboard-history-list .ticket-row {
         display: grid !important;
