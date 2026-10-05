@@ -4168,9 +4168,20 @@ body[data-page="messages"] .mailbox-container {
         box-sizing: border-box;
     }
 
+    body[data-page="tickets"] #page-tickets,
+    body[data-page="dashboard"] #page-dashboard.role-dashboard-page {
+        padding-left: 12px;
+        padding-right: 12px;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+
     .ticket-history-list,
     .tickets-list-user,
+    .tickets-list-user--actions,
     .tickets-list-techn-actions,
+    .role-dash-list,
     body[data-page="utilities"] #page-utilities .tickets-list.tickets-list-utilities,
     .tickets-list-utilities,
     .admin-dashboard-history-list {
@@ -4179,17 +4190,106 @@ body[data-page="messages"] .mailbox-container {
         -webkit-overflow-scrolling: touch;
         width: 100% !important;
         max-width: 100% !important;
-        margin-left: 0;
-        margin-right: 0;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
         box-sizing: border-box;
     }
 
     .ticket-history-list .tickets-list-body,
+    .tickets-list-user .tickets-list-body,
+    .tickets-list-techn-actions .tickets-list-body,
+    .role-dash-list .tickets-list-body,
     .tickets-list-utilities .tickets-list-body,
     .admin-dashboard-history-list .tickets-list-body {
         overflow: visible !important;
         flex: 0 0 auto !important;
         min-height: 0;
+    }
+
+    .tickets-list-user--actions .tickets-list-header,
+    .tickets-list-user--actions .ticket-row {
+        display: grid !important;
+        grid-template-columns:
+            56px
+            minmax(140px, 1.2fr)
+            minmax(160px, 1.4fr)
+            100px
+            minmax(120px, 1fr)
+            48px !important;
+        min-width: 860px !important;
+        width: 860px !important;
+        max-width: none !important;
+        box-sizing: border-box;
+    }
+
+    .tickets-list-user--actions .tickets-list-header > span,
+    .tickets-list-user--actions .ticket-row > span {
+        flex: unset !important;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .tickets-list-user--actions .tickets-col-subject,
+    .tickets-list-user--actions .tickets-col-description {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .tickets-list-user--actions .tickets-col-subject .ai-selfhelp {
+        white-space: normal;
+    }
+
+    #page-dashboard.role-dashboard-page .role-dash-list .tickets-list-header,
+    #page-dashboard.role-dashboard-page .role-dash-list .ticket-row,
+    .role-dash-list .tickets-list-header,
+    .role-dash-list .ticket-row {
+        display: grid !important;
+        grid-template-columns:
+            56px
+            minmax(140px, 1.2fr)
+            minmax(160px, 1.4fr)
+            110px !important;
+        min-width: 560px !important;
+        width: 560px !important;
+        max-width: none !important;
+        box-sizing: border-box;
+    }
+
+    #page-dashboard.role-dashboard-page .role-dash-list.role-dash-list--category .tickets-list-header,
+    #page-dashboard.role-dashboard-page .role-dash-list.role-dash-list--category .ticket-row {
+        grid-template-columns:
+            56px
+            minmax(120px, 1.1fr)
+            minmax(140px, 1.3fr)
+            90px
+            90px
+            100px !important;
+        min-width: 720px !important;
+        width: 720px !important;
+    }
+
+    .role-dash-list .tickets-col-subject,
+    .role-dash-list .tickets-col-description {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .tickets-list-techn-actions .tickets-list-header,
+    .tickets-list-techn-actions .ticket-row {
+        display: grid !important;
+        grid-template-columns:
+            56px
+            minmax(140px, 1.2fr)
+            minmax(160px, 1.4fr)
+            120px
+            110px !important;
+        min-width: 720px !important;
+        width: 720px !important;
+        max-width: none !important;
+        box-sizing: border-box;
     }
 
     .ticket-history-section {

@@ -325,13 +325,20 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .tickets-list-admin .tickets-list-header,
     .tickets-list-admin .ticket-row,
     .tickets-list-user .tickets-list-header,
-    .tickets-list-user .ticket-row {
-        min-width: 920px;
+    .tickets-list-user .ticket-row,
+    .tickets-list-user--actions .tickets-list-header,
+    .tickets-list-user--actions .ticket-row {
+        min-width: 860px;
+        width: 860px;
+        max-width: none;
+        box-sizing: border-box;
     }
 
     /* admin-five: same table as desktop — swipe sideways, never cards */
@@ -396,8 +403,12 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
     .tickets-list-admin .tickets-list-header,
     .tickets-list-admin .ticket-row,
     .tickets-list-user .tickets-list-header,
-    .tickets-list-user .ticket-row {
-        min-width: 680px;
+    .tickets-list-user .ticket-row,
+    .tickets-list-user--actions .tickets-list-header,
+    .tickets-list-user--actions .ticket-row {
+        min-width: 860px;
+        width: 860px;
+        max-width: none;
     }
 }
 

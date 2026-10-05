@@ -93,9 +93,9 @@
 
     function initAdminLazyBundles() {
         var chartSrc = '../js/chart.umd.js';
-        var chartsSrc = '../js/dashboard_static_charts.js?v=1.6.3';
-        var ticketsSrc = '../js/tickets_filter.js?v=1.6.3';
-        var utilitiesSrc = '../js/utilities_filter.js?v=1.6.3';
+        var chartsSrc = '../js/dashboard_static_charts.js?v=1.6.4';
+        var ticketsSrc = '../js/tickets_filter.js?v=1.6.4';
+        var utilitiesSrc = '../js/utilities_filter.js?v=1.6.4';
 
         whenTab('dashboard', function () {
             if (global.__zpgcChartsLoading) {
