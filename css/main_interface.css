@@ -3611,6 +3611,17 @@ body[data-page="messages"] .mailbox-container {
             108px
             108px;
     }
+
+    .ticket-history-list--satisfaction .tickets-list-header,
+    .ticket-history-list--satisfaction .ticket-row {
+        grid-template-columns:
+            64px
+            minmax(95px, 1fr)
+            minmax(105px, 1.15fr)
+            100px
+            100px
+            minmax(120px, 1fr);
+    }
 }
 
 @media (max-width: 860px) {
