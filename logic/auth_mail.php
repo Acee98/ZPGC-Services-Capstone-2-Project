@@ -56,8 +56,9 @@ if (!function_exists('auth_mail_ready')) {
     }
 
     /**
-     * Reject made-up / placeholder local-parts that still match @student.tsu.edu.ph.
-     * SMTP often accepts these and the UI falsely says "code sent".
+     * Soft check for obviously invented local-parts.
+     * Real TSU IDs often contain zeros / short locals — do NOT over-block those.
+     * Delivery proof is the 6-digit Outlook code, not this heuristic.
      */
     function auth_mail_is_plausible_tsu_mailbox($email)
     {
@@ -66,48 +67,31 @@ if (!function_exists('auth_mail_ready')) {
             return false;
         }
         $local = explode('@', $email, 2)[0] ?? '';
-        if ($local === '' || strlen($local) < 5 || strlen($local) > 64) {
+        // Staff aliases can be short (e.g. j.reyes); students are usually longer.
+        if ($local === '' || strlen($local) < 3 || strlen($local) > 64) {
             return false;
         }
-        // Must be normal mailbox characters only.
-        if (!preg_match('/^[a-z0-9][a-z0-9._+-]*[a-z0-9]$/', $local) && !preg_match('/^[a-z0-9]{5,64}$/', $local)) {
+        // Normal mailbox characters (letters, digits, dot, underscore, hyphen, plus).
+        if (!preg_match('/^[a-z0-9](?:[a-z0-9._+-]*[a-z0-9])?$/', $local)) {
             return false;
         }
-        if (str_contains($local, '..') || str_starts_with($local, '.') || str_ends_with($local, '.')) {
+        if (str_contains($local, '..')) {
             return false;
         }
 
+        // Only exact placeholder / spam locals — never block zero-padded student IDs.
         $blockedExact = [
             'test', 'testing', 'tester', 'fake', 'asdf', 'asdfgh', 'qwerty', 'demo', 'sample',
             'example', 'nowhere', 'junk', 'temp', 'temporary', 'admin', 'administrator',
             'root', 'noreply', 'no-reply', 'null', 'void', 'guest', 'user', 'abcde', 'abcdef',
-            'xxxxxx', 'student00000', 'student12345', 'firstname.lastname', 'name',
-            'cb00000', 'cb00008', 'aa00000', 'test00000', 'fake00000',
+            'xxxxxx', 'student00000', 'firstname.lastname', 'name', 'your.real.tsu',
+            'yourname', 'email', 'mailbox',
         ];
         if (in_array($local, $blockedExact, true)) {
             return false;
         }
-
-        $blockedPrefixes = [
-            'fake', 'test', 'asdf', 'qwerty', 'demo', 'sample', 'example', 'temp', 'junk',
-            'nowhere', 'xxx', 'aaa', 'abcabc',
-        ];
-        foreach ($blockedPrefixes as $prefix) {
-            if (str_starts_with($local, $prefix)) {
-                return false;
-            }
-        }
-
-        // All identical characters / obvious keyboard spam.
-        if (preg_match('/^(.)\1{4,}$/', $local)) {
-            return false;
-        }
-        // Mostly zeros (e.g. xx00000 / cb00008-style invented IDs with zero padding).
-        $digits = preg_replace('/\D+/', '', $local);
-        if ($digits !== '' && strlen($digits) >= 4 && preg_match('/^0+$/', $digits)) {
-            return false;
-        }
-        if ($digits !== '' && strlen($digits) >= 5 && substr_count($digits, '0') >= (strlen($digits) - 1)) {
+        // All identical characters (aaaaa).
+        if (preg_match('/^(.)\1{3,}$/', $local)) {
             return false;
         }
 
@@ -122,9 +106,22 @@ if (!function_exists('auth_mail_ready')) {
 
     function auth_mail_tsu_email_hint()
     {
-        return 'Use your real TSU Outlook email only (the inbox you can open): '
-            . 'yourname@student.tsu.edu.ph or name@tsu.edu.ph. '
-            . 'Made-up or Gmail addresses are blocked — you will never receive a verification code.';
+        return 'Use your TSU Outlook email: someone@student.tsu.edu.ph (students) or someone@tsu.edu.ph (staff). Gmail and other domains are not allowed.';
+    }
+
+    function auth_mail_signup_email_error($email)
+    {
+        $email = strtolower(trim((string) $email));
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return 'Enter a valid email address.';
+        }
+        if (!auth_mail_is_tsu_email($email)) {
+            return auth_mail_tsu_email_hint();
+        }
+        if (!auth_mail_is_plausible_tsu_mailbox($email)) {
+            return 'That TSU-looking address looks like a placeholder (e.g. test@… / fake@…). Use the real Outlook mailbox you can open.';
+        }
+        return '';
     }
 
     function auth_mail_delete_user(mysqli $conn, $userId)

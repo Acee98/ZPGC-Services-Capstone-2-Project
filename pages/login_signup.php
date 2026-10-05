@@ -61,11 +61,11 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
 <?php echo zpgc_csrf_field(); ?>
                 <h1>SIGNUP</h1>
                 <?php echo showError($signup_error); ?>
-                <h5>Use your <strong>real</strong> TSU Outlook email only (the inbox you can open). Made-up addresses like fake@student.tsu.edu.ph will never receive a code. Users auto-activate after the code; technicians still need admin Activate.</h5>
+                <h5>Use your TSU Outlook email (@student.tsu.edu.ph or @tsu.edu.ph). Users auto-activate after the 6-digit code; technicians still need admin Activate.</h5>
                 <input type="text" name="first_name" placeholder="First Name" required>
                 <input type="text" name="last_name" placeholder="Last Name" required>
-                <input type="email" name="email" placeholder="your.real.tsu@student.tsu.edu.ph" required
-                    title="Must be a real @student.tsu.edu.ph or @tsu.edu.ph mailbox you can open">
+                <input type="email" name="email" placeholder="you@student.tsu.edu.ph or you@tsu.edu.ph" required
+                    title="Use your @student.tsu.edu.ph or @tsu.edu.ph Outlook address">
                 <input type="password" name="password" id="signup-password" placeholder="Password (8+ characters)" minlength="8" autocomplete="new-password" required>
                 <input type="password" name="confirm_password" id="signup-confirm-password" placeholder="Confirm password" minlength="8" autocomplete="new-password" required>
                 <select name="role" required>
