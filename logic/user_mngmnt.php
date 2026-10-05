@@ -93,6 +93,7 @@ if (isset($_POST['signup'])) {
     $last_name = trim($_POST['last_name'] ?? '');
     $email = strtolower(trim($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
+    $confirmPassword = (string) ($_POST['confirm_password'] ?? '');
     $role = $_POST['role'] ?? '';
     $acceptedTerms = isset($_POST['accept_terms']);
 
@@ -104,6 +105,11 @@ if (isset($_POST['signup'])) {
     }
     if ($first_name === '' || $last_name === '' || strlen($password) < 8) {
         $_SESSION['signup_error'] = 'Fill every field. Password must be at least 8 characters.';
+        header('Location: ../pages/login_signup.php?form=signup');
+        exit();
+    }
+    if (!hash_equals($password, $confirmPassword)) {
+        $_SESSION['signup_error'] = 'Password and Confirm password do not match.';
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }

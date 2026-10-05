@@ -29,7 +29,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.8">
+    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.9">
     <title>ZPGC Services | Login/Signup</title>
 </head>
 
@@ -57,7 +57,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
         </div>
 
         <div class="form-box <?php echo $openSignup ? 'active' : ''; ?>" id="signup-form">
-            <form action="../logic/user_mngmnt.php" method="post">
+            <form action="../logic/user_mngmnt.php" method="post" id="signup-form-el" onsubmit="return zpgcConfirmSignupPassword();">
 <?php echo zpgc_csrf_field(); ?>
                 <h1>SIGNUP</h1>
                 <?php echo showError($signup_error); ?>
@@ -65,7 +65,8 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
                 <input type="text" name="first_name" placeholder="First Name" required>
                 <input type="text" name="last_name" placeholder="Last Name" required>
                 <input type="email" name="email" placeholder="student00000@student.tsu.edu.ph or name@tsu.edu.ph" required>
-                <input type="password" name="password" placeholder="Password (8+ characters)" minlength="8" required>
+                <input type="password" name="password" id="signup-password" placeholder="Password (8+ characters)" minlength="8" autocomplete="new-password" required>
+                <input type="password" name="confirm_password" id="signup-confirm-password" placeholder="Confirm password" minlength="8" autocomplete="new-password" required>
                 <select name="role" required>
                     <option value="" disabled selected>Role</option>
                     <option value="user">User</option>
@@ -80,7 +81,35 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
             </form>
         </div>
     </div>
-    <script src="../js/script.js?v=1.6.7"></script>
+    <script src="../js/script.js?v=1.6.9"></script>
+    <script>
+    function zpgcConfirmSignupPassword() {
+        var p = document.getElementById('signup-password');
+        var c = document.getElementById('signup-confirm-password');
+        if (!p || !c) {
+            return true;
+        }
+        if (p.value !== c.value) {
+            c.setCustomValidity('Passwords do not match.');
+            c.reportValidity();
+            return false;
+        }
+        c.setCustomValidity('');
+        return true;
+    }
+    (function () {
+        var p = document.getElementById('signup-password');
+        var c = document.getElementById('signup-confirm-password');
+        if (!p || !c) {
+            return;
+        }
+        function clearMismatch() {
+            c.setCustomValidity(p.value === c.value || c.value === '' ? '' : 'Passwords do not match.');
+        }
+        p.addEventListener('input', clearMismatch);
+        c.addEventListener('input', clearMismatch);
+    })();
+    </script>
     <?php if ($openSignup) { ?>
     <script>showForm('signup-form');</script>
     <?php } ?>
