@@ -93,7 +93,7 @@ $needsTechnicians = in_array($tab, ['tickets', 'messages', 'dashboard'], true);
 $hasArchivedCol = ticket_has_column($conn, 'archived_at');
 
 if ($tab === 'utilities') {
-    $result = $conn->query('SELECT id, first_name, last_name, email, role, status FROM users ORDER BY last_name, first_name');
+    $result = $conn->query('SELECT id, first_name, last_name, email, role, status FROM users ORDER BY id ASC');
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $all_users[] = $row;
