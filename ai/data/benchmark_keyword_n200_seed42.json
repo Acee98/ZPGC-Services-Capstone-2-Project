@@ -1,0 +1,222 @@
+{
+    "mode": "keyword_only",
+    "openai": false,
+    "model": null,
+    "n": 200,
+    "seed": 42,
+    "openai_errors_or_fallbacks": 0,
+    "filters": {
+        "language": "en",
+        "queues": [
+            "it support",
+            "product support",
+            "service outages and maintenance",
+            "technical support"
+        ],
+        "note": "Gold categories are heuristically mapped from queue/tags/text into ZPGC labels."
+    },
+    "accuracy": {
+        "category": 0.515,
+        "priority": 0.405,
+        "category_and_priority": 0.205
+    },
+    "gold_category_distribution": {
+        "hardware": 13,
+        "software": 78,
+        "network": 66,
+        "account": 8,
+        "other": 35
+    },
+    "gold_priority_distribution": {
+        "critical": 96,
+        "moderate": 76,
+        "low": 28
+    },
+    "pred_category_distribution": {
+        "hardware": 8,
+        "software": 55,
+        "network": 17,
+        "account": 9,
+        "other": 111
+    },
+    "pred_priority_distribution": {
+        "critical": 37,
+        "moderate": 152,
+        "low": 11
+    },
+    "category_confusion": {
+        "hardware": {
+            "hardware": 5,
+            "software": 3,
+            "network": 0,
+            "account": 0,
+            "other": 5
+        },
+        "software": {
+            "hardware": 0,
+            "software": 39,
+            "network": 0,
+            "account": 1,
+            "other": 38
+        },
+        "network": {
+            "hardware": 3,
+            "software": 13,
+            "network": 17,
+            "account": 1,
+            "other": 32
+        },
+        "account": {
+            "hardware": 0,
+            "software": 0,
+            "network": 0,
+            "account": 7,
+            "other": 1
+        },
+        "other": {
+            "hardware": 0,
+            "software": 0,
+            "network": 0,
+            "account": 0,
+            "other": 35
+        }
+    },
+    "priority_confusion": {
+        "critical": {
+            "critical": 23,
+            "moderate": 71,
+            "low": 2
+        },
+        "moderate": {
+            "critical": 11,
+            "moderate": 57,
+            "low": 8
+        },
+        "low": {
+            "critical": 3,
+            "moderate": 24,
+            "low": 1
+        }
+    },
+    "sample_misses": [
+        {
+            "subject": "Errors Detected in Investment Algorithm",
+            "gold_category": "software",
+            "pred_category": "other",
+            "gold_priority": "moderate",
+            "pred_priority": "moderate",
+            "queue": "Product Support",
+            "method": "keyword"
+        },
+        {
+            "subject": "Problem with Data Integration on AWS",
+            "gold_category": "network",
+            "pred_category": "other",
+            "gold_priority": "moderate",
+            "pred_priority": "moderate",
+            "queue": "Technical Support",
+            "method": "keyword"
+        },
+        {
+            "subject": "",
+            "gold_category": "software",
+            "pred_category": "software",
+            "gold_priority": "critical",
+            "pred_priority": "moderate",
+            "queue": "Technical Support",
+            "method": "keyword"
+        },
+        {
+            "subject": "",
+            "gold_category": "software",
+            "pred_category": "software",
+            "gold_priority": "critical",
+            "pred_priority": "moderate",
+            "queue": "Product Support",
+            "method": "keyword"
+        },
+        {
+            "subject": "Address Security Concern Detected",
+            "gold_category": "network",
+            "pred_category": "network",
+            "gold_priority": "low",
+            "pred_priority": "critical",
+            "queue": "Product Support",
+            "method": "keyword"
+        },
+        {
+            "subject": "Healthcare provider faced intermittent delays in accessing medical records",
+            "gold_category": "network",
+            "pred_category": "other",
+            "gold_priority": "moderate",
+            "pred_priority": "moderate",
+            "queue": "Product Support",
+            "method": "keyword"
+        },
+        {
+            "subject": "Details on Securing Medical Data for Hospital Products and Services",
+            "gold_category": "software",
+            "pred_category": "other",
+            "gold_priority": "moderate",
+            "pred_priority": "moderate",
+            "queue": "Product Support",
+            "method": "keyword"
+        },
+        {
+            "subject": "Enhancing Collaboration with Cisco Webex Meetings Integration",
+            "gold_category": "software",
+            "pred_category": "other",
+            "gold_priority": "low",
+            "pred_priority": "moderate",
+            "queue": "Technical Support",
+            "method": "keyword"
+        },
+        {
+            "subject": "Software Integration Challenge",
+            "gold_category": "software",
+            "pred_category": "software",
+            "gold_priority": "low",
+            "pred_priority": "moderate",
+            "queue": "Product Support",
+            "method": "keyword"
+        },
+        {
+            "subject": "Variability in Digital Strategy Metrics Among Various Platforms",
+            "gold_category": "software",
+            "pred_category": "other",
+            "gold_priority": "low",
+            "pred_priority": "moderate",
+            "queue": "Product Support",
+            "method": "keyword"
+        },
+        {
+            "subject": "Support for Service Interruptions",
+            "gold_category": "network",
+            "pred_category": "other",
+            "gold_priority": "critical",
+            "pred_priority": "moderate",
+            "queue": "Service Outages and Maintenance",
+            "method": "keyword"
+        },
+        {
+            "subject": "Support for Expanding a Brand",
+            "gold_category": "other",
+            "pred_category": "other",
+            "gold_priority": "low",
+            "pred_priority": "moderate",
+            "queue": "Technical Support",
+            "method": "keyword"
+        }
+    ],
+    "methods": {
+        "keyword": 200
+    },
+    "baseline_keyword_3000": {
+        "source": "ai/data/benchmark_keyword_report.json",
+        "accuracy": {
+            "category": 0.4647,
+            "priority": 0.4223,
+            "category_and_priority": 0.2047
+        }
+    }
+}

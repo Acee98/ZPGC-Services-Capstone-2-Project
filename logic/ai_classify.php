@@ -279,7 +279,7 @@ if (!function_exists('ai_classifier_base')) {
 
         if (function_exists('curl_init')) {
             $ch = curl_init($endpoint);
-            curl_setopt_array($ch, [
+            $curlOpts = [
                 CURLOPT_POST => true,
                 CURLOPT_HTTPHEADER => [
                     'Content-Type: application/json',
@@ -289,7 +289,14 @@ if (!function_exists('ai_classifier_base')) {
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_CONNECTTIMEOUT => 8,
                 CURLOPT_TIMEOUT => 45,
-            ]);
+            ];
+            // XAMPP often has empty curl.cainfo; use bundled Mozilla CA file when present.
+            $caBundle = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'ai' . DIRECTORY_SEPARATOR . 'cacert.pem';
+            if (is_file($caBundle)) {
+                $curlOpts[CURLOPT_CAINFO] = $caBundle;
+                $curlOpts[CURLOPT_SSL_VERIFYPEER] = true;
+            }
+            curl_setopt_array($ch, $curlOpts);
             $resp = curl_exec($ch);
             $errno = curl_errno($ch);
             $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
