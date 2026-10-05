@@ -17,21 +17,18 @@ zpgc_ui_persist_redirect($tab);
 
 ticket_ensure_archived_column($conn);
 ticket_ensure_satisfaction_column($conn);
-ticket_ensure_indexes($conn);
-ticket_retention_maybe_backfill($conn, 1);
+// Index ensure + archive backfill only on utilities (not every admin click).
+if ($tab === 'utilities') {
+    ticket_ensure_indexes($conn);
+    ticket_retention_maybe_backfill($conn, 6);
+}
 $purge_rules = ticket_retention_rules_summary();
 $purge_eligible = 0;
 $purge_flash = '';
 $auto_purge = null;
 if ($tab === 'utilities') {
-    $auto_purge = ticket_retention_maybe_auto_purge($conn);
+    // Count only on GET — never auto-delete during demos (use Run disposal batch).
     $purge_eligible = ticket_retention_count_eligible_cached($conn);
-    if (is_array($auto_purge) && (int) ($auto_purge['deleted'] ?? 0) > 0) {
-        $purge_flash = 'Auto-disposed ' . (int) $auto_purge['deleted'] . ' archived resolved ticket(s).';
-        $purge_eligible = ticket_retention_count_eligible($conn);
-        $_SESSION['_purge_eligible'] = $purge_eligible;
-        $_SESSION['_purge_eligible_at'] = time();
-    }
 }
 
 $role_labels = [
@@ -94,11 +91,15 @@ $needsDashboardList = ($tab === 'dashboard');
 $needsTechnicians = in_array($tab, ['tickets', 'messages'], true);
 $hasArchivedCol = ticket_has_column($conn, 'archived_at');
 
-// Always load accounts so Utilities role filters have rows after any tab navigation.
-$result = $conn->query('SELECT id, first_name, last_name, email, role, status FROM users ORDER BY id ASC');
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $all_users[] = $row;
+// Load accounts only on Utilities (filters / Activate) — not every admin tab.
+if ($tab === 'utilities') {
+    $result = $conn->query(
+        'SELECT id, first_name, last_name, email, role, status FROM users ORDER BY id ASC LIMIT 500'
+    );
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $all_users[] = $row;
+        }
     }
 }
 
@@ -263,9 +264,9 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.16">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.14">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.14">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.18">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.18">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.18">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -586,7 +587,7 @@ $ui_theme = current_ui_theme();
                             <li>Auto-archive when a ticket becomes <strong>resolved</strong>.</li>
                             <li>Dispose rated archived tickets after <strong><?php echo (int) $purge_rules['rated_days']; ?> days</strong>.</li>
                             <li>Dispose unrated archived tickets after <strong><?php echo (int) $purge_rules['unrated_days']; ?> days</strong>.</li>
-                            <li>Auto-runs about every <strong><?php echo (int) $purge_rules['auto_hours']; ?> hours</strong> when an admin opens this panel.</li>
+                            <li>Disposal runs only when an admin clicks <strong>Run disposal batch</strong> (no surprise deletes).</li>
                         </ul>
                     </div>
                     <div class="ticket-retention-footer">
@@ -988,9 +989,9 @@ $ui_theme = current_ui_theme();
     <script>
         window.DASHBOARD_CHART_DATA = <?php echo json_encode($dashboard_charts, JSON_UNESCAPED_UNICODE); ?>;
     </script>
-    <script src="../js/lazy_load.js?v=1.6.16"></script>
-    <script src="../js/utilities_filter.js?v=1.6.16"></script>
-    <script src="../js/behavior.js?v=1.6.16" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.18"></script>
+    <script src="../js/utilities_filter.js?v=1.6.18"></script>
+    <script src="../js/behavior.js?v=1.6.18" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var input = document.getElementById('perf-log-search');

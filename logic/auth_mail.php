@@ -154,6 +154,12 @@ if (!function_exists('auth_mail_ready')) {
      */
     function auth_mail_purge_stale_unverified(mysqli $conn)
     {
+        $last = (int) ($_SESSION['_auth_purge_at'] ?? 0);
+        if ($last > 0 && (time() - $last) < 3600) {
+            return;
+        }
+        $_SESSION['_auth_purge_at'] = time();
+
         // Simple sweep: inactive + unverified tech/user with no unused unexpired verify token.
         $ids = [];
         $res = $conn->query(

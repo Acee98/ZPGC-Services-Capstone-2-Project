@@ -41,8 +41,7 @@ unset($_SESSION['confirm_success'], $_SESSION['confirm_error'], $_SESSION['ticke
 $has_ai_guidance = ticket_has_column($conn, 'ai_guidance');
 $has_satisfaction = ticket_ensure_satisfaction_column($conn);
 ticket_ensure_archived_column($conn);
-ticket_ensure_indexes($conn);
-ticket_retention_maybe_backfill($conn, 1);
+// Skip heavy index DDL + retention backfill on every user page load.
 $rating_labels = [
     5 => 'Very satisfied',
     4 => 'Satisfied',
@@ -83,8 +82,8 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.14">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.14">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.18">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.18">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | User</title>
 </head>
@@ -407,8 +406,8 @@ $ui_theme = current_ui_theme();
         </form>
     </div>
     <?php } ?>
-    <script src="../js/lazy_load.js?v=1.6.14"></script>
-    <script src="../js/behavior.js?v=1.6.14" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.18"></script>
+    <script src="../js/behavior.js?v=1.6.18" defer></script>
 </body>
 
 </html>

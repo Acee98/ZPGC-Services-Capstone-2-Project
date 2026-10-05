@@ -74,7 +74,8 @@ UNION ALL
     INNER JOIN users u ON u.id = a.uploaded_by
     WHERE a.ticket_id = ?
 )
-ORDER BY sort_ts ASC, sort_id ASC';
+ORDER BY sort_ts ASC, sort_id ASC
+LIMIT 300';
 
 $q = $conn->prepare($sql);
 if (!$q) {

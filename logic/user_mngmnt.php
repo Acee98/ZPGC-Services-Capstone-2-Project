@@ -18,7 +18,7 @@ if (isset($_POST['login'])) {
 
     $stmt = $conn->prepare(
         'SELECT id, first_name, last_name, email, password, role, status, email_verified
-        FROM users WHERE LOWER(email) = ?'
+        FROM users WHERE LOWER(email) = ? LIMIT 1'
     );
     $stmt->bind_param('s', $email);
     $stmt->execute();

@@ -15,8 +15,7 @@ $ticket_flash = $_SESSION['ticket_flash'] ?? '';
 unset($_SESSION['ticket_flash']);
 
 ticket_ensure_archived_column($conn);
-ticket_ensure_indexes($conn);
-ticket_retention_maybe_backfill($conn, 1);
+// Skip heavy index DDL + retention backfill on every technician page load.
 $tech_tickets = [];
 $hasArchived = ticket_has_column($conn, 'archived_at');
 $cols = 'id, subject, description, category, priority, status'
@@ -58,8 +57,8 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.14">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.14">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.18">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.18">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | Technician</title>
 </head>
@@ -287,8 +286,8 @@ $ui_theme = current_ui_theme();
             </div>
         </section>
     </main>
-    <script src="../js/lazy_load.js?v=1.6.14"></script>
-    <script src="../js/behavior.js?v=1.6.14" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.18"></script>
+    <script src="../js/behavior.js?v=1.6.18" defer></script>
 </body>
 
 </html>

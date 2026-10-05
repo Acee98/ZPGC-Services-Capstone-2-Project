@@ -106,17 +106,26 @@ if (!class_exists('ZpgcDbSessionHandler')) {
             if ($this->ready || !$this->db) {
                 return $this->ready;
             }
+            // Process-wide cache — avoids SHOW TABLES on every open/close cycle.
+            if (!empty($GLOBALS['zpgc_php_sessions_ready'])) {
+                $this->ready = true;
+                return true;
+            }
 
             // Prefer existing table (Azure users may lack CREATE).
             $check = @$this->db->query("SHOW TABLES LIKE 'php_sessions'");
             if ($check && $check->num_rows > 0) {
                 $this->ready = true;
+                $GLOBALS['zpgc_php_sessions_ready'] = true;
                 return true;
             }
 
             if (function_exists('zpgc_runtime_ddl_allowed') && !zpgc_runtime_ddl_allowed()) {
                 $probe = @$this->db->query('SELECT 1 FROM php_sessions LIMIT 1');
                 $this->ready = (bool) $probe;
+                if ($this->ready) {
+                    $GLOBALS['zpgc_php_sessions_ready'] = true;
+                }
                 return $this->ready;
             }
             $sql = 'CREATE TABLE IF NOT EXISTS php_sessions (
@@ -127,12 +136,16 @@ if (!class_exists('ZpgcDbSessionHandler')) {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4';
             if (@$this->db->query($sql)) {
                 $this->ready = true;
+                $GLOBALS['zpgc_php_sessions_ready'] = true;
                 return true;
             }
 
             // Last resort: table may exist even if SHOW/CREATE was denied.
             $probe = @$this->db->query('SELECT 1 FROM php_sessions LIMIT 1');
             $this->ready = (bool) $probe;
+            if ($this->ready) {
+                $GLOBALS['zpgc_php_sessions_ready'] = true;
+            }
             return $this->ready;
         }
 
@@ -140,6 +153,7 @@ if (!class_exists('ZpgcDbSessionHandler')) {
         {
             $this->memoryOnly = true;
             $this->ready = false;
+            $GLOBALS['zpgc_php_sessions_memory'] = true;
         }
 
         public function open(string $path, string $name): bool
@@ -161,10 +175,14 @@ if (!class_exists('ZpgcDbSessionHandler')) {
             // Never close the shared app connection — only privately owned links.
             if ($this->ownsDb && $this->db instanceof mysqli) {
                 @$this->db->close();
+                $this->db = null;
+                $this->ownsDb = false;
+                // Owned connections are gone; shared readiness flag can stay.
+            } else {
+                // Shared mysqli stays alive — keep handler ready for next session I/O.
+                $this->db = null;
+                $this->ownsDb = false;
             }
-            $this->db = null;
-            $this->ownsDb = false;
-            $this->ready = false;
             return true;
         }
 
@@ -274,12 +292,15 @@ if (!function_exists('zpgc_register_db_sessions')) {
         $done = true;
 
         try {
-            $probe = new ZpgcDbSessionHandler();
-            $probe->open('', 'probe');
-            $dbOk = $probe->usingDatabase();
-            $probe->close();
-            if (!$dbOk) {
-                return false;
+            // Skip throwaway probe open/close when we already know the table exists.
+            if (empty($GLOBALS['zpgc_php_sessions_ready'])) {
+                $probe = new ZpgcDbSessionHandler();
+                $probe->open('', 'probe');
+                $dbOk = $probe->usingDatabase();
+                $probe->close();
+                if (!$dbOk) {
+                    return false;
+                }
             }
             session_set_save_handler(new ZpgcDbSessionHandler(), true);
             $registered = true;
