@@ -38,11 +38,7 @@ $confirm_error = $_SESSION['confirm_error'] ?? '';
 $ticket_flash = $_SESSION['ticket_flash'] ?? '';
 unset($_SESSION['confirm_success'], $_SESSION['confirm_error'], $_SESSION['ticket_flash']);
 
-$has_ai_guidance = false;
-$colCheck = $conn->query("SHOW COLUMNS FROM tickets LIKE 'ai_guidance'");
-if ($colCheck && $colCheck->num_rows > 0) {
-    $has_ai_guidance = true;
-}
+$has_ai_guidance = ticket_has_column($conn, 'ai_guidance');
 $has_satisfaction = ticket_ensure_satisfaction_column($conn);
 ticket_ensure_archived_column($conn);
 ticket_ensure_indexes($conn);
@@ -87,8 +83,8 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.13">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.13">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.14">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.14">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | User</title>
 </head>
@@ -411,8 +407,8 @@ $ui_theme = current_ui_theme();
         </form>
     </div>
     <?php } ?>
-    <script src="../js/lazy_load.js?v=1.6.9"></script>
-    <script src="../js/behavior.js?v=1.6.9" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.14"></script>
+    <script src="../js/behavior.js?v=1.6.14" defer></script>
 </body>
 
 </html>

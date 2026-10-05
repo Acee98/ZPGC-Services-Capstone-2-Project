@@ -38,6 +38,8 @@ if (!class_exists('ZpgcDbSessionHandler')) {
         /** @var mysqli|null */
         private $db = null;
         private $ready = false;
+        /** When true, close() must not destroy the shared app mysqli. */
+        private $ownsDb = false;
         /** @var bool when DB is unavailable after the handler was registered */
         private $memoryOnly = false;
         /** @var array<string,string> */
@@ -53,6 +55,18 @@ if (!class_exists('ZpgcDbSessionHandler')) {
             if ($this->db instanceof mysqli) {
                 return true;
             }
+            // Prefer the single request-scoped connection from logic/config.php.
+            if (isset($GLOBALS['conn']) && $GLOBALS['conn'] instanceof mysqli) {
+                $this->db = $GLOBALS['conn'];
+                $this->ownsDb = false;
+                return true;
+            }
+            if (isset($GLOBALS['zpgc_mysqli']) && $GLOBALS['zpgc_mysqli'] instanceof mysqli) {
+                $this->db = $GLOBALS['zpgc_mysqli'];
+                $this->ownsDb = false;
+                return true;
+            }
+
             $host = zpgc_env_first('DB_HOST', 'localhost');
             $user = zpgc_env_first('DB_USER', 'root');
             // Empty string is valid (local XAMPP root with no password).
@@ -79,6 +93,11 @@ if (!class_exists('ZpgcDbSessionHandler')) {
             }
             $mysqli->set_charset('utf8mb4');
             $this->db = $mysqli;
+            $this->ownsDb = true;
+            $GLOBALS['zpgc_mysqli'] = $mysqli;
+            if (!isset($GLOBALS['conn']) || !($GLOBALS['conn'] instanceof mysqli)) {
+                $GLOBALS['conn'] = $mysqli;
+            }
             return true;
         }
 
@@ -139,10 +158,12 @@ if (!class_exists('ZpgcDbSessionHandler')) {
 
         public function close(): bool
         {
-            if ($this->db instanceof mysqli) {
+            // Never close the shared app connection — only privately owned links.
+            if ($this->ownsDb && $this->db instanceof mysqli) {
                 @$this->db->close();
-                $this->db = null;
             }
+            $this->db = null;
+            $this->ownsDb = false;
             $this->ready = false;
             return true;
         }

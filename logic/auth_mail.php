@@ -5,7 +5,11 @@ require_once __DIR__ . '/mail_smtp.php';
 if (!function_exists('auth_mail_ready')) {
     function auth_mail_ready(mysqli $conn)
     {
+        if (!empty($_SESSION['_zpgc_auth_mail_ready'])) {
+            return;
+        }
         if (function_exists('zpgc_runtime_ddl_allowed') && !zpgc_runtime_ddl_allowed()) {
+            $_SESSION['_zpgc_auth_mail_ready'] = 1;
             return;
         }
         $col = $conn->query("SHOW COLUMNS FROM users LIKE 'email_verified'");
@@ -30,6 +34,7 @@ if (!function_exists('auth_mail_ready')) {
                 KEY idx_auth_user (user_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
+        $_SESSION['_zpgc_auth_mail_ready'] = 1;
     }
 
     /**

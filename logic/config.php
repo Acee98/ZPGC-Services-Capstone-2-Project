@@ -3,7 +3,40 @@
  * Database connection.
  * Local XAMPP defaults: localhost / root / (empty) / zpgc_services_db
  * Azure / Hostinger: set DB_* environment variables (App Settings or panel).
+ *
+ * Idempotent: safe to require more than once; reuses one mysqli per request
+ * (shared with MySQL session handler to avoid a second Azure SSL handshake).
  */
+if (!function_exists('zpgc_runtime_ddl_allowed')) {
+    /**
+     * When false, PHP skips CREATE/ALTER bootstrap (schema must already match V1.6).
+     * Default true for campus demos; set ZPGC_ALLOW_RUNTIME_DDL=0 after migrations.
+     */
+    function zpgc_runtime_ddl_allowed()
+    {
+        $raw = getenv('ZPGC_ALLOW_RUNTIME_DDL');
+        if ($raw === false || trim((string) $raw) === '') {
+            if (isset($_SERVER['ZPGC_ALLOW_RUNTIME_DDL']) && trim((string) $_SERVER['ZPGC_ALLOW_RUNTIME_DDL']) !== '') {
+                $raw = $_SERVER['ZPGC_ALLOW_RUNTIME_DDL'];
+            } else {
+                return true;
+            }
+        }
+        return in_array(strtolower(trim((string) $raw)), ['1', 'true', 'yes', 'on'], true);
+    }
+}
+
+if (isset($conn) && $conn instanceof mysqli) {
+    $GLOBALS['zpgc_mysqli'] = $conn;
+    $GLOBALS['conn'] = $conn;
+    return;
+}
+if (isset($GLOBALS['zpgc_mysqli']) && $GLOBALS['zpgc_mysqli'] instanceof mysqli) {
+    $conn = $GLOBALS['zpgc_mysqli'];
+    $GLOBALS['conn'] = $conn;
+    return;
+}
+
 // Azure App Settings often appear in $_SERVER even when getenv() is empty.
 $dbEnv = static function ($key, $default = '') {
     $g = getenv($key);
@@ -49,22 +82,5 @@ if (!$ok || $conn->connect_error) {
 }
 
 $conn->set_charset('utf8mb4');
-
-if (!function_exists('zpgc_runtime_ddl_allowed')) {
-    /**
-     * When false, PHP skips CREATE/ALTER bootstrap (schema must already match V1.6).
-     * Default true for campus demos; set ZPGC_ALLOW_RUNTIME_DDL=0 after migrations.
-     */
-    function zpgc_runtime_ddl_allowed()
-    {
-        $raw = getenv('ZPGC_ALLOW_RUNTIME_DDL');
-        if ($raw === false || trim((string) $raw) === '') {
-            if (isset($_SERVER['ZPGC_ALLOW_RUNTIME_DDL']) && trim((string) $_SERVER['ZPGC_ALLOW_RUNTIME_DDL']) !== '') {
-                $raw = $_SERVER['ZPGC_ALLOW_RUNTIME_DDL'];
-            } else {
-                return true;
-            }
-        }
-        return in_array(strtolower(trim((string) $raw)), ['1', 'true', 'yes', 'on'], true);
-    }
-}
+$GLOBALS['zpgc_mysqli'] = $conn;
+$GLOBALS['conn'] = $conn;

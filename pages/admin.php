@@ -89,8 +89,9 @@ $status_counts = [
     'resolved' => 0,
 ];
 
-$needsTickets = in_array($tab, ['dashboard', 'tickets', 'messages'], true);
-$needsTechnicians = in_array($tab, ['tickets', 'messages', 'dashboard'], true);
+$needsTickets = in_array($tab, ['tickets', 'messages'], true);
+$needsDashboardList = ($tab === 'dashboard');
+$needsTechnicians = in_array($tab, ['tickets', 'messages'], true);
 $hasArchivedCol = ticket_has_column($conn, 'archived_at');
 
 if ($tab === 'utilities') {
@@ -128,7 +129,7 @@ if ($needsTechnicians) {
     }
 }
 
-if ($needsTickets) {
+if ($needsTickets || $needsDashboardList) {
     $ticketCols = 't.id, t.subject, t.description, t.status, t.priority, t.assigned_to'
         . ($hasArchivedCol ? ', t.archived_at' : '')
         . ',
@@ -138,12 +139,15 @@ if ($needsTickets) {
     if ($hasArchivedCol) {
         $activeWhere .= ' AND t.archived_at IS NULL';
     }
+    // Cap rows — unbounded JOINs were a major source of Azure lag.
+    $activeLimit = $needsDashboardList && !$needsTickets ? 80 : 250;
     $activeSql = "SELECT {$ticketCols}
          FROM tickets t
          INNER JOIN users u ON t.user_id = u.id
          LEFT JOIN users tech ON t.assigned_to = tech.id
          WHERE {$activeWhere}
-         ORDER BY t.id DESC";
+         ORDER BY t.id DESC
+         LIMIT {$activeLimit}";
     $ticket_result = $conn->query($activeSql);
     if ($ticket_result) {
         while ($row = $ticket_result->fetch_assoc()) {
@@ -174,30 +178,36 @@ if ($needsTickets) {
     $mailbox_tickets = $active_tickets;
     $recent_tickets = $history_tickets;
 
-    $replaceTable = $conn->query("SHOW TABLES LIKE 'replacement_requests'");
-    if ($replaceTable && $replaceTable->num_rows > 0) {
-        $conn->query(
-            "UPDATE replacement_requests r
-             INNER JOIN tickets t ON t.id = r.ticket_id
-             SET r.status = 'resolved'
-             WHERE r.status = 'pending'
-               AND t.assigned_to IS NOT NULL
-               AND CAST(t.assigned_to AS UNSIGNED) <> 0
-               AND CAST(t.assigned_to AS UNSIGNED) <> CAST(r.techn_id AS UNSIGNED)"
-        );
-        $replaceRows = $conn->query(
-            "SELECT r.id, r.ticket_id, r.created_at, t.subject,
-                    u.first_name, u.last_name
-             FROM replacement_requests r
-             INNER JOIN tickets t ON t.id = r.ticket_id
-             INNER JOIN users u ON u.id = r.techn_id
-             WHERE r.status = 'pending'
-             ORDER BY r.id DESC
-             LIMIT 100"
-        );
-        if ($replaceRows) {
-            while ($row = $replaceRows->fetch_assoc()) {
-                $replacement_requests[] = $row;
+    if ($tab === 'tickets') {
+        $replaceTable = $conn->query("SHOW TABLES LIKE 'replacement_requests'");
+        if ($replaceTable && $replaceTable->num_rows > 0) {
+            $lastReplaceFix = (int) ($_SESSION['_replace_fix_at'] ?? 0);
+            if ($lastReplaceFix <= 0 || (time() - $lastReplaceFix) > 300) {
+                $_SESSION['_replace_fix_at'] = time();
+                $conn->query(
+                    "UPDATE replacement_requests r
+                     INNER JOIN tickets t ON t.id = r.ticket_id
+                     SET r.status = 'resolved'
+                     WHERE r.status = 'pending'
+                       AND t.assigned_to IS NOT NULL
+                       AND CAST(t.assigned_to AS UNSIGNED) <> 0
+                       AND CAST(t.assigned_to AS UNSIGNED) <> CAST(r.techn_id AS UNSIGNED)"
+                );
+            }
+            $replaceRows = $conn->query(
+                "SELECT r.id, r.ticket_id, r.created_at, t.subject,
+                        u.first_name, u.last_name
+                 FROM replacement_requests r
+                 INNER JOIN tickets t ON t.id = r.ticket_id
+                 INNER JOIN users u ON u.id = r.techn_id
+                 WHERE r.status = 'pending'
+                 ORDER BY r.id DESC
+                 LIMIT 100"
+            );
+            if ($replaceRows) {
+                while ($row = $replaceRows->fetch_assoc()) {
+                    $replacement_requests[] = $row;
+                }
             }
         }
     }
@@ -251,9 +261,9 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.9">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.9">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.9">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.14">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.14">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.14">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -976,8 +986,8 @@ $ui_theme = current_ui_theme();
     <script>
         window.DASHBOARD_CHART_DATA = <?php echo json_encode($dashboard_charts, JSON_UNESCAPED_UNICODE); ?>;
     </script>
-    <script src="../js/lazy_load.js?v=1.6.9"></script>
-    <script src="../js/behavior.js?v=1.6.9" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.14"></script>
+    <script src="../js/behavior.js?v=1.6.14" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var input = document.getElementById('perf-log-search');

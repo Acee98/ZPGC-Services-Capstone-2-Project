@@ -7,13 +7,24 @@ if (!function_exists('ticket_has_column')) {
         $column = (string) $column;
         if ($refresh) {
             unset($cache[$column]);
+            if (isset($_SESSION['_zpgc_cols'][$column])) {
+                unset($_SESSION['_zpgc_cols'][$column]);
+            }
         }
         if (isset($cache[$column])) {
+            return $cache[$column];
+        }
+        if (!$refresh && isset($_SESSION['_zpgc_cols'][$column])) {
+            $cache[$column] = (bool) $_SESSION['_zpgc_cols'][$column];
             return $cache[$column];
         }
         $col = $conn->real_escape_string($column);
         $res = $conn->query("SHOW COLUMNS FROM tickets LIKE '{$col}'");
         $cache[$column] = ($res && $res->num_rows > 0);
+        if (!isset($_SESSION['_zpgc_cols']) || !is_array($_SESSION['_zpgc_cols'])) {
+            $_SESSION['_zpgc_cols'] = [];
+        }
+        $_SESSION['_zpgc_cols'][$column] = $cache[$column] ? 1 : 0;
         return $cache[$column];
     }
 
@@ -83,6 +94,12 @@ if (!function_exists('ticket_has_column')) {
         $ensure($conn, 'tickets', 'idx_tickets_assigned_to', 'CREATE INDEX idx_tickets_assigned_to ON tickets (assigned_to)');
         if (ticket_has_column($conn, 'archived_at')) {
             $ensure($conn, 'tickets', 'idx_tickets_archived_at', 'CREATE INDEX idx_tickets_archived_at ON tickets (archived_at)');
+            $ensure(
+                $conn,
+                'tickets',
+                'idx_tickets_status_archived',
+                'CREATE INDEX idx_tickets_status_archived ON tickets (status, archived_at)'
+            );
         }
         $msgTable = $conn->query("SHOW TABLES LIKE 'messages'");
         if ($msgTable && $msgTable->num_rows > 0) {

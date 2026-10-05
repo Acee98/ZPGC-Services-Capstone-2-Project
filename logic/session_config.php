@@ -165,6 +165,11 @@ if (session_status() === PHP_SESSION_NONE) {
 
     session_name(ZPGC_SESSION_NAME);
 
+    // One shared DB connection for the request (sessions + app queries).
+    if (!isset($GLOBALS['conn']) || !($GLOBALS['conn'] instanceof mysqli)) {
+        require_once __DIR__ . '/config.php';
+    }
+
     // Prefer MySQL sessions on Azure so App Service recycles do not wipe logins.
     // Registration is best-effort; handler itself never fails open()/write().
     $usingDbSessions = false;

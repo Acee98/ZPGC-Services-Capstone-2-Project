@@ -264,7 +264,7 @@ function initTabFromQuery() {
     }
 }
 
-var POLL_MS = 8000;
+var POLL_MS = 15000;
 var mailboxTimer = null;
 var mailboxTicketId = 0;
 var mailboxLastSig = "";
@@ -521,9 +521,14 @@ function startMailboxPoll() {
     if (document.body.getAttribute("data-page") !== "messages") {
         return;
     }
-    // Lazy: only poll while Mailbox is the active tab.
+    // Lazy: only poll while Mailbox is the active tab and the page is visible.
     loadMailboxMessages();
-    mailboxTimer = setInterval(loadMailboxMessages, POLL_MS);
+    mailboxTimer = setInterval(function () {
+        if (document.hidden) {
+            return;
+        }
+        loadMailboxMessages();
+    }, POLL_MS);
 }
 
 function setMailboxMobileChat(open) {

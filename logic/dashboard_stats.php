@@ -14,6 +14,13 @@ if (!function_exists('dashboard_chart_data')) {
 
     function dashboard_chart_data(mysqli $conn)
     {
+        $ttl = 60;
+        $cached = $_SESSION['_dash_charts'] ?? null;
+        $at = (int) ($_SESSION['_dash_charts_at'] ?? 0);
+        if (is_array($cached) && $at > 0 && (time() - $at) < $ttl) {
+            return $cached;
+        }
+
         $days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         $submitted = array_fill(0, 7, 0);
         $resolved = array_fill(0, 7, 0);
@@ -131,7 +138,7 @@ if (!function_exists('dashboard_chart_data')) {
         }
         $sat = [$buckets[5], $buckets[4], $buckets[3], $buckets[2], $buckets[1]];
 
-        return [
+        $payload = [
             'live' => true,
             'report' => [
                 'labels' => $days,
@@ -153,5 +160,8 @@ if (!function_exists('dashboard_chart_data')) {
                 'note' => $satNote,
             ],
         ];
+        $_SESSION['_dash_charts'] = $payload;
+        $_SESSION['_dash_charts_at'] = time();
+        return $payload;
     }
 }
