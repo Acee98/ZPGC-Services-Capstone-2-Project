@@ -255,13 +255,33 @@ html[data-theme="dark"] .ticket-row {
         margin-bottom: 16px !important;
     }
     body[data-page="tickets"] #page-tickets .ticket-history-section {
+        flex: 0 0 auto !important;
         flex-shrink: 0 !important;
-        margin-bottom: calc(var(--zpgc-tabbar-h) + 28px) !important;
-        padding-bottom: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-bottom: calc(var(--zpgc-tabbar-h) + 48px) !important;
+        padding-bottom: 20px !important;
+        box-sizing: border-box !important;
     }
     body[data-page="tickets"] #page-tickets .ticket-history-list.tickets-list {
+        flex: 0 0 auto !important;
+        min-height: 140px !important;
         max-height: min(36vh, 260px) !important;
-        margin-bottom: 8px !important;
+        height: auto !important;
+        margin-bottom: 12px !important;
+    }
+    body[data-page="tickets"] #page-tickets .ticket-history-list .tickets-list-body {
+        flex: 0 1 auto !important;
+        min-height: 0 !important;
+    }
+    /* Extra end spacer so last history pixels clear the fixed ribbon */
+    body[data-page="tickets"] #page-tickets::after {
+        content: "" !important;
+        display: block !important;
+        flex: 0 0 auto !important;
+        height: calc(var(--zpgc-tabbar-h) + 24px) !important;
+        width: 100% !important;
+        pointer-events: none !important;
     }
     body[data-page="dashboard"] #page-dashboard.role-dashboard-page {
         overflow-x: hidden !important;

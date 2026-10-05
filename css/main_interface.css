@@ -3237,14 +3237,23 @@ body[data-page="tickets"] .main-wrap {
     min-height: 100vh;
 }
 
-body[data-page="tickets"] #page-tickets .tickets-list {
+body[data-page="tickets"] #page-tickets .tickets-list:not(.ticket-history-list) {
     flex: 1 1 auto;
     min-height: calc(100vh - 200px);
+}
+
+body[data-page="tickets"] #page-tickets .tickets-list.ticket-history-list {
+    flex: 0 0 auto;
+    min-height: 160px;
 }
 
 body[data-page="tickets"] #page-tickets .tickets-list-body {
     flex: 1 1 auto;
     min-height: 0;
+}
+
+body[data-page="tickets"] #page-tickets .ticket-history-list .tickets-list-body {
+    flex: 0 1 auto;
 }
 
 body[data-page="messages"] .mailbox-container {
@@ -3733,14 +3742,34 @@ body[data-page="messages"] .mailbox-container {
     }
 
     body[data-page="tickets"] #page-tickets .ticket-history-section {
-        flex-shrink: 0;
-        margin-bottom: calc(var(--zpgc-tabbar-h) + 28px);
-        padding-bottom: 12px;
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: calc(var(--zpgc-tabbar-h) + 48px);
+        padding-bottom: 20px;
+        box-sizing: border-box;
     }
 
     body[data-page="tickets"] #page-tickets .ticket-history-list.tickets-list {
+        flex: 0 0 auto;
+        min-height: 140px;
         max-height: min(36vh, 260px);
-        margin-bottom: 8px;
+        height: auto;
+        margin-bottom: 12px;
+    }
+
+    body[data-page="tickets"] #page-tickets .ticket-history-list .tickets-list-body {
+        flex: 0 1 auto;
+        min-height: 0;
+    }
+
+    body[data-page="tickets"] #page-tickets::after {
+        content: "";
+        display: block;
+        flex: 0 0 auto;
+        height: calc(var(--zpgc-tabbar-h) + 24px);
+        width: 100%;
+        pointer-events: none;
     }
 
     body[data-page="dashboard"] #page-dashboard.role-dashboard-page {

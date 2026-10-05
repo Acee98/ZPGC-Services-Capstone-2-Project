@@ -58,8 +58,8 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.5">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.5">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.6">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.6">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | Technician</title>
 </head>
@@ -287,8 +287,8 @@ $ui_theme = current_ui_theme();
             </div>
         </section>
     </main>
-    <script src="../js/lazy_load.js?v=1.6.5"></script>
-    <script src="../js/behavior.js?v=1.6.5" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.6"></script>
+    <script src="../js/behavior.js?v=1.6.6" defer></script>
 </body>
 
 </html>
