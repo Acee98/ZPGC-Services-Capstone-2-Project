@@ -362,8 +362,9 @@ function require_role($role)
         exit();
     }
 
-    // Technicians: re-check DB so a deactivated/pending tech cannot keep using an old session.
-    if ($need === 'techn' && function_exists('auth_mail_assert_session_still_allowed')) {
+    // Re-check DB so a deactivated account cannot keep using an old session.
+    if (in_array($need, ['techn', 'admin', 'user'], true)
+        && function_exists('auth_mail_assert_session_still_allowed')) {
         global $conn;
         if ($conn instanceof mysqli) {
             auth_mail_assert_session_still_allowed($conn);

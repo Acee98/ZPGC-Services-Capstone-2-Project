@@ -415,7 +415,7 @@ $ui_theme = current_ui_theme();
     </div>
     <?php } ?>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.20" defer></script>
+    <script src="../js/behavior.js?v=1.6.21" defer></script>
 </body>
 
 </html>

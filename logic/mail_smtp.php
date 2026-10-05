@@ -3,7 +3,7 @@
 require_once __DIR__ . '/mail_config.php';
 
 if (!function_exists('mail_send')) {
-    function mail_send($to, $subject, $plainBody, $htmlBody = '')
+    function mail_send($to, $subject, $plainBody, $htmlBody = '', $quick = false)
     {
         $cfg = mail_env_load();
         if (!mail_ready()) {
@@ -24,12 +24,16 @@ if (!function_exists('mail_send')) {
         // Gmail accepts mail only from the authenticated mailbox.
         $from = $user;
         $fromName = $cfg['MAIL_FROM_NAME'] !== '' ? $cfg['MAIL_FROM_NAME'] : 'ZPGC Services';
+        $connectTimeout = $quick ? 6 : 15;
 
         // Prefer STARTTLS on 587; fall back to implicit SSL on 465 (common Azure/Gmail path).
+        // Quick notifies skip the second transport so ticket submit cannot hang ~40s.
         $attempts = [
             ['transport' => 'tcp://' . $host . ':' . ($port > 0 ? $port : 587), 'starttls' => true],
-            ['transport' => 'ssl://' . $host . ':465', 'starttls' => false],
         ];
+        if (!$quick) {
+            $attempts[] = ['transport' => 'ssl://' . $host . ':465', 'starttls' => false];
+        }
         $lastError = 'Could not connect to SMTP.';
         foreach ($attempts as $attempt) {
             $result = mail_send_via_socket(
@@ -42,7 +46,8 @@ if (!function_exists('mail_send')) {
                 $to,
                 $subject,
                 $plainBody,
-                $htmlBody
+                $htmlBody,
+                $connectTimeout
             );
             if ($result['ok']) {
                 return $result;
@@ -62,7 +67,8 @@ if (!function_exists('mail_send')) {
         $to,
         $subject,
         $plainBody,
-        $htmlBody = ''
+        $htmlBody = '',
+        $connectTimeout = 15
     ) {
         $errno = 0;
         $errstr = '';
@@ -70,13 +76,13 @@ if (!function_exists('mail_send')) {
             $transport,
             $errno,
             $errstr,
-            20,
+            max(3, (int) $connectTimeout),
             STREAM_CLIENT_CONNECT
         );
         if (!$socket) {
             return ['ok' => false, 'error' => 'Could not connect to SMTP ' . $transport . ' (' . $errstr . ').'];
         }
-        stream_set_timeout($socket, 20);
+        stream_set_timeout($socket, max(5, (int) $connectTimeout));
 
         $read = function () use ($socket) {
             $data = '';

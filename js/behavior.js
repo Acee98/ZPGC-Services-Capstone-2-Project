@@ -509,7 +509,16 @@ function loadMailboxMessages() {
     })
         .then(function (res) { return res.json(); })
         .then(renderMailboxMessages)
-        .catch(function () {});
+        .catch(function () {
+            var box = document.getElementById("mailbox-chat-messages");
+            if (!box || box.querySelector(".mailbox-chat-error")) {
+                return;
+            }
+            var err = document.createElement("p");
+            err.className = "mailbox-chat-empty-sub mailbox-chat-error";
+            err.textContent = "Couldn’t load messages. Check your connection, then reopen Mailbox.";
+            box.appendChild(err);
+        });
 }
 
 function startMailboxPoll() {

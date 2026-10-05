@@ -3,19 +3,21 @@
 if (!function_exists('ai_classifier_base')) {
     /**
      * Optional Flask helper URL.
-     * Local XAMPP default: http://127.0.0.1:5000
-     * Azure: leave unset and set OPENAI_API_KEY in App Settings (PHP calls OpenAI directly).
+     * Only used when AI_CLASSIFIER_URL is set — never auto-probe localhost
+     * (that hung ticket submit for ~12s whenever Flask was down).
+     * Azure: leave unset and set OPENAI_API_KEY in App Settings.
      */
     function ai_classifier_base()
     {
         $env = getenv('AI_CLASSIFIER_URL');
-        if ($env !== false && trim((string) $env) !== '') {
-            return rtrim(trim((string) $env), '/');
+        if ($env === false || trim((string) $env) === '') {
+            if (isset($_SERVER['AI_CLASSIFIER_URL']) && trim((string) $_SERVER['AI_CLASSIFIER_URL']) !== '') {
+                $env = $_SERVER['AI_CLASSIFIER_URL'];
+            } else {
+                return '';
+            }
         }
-        if (ai_is_local_host()) {
-            return 'http://127.0.0.1:5000';
-        }
-        return '';
+        return rtrim(trim((string) $env), '/');
     }
 
     function ai_is_local_host()
@@ -291,8 +293,8 @@ if (!function_exists('ai_classifier_base')) {
                 ],
                 CURLOPT_POSTFIELDS => $body,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_CONNECTTIMEOUT => 8,
-                CURLOPT_TIMEOUT => 45,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT => 12,
             ];
             // XAMPP often has empty curl.cainfo; use bundled Mozilla CA file when present.
             $caBundle = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'ai' . DIRECTORY_SEPARATOR . 'cacert.pem';
@@ -316,7 +318,7 @@ if (!function_exists('ai_classifier_base')) {
                     'method' => 'POST',
                     'header' => "Content-Type: application/json\r\nAuthorization: Bearer {$key}\r\n",
                     'content' => $body,
-                    'timeout' => 45,
+                    'timeout' => 12,
                     'ignore_errors' => true,
                 ],
             ]);
@@ -586,6 +588,8 @@ if (!function_exists('ai_classifier_base')) {
             'error' => null,
         ];
 
+        // Prefer keyword self-help on the submit path so demos never hang on LLM.
+        // OpenAI tips remain available via AI_CLASSIFIER_URL / deferred jobs later.
         if (ai_classifier_base() !== '') {
             $http = ai_http_post_json('/suggest', [
                 'subject' => (string) $subject,
@@ -593,7 +597,7 @@ if (!function_exists('ai_classifier_base')) {
                 'description' => (string) $description,
                 'category' => (string) $category,
                 'priority' => (string) $priority,
-            ], 20);
+            ], 6);
 
             if ($http['ok']) {
                 $data = $http['data'];
@@ -622,13 +626,6 @@ if (!function_exists('ai_classifier_base')) {
                 $result['method'] = isset($data['method']) ? (string) $data['method'] : null;
                 $result['model'] = isset($data['model']) ? (string) $data['model'] : null;
                 return $result;
-            }
-        }
-
-        if (ai_openai_key() !== '') {
-            $direct = ai_openai_troubleshoot($subject, $description, $category, $priority);
-            if (!empty($direct['ok'])) {
-                return $direct;
             }
         }
 

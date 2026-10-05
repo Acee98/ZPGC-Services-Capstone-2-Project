@@ -526,6 +526,9 @@ if (!function_exists('auth_mail_ready')) {
             return;
         }
         $stmt = $conn->prepare('SELECT role, status, email_verified FROM users WHERE id = ? LIMIT 1');
+        if ($stmt === false) {
+            return;
+        }
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
@@ -607,6 +610,16 @@ if (!function_exists('auth_mail_ready')) {
             'SELECT email, first_name, role, email_notify, email_verified, status
              FROM users WHERE id = ? LIMIT 1'
         );
+        if ($stmt === false) {
+            // Schema without email_notify — still deliver when possible.
+            $stmt = $conn->prepare(
+                'SELECT email, first_name, role, email_verified, status
+                 FROM users WHERE id = ? LIMIT 1'
+            );
+        }
+        if ($stmt === false) {
+            return ['ok' => false, 'error' => 'schema'];
+        }
         $stmt->bind_param('i', $userId);
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
@@ -614,7 +627,7 @@ if (!function_exists('auth_mail_ready')) {
         if (!$user) {
             return ['ok' => false, 'error' => 'no user'];
         }
-        if ((int) ($user['email_notify'] ?? 1) !== 1) {
+        if (array_key_exists('email_notify', $user) && (int) ($user['email_notify'] ?? 1) !== 1) {
             return ['ok' => false, 'error' => 'notify off'];
         }
         if ((int) ($user['email_verified'] ?? 0) !== 1 && ($user['role'] ?? '') !== 'admin') {
@@ -626,6 +639,6 @@ if (!function_exists('auth_mail_ready')) {
         }
         $greeting = trim((string) ($user['first_name'] ?? ''));
         $text = ($greeting !== '' ? "Hello {$greeting},\n\n" : '') . $body . "\n\nZPGC Services";
-        return mail_send($user['email'], $subject, $text);
+        return mail_send($user['email'], $subject, $text, '', true);
     }
 }

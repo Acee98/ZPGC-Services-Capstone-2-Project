@@ -108,6 +108,10 @@ if (!function_exists('ticket_files_ready')) {
         if ($done) {
             return;
         }
+        if (!empty($_SESSION['_zpgc_ticket_files_ready'])) {
+            $done = true;
+            return;
+        }
         $done = true;
 
         if (function_exists('zpgc_runtime_ddl_allowed') && !zpgc_runtime_ddl_allowed()) {
@@ -115,6 +119,7 @@ if (!function_exists('ticket_files_ready')) {
             if (!is_dir($dir)) {
                 @mkdir($dir, 0775, true);
             }
+            $_SESSION['_zpgc_ticket_files_ready'] = 1;
             return;
         }
 
@@ -158,6 +163,9 @@ if (!function_exists('ticket_files_ready')) {
         $legacy = ticket_upload_legacy_root();
         if (!is_dir($legacy)) {
             @mkdir($legacy, 0775, true);
+        }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION['_zpgc_ticket_files_ready'] = 1;
         }
     }
 
@@ -247,12 +255,14 @@ if (!function_exists('ticket_files_ready')) {
             $savedDisk = @file_put_contents($dest, $bytes);
         }
         if ($savedDisk !== false) {
-            // Mirror into the other root when possible (Azure durable + wwwroot).
-            $other = (strpos($dest, ticket_upload_root()) === 0)
-                ? ticket_upload_legacy_root() . '/' . $stored
-                : ticket_upload_root() . '/' . $stored;
-            if ($other !== $dest && !is_file($other)) {
-                @file_put_contents($other, $bytes);
+            // On Azure, never mirror into wwwroot (static /uploads is blocked; serve via ticket_image.php).
+            if (!function_exists('ticket_is_azure_host') || !ticket_is_azure_host()) {
+                $other = (strpos($dest, ticket_upload_root()) === 0)
+                    ? ticket_upload_legacy_root() . '/' . $stored
+                    : ticket_upload_root() . '/' . $stored;
+                if ($other !== $dest && !is_file($other)) {
+                    @file_put_contents($other, $bytes);
+                }
             }
             ticket_ensure_thumb($dest);
         }

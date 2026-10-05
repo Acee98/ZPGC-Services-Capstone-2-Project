@@ -951,6 +951,17 @@ $ui_theme = current_ui_theme();
                     </header>
                 </div>
                 <div class="settings-container">
+                    <?php
+                    $settings_success = $_SESSION['settings_success'] ?? '';
+                    $settings_error = $_SESSION['settings_error'] ?? '';
+                    unset($_SESSION['settings_success'], $_SESSION['settings_error']);
+                    ?>
+                    <?php if ($settings_success !== '') { ?>
+                    <div class="utilities-notice"><?php echo htmlspecialchars($settings_success); ?></div>
+                    <?php } ?>
+                    <?php if ($settings_error !== '') { ?>
+                    <div class="utilities-notice-error"><?php echo htmlspecialchars($settings_error); ?></div>
+                    <?php } ?>
                     <div class="settings-card">
                         <div class="settings-card-header">
                             <h2>Appearance</h2>
@@ -1000,7 +1011,7 @@ $ui_theme = current_ui_theme();
     </script>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
     <script src="../js/utilities_filter.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.20" defer></script>
+    <script src="../js/behavior.js?v=1.6.21" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var input = document.getElementById('perf-log-search');

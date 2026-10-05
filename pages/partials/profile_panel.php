@@ -66,7 +66,7 @@ if ($language !== 'Filipino') {
                             <span class="profile-info-label">E-mail</span>
                             <span class="profile-info-value"><?php echo htmlspecialchars((string) $profile['email']); ?></span>
                             <span class="profile-info-editfields" hidden>
-                                <input type="email" name="email" required value="<?php echo htmlspecialchars((string) $profile['email']); ?>" aria-label="E-mail">
+                                <input type="email" name="email" required readonly value="<?php echo htmlspecialchars((string) $profile['email']); ?>" aria-label="E-mail" title="Email cannot be changed here">
                             </span>
                         </div>
                         <button type="button" class="profile-info-edit" data-profile-pencil aria-label="Edit e-mail">

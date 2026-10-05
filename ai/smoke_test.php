@@ -3,6 +3,10 @@
  * Local smoke tests — no OpenAI spend. Run: php ai/smoke_test.php
  */
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit('CLI only');
+}
 
 $root = dirname(__DIR__);
 $fail = 0;

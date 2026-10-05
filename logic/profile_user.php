@@ -16,6 +16,11 @@ if (!function_exists('current_profile_user')) {
              FROM users WHERE id = ? LIMIT 1'
         );
         if ($stmt === false) {
+            $stmt = $conn->prepare(
+                'SELECT id, first_name, last_name, email, role FROM users WHERE id = ? LIMIT 1'
+            );
+        }
+        if ($stmt === false) {
             $row = false;
             return $row;
         }

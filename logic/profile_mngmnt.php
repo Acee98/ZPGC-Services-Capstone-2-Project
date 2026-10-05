@@ -20,7 +20,6 @@ if (!isset($_POST['save_profile'])) {
 
 $first = trim((string) ($_POST['first_name'] ?? ''));
 $last = trim((string) ($_POST['last_name'] ?? ''));
-$email = trim((string) ($_POST['email'] ?? ''));
 $phone = trim((string) ($_POST['phone'] ?? ''));
 $language = trim((string) ($_POST['preferred_language'] ?? 'English'));
 $emailNotify = isset($_POST['email_notify']) ? 1 : 0;
@@ -30,42 +29,53 @@ if ($language !== 'Filipino') {
     $language = 'English';
 }
 
-if ($id <= 0 || $first === '' || $last === '' || $email === '') {
-    $_SESSION['profile_error'] = 'Name and e-mail are required.';
+if ($id <= 0 || $first === '' || $last === '') {
+    $_SESSION['profile_error'] = 'Name fields are required.';
     header('Location: ' . $back);
     exit();
 }
 
-$check = $conn->prepare('SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1');
-if ($check === false) {
+// Email is identity for TSU auth — do not allow silent change without re-verify.
+$cur = $conn->prepare('SELECT email FROM users WHERE id = ? LIMIT 1');
+if ($cur === false) {
     $_SESSION['profile_error'] = 'Profile could not be saved. Try again after the database update.';
     header('Location: ' . $back);
     exit();
 }
-$check->bind_param('si', $email, $id);
-$check->execute();
-$taken = $check->get_result()->fetch_assoc();
-$check->close();
-if ($taken) {
-    $_SESSION['profile_error'] = 'That email is already used by another account.';
+$cur->bind_param('i', $id);
+$cur->execute();
+$curRow = $cur->get_result()->fetch_assoc();
+$cur->close();
+$email = strtolower(trim((string) ($curRow['email'] ?? '')));
+$postedEmail = strtolower(trim((string) ($_POST['email'] ?? '')));
+if ($postedEmail !== '' && $email !== '' && $postedEmail !== $email) {
+    $_SESSION['profile_error'] = 'Email cannot be changed here. Ask an administrator if you need a different TSU address.';
     header('Location: ' . $back);
     exit();
 }
 
 $stmt = $conn->prepare(
     'UPDATE users
-     SET first_name = ?, last_name = ?, email = ?, phone = ?, email_notify = ?, sms_notify = ?, preferred_language = ?
+     SET first_name = ?, last_name = ?, phone = ?, email_notify = ?, sms_notify = ?, preferred_language = ?
      WHERE id = ?'
 );
 if ($stmt === false) {
-    $_SESSION['profile_error'] = 'Profile could not be saved. Try again after the database update.';
-    header('Location: ' . $back);
-    exit();
+    $stmt = $conn->prepare(
+        'UPDATE users SET first_name = ?, last_name = ? WHERE id = ?'
+    );
+    if ($stmt === false) {
+        $_SESSION['profile_error'] = 'Profile could not be saved. Try again after the database update.';
+        header('Location: ' . $back);
+        exit();
+    }
+    $stmt->bind_param('ssi', $first, $last, $id);
+    $stmt->execute();
+    $stmt->close();
+} else {
+    $stmt->bind_param('ssiissi', $first, $last, $phone, $emailNotify, $smsNotify, $language, $id);
+    $stmt->execute();
+    $stmt->close();
 }
-$stmt->bind_param('ssssiisi', $first, $last, $email, $phone, $emailNotify, $smsNotify, $language, $id);
-$stmt->execute();
-$stmt->close();
-$_SESSION['email'] = $email;
 
 $_SESSION['profile_success'] = 'Profile saved.';
 header('Location: ' . $back);

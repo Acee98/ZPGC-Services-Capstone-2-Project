@@ -4,6 +4,10 @@
  * php ai/smoke_http.php
  */
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit('CLI only');
+}
 
 $base = getenv('ZPGC_SMOKE_BASE') ?: 'http://127.0.0.1/CP2_V1.6';
 $fail = 0;

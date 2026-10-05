@@ -2,6 +2,10 @@
 /**
  * Login as admin and hit key pages over HTTP.
  */
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit('CLI only');
+}
 $base = 'http://127.0.0.1/CP2_V1.6';
 $cookie = sys_get_temp_dir() . '/zpgc_admin_smoke.txt';
 @unlink($cookie);

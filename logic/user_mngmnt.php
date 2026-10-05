@@ -239,6 +239,11 @@ if (isset($_POST['signup'])) {
 if (isset($_POST['resend_verify'])) {
     $email = strtolower(trim((string) ($_POST['email'] ?? '')));
     $_SESSION['pending_verify_email'] = $email;
+    if (!zpgc_rate_limit('verify_resend', 5, 900)) {
+        $_SESSION['signup_error'] = 'Too many resend attempts. Wait a few minutes, then try again.';
+        header('Location: ../pages/verify_pending.php');
+        exit();
+    }
     if ($email === '') {
         $_SESSION['signup_error'] = 'Enter the email you used at signup to resend verification.';
         header('Location: ../pages/verify_pending.php');
@@ -294,6 +299,11 @@ if (isset($_POST['verify_code'])) {
     $email = strtolower(trim((string) ($_POST['email'] ?? '')));
     $code = trim((string) ($_POST['code'] ?? ''));
     $_SESSION['pending_verify_email'] = $email;
+    if (!zpgc_rate_limit('verify_code', 12, 900)) {
+        $_SESSION['signup_error'] = 'Too many verification attempts. Wait a few minutes, then try again.';
+        header('Location: ../pages/verify_pending.php');
+        exit();
+    }
     if ($email === '') {
         $_SESSION['signup_error'] = auth_mail_tsu_email_hint();
         header('Location: ../pages/verify_pending.php');
