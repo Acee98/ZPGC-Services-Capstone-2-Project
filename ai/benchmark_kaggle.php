@@ -13,6 +13,13 @@
  */
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Not found.';
+    exit;
+}
+
 require_once dirname(__DIR__) . '/logic/ai_classify.php';
 require_once __DIR__ . '/metrics_paper.php';
 

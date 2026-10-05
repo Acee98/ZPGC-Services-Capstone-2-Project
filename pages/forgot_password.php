@@ -10,6 +10,11 @@ unset($_SESSION['forgot_error'], $_SESSION['forgot_success']);
 
 if (isset($_POST['forgot_password'])) {
     zpgc_csrf_require();
+    if (!zpgc_rate_limit('forgot', 5, 3600)) {
+        $_SESSION['forgot_error'] = 'Too many reset requests. Try again later.';
+        header('Location: forgot_password.php');
+        exit();
+    }
     $email = strtolower(trim((string) ($_POST['email'] ?? '')));
     // Always show the same message so accounts are not revealed.
     $_SESSION['forgot_success'] = 'If that email is registered, a reset link was sent. Check your inbox.';

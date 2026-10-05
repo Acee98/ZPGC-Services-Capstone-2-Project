@@ -227,9 +227,9 @@ if (!function_exists('ticket_files_ready')) {
             return 'Only image files can be attached.';
         }
         $ext = image_type_to_extension((int) $info[2], false);
-        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
         if (!in_array($ext, $allowed, true)) {
-            return 'Only image files can be attached.';
+            return 'Only JPG, PNG, or WEBP images can be attached.';
         }
 
         $bytes = @file_get_contents((string) $file['tmp_name']);

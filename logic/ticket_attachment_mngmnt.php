@@ -42,6 +42,8 @@ if ($role === 'user') {
     $allowed = ticket_user_can_touch($conn, $ticketId, $userId);
 } elseif ($role === 'techn') {
     $allowed = ticket_techn_can_touch($conn, $ticketId, $userId);
+} elseif ($role === 'admin') {
+    $allowed = true;
 }
 if (!$allowed) {
     $_SESSION['ticket_flash'] = 'You cannot attach an image to that ticket.';

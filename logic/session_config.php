@@ -85,6 +85,9 @@ if (!defined('ZPGC_COOKIE_PATH')) {
     define('ZPGC_COOKIE_PATH', zpgc_detect_cookie_path());
 }
 
+require_once __DIR__ . '/security.php';
+zpgc_security_bootstrap();
+
 if (!function_exists('zpgc_cookie_options')) {
     function zpgc_cookie_options($expires = null)
     {

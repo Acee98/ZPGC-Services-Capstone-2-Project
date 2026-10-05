@@ -10,6 +10,12 @@ if (isset($_POST['login'])) {
     $email = strtolower(trim((string) ($_POST['email'] ?? '')));
     $password = (string) ($_POST['password'] ?? '');
 
+    if (!zpgc_rate_limit('login', 8, 900)) {
+        $_SESSION['login_error'] = 'Too many login attempts. Wait a few minutes, then try again.';
+        header('Location: ../pages/login_signup.php');
+        exit();
+    }
+
     $stmt = $conn->prepare(
         'SELECT id, first_name, last_name, email, password, role, status, email_verified
         FROM users WHERE LOWER(email) = ?'
@@ -67,6 +73,7 @@ if (isset($_POST['login'])) {
             exit();
         }
 
+        zpgc_rate_limit_clear('login');
         zpgc_establish_login_session($user);
 
         $returnTo = zpgc_consume_login_return();
@@ -128,21 +135,11 @@ if (isset($_POST['signup'])) {
     }
 
     // Rate-limit signup bursts (testers inventing emails).
-    $now = time();
-    $attempts = $_SESSION['signup_attempt_times'] ?? [];
-    if (!is_array($attempts)) {
-        $attempts = [];
-    }
-    $attempts = array_values(array_filter($attempts, static function ($t) use ($now) {
-        return is_int($t) && ($now - $t) < 3600;
-    }));
-    if (count($attempts) >= 5) {
+    if (!zpgc_rate_limit('signup', 5, 3600)) {
         $_SESSION['signup_error'] = 'Too many signup attempts from this browser. Wait a bit, then use your real TSU Outlook email.';
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }
-    $attempts[] = $now;
-    $_SESSION['signup_attempt_times'] = $attempts;
 
     if (!auth_mail_is_tsu_email($email) || !auth_mail_is_plausible_tsu_mailbox($email)) {
         $_SESSION['signup_error'] = auth_mail_tsu_email_hint();
