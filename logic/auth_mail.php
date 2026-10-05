@@ -217,20 +217,43 @@ if (!function_exists('auth_mail_ready')) {
         return $ok ? $userId : null;
     }
 
+    /**
+     * After a valid verify code/link:
+     * - user (and non-techn roles): email_verified=1 and status=active (auto-activate)
+     * - techn: email_verified=1 but stay inactive until an admin Activates them
+     *
+     * @return array{ok:bool,role:string,awaiting_admin:bool}
+     */
     function auth_mail_activate_verified_user(mysqli $conn, $userId)
     {
         $userId = (int) $userId;
         if ($userId <= 0) {
-            return false;
+            return ['ok' => false, 'role' => '', 'awaiting_admin' => false];
         }
-        $stmt = $conn->prepare(
-            "UPDATE users SET email_verified = 1, status = 'active' WHERE id = ?"
-        );
+        $stmt = $conn->prepare('SELECT role, status FROM users WHERE id = ? LIMIT 1');
         $stmt->bind_param('i', $userId);
         $stmt->execute();
-        $ok = $stmt->affected_rows >= 0;
+        $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
-        return $ok;
+        if (!$row) {
+            return ['ok' => false, 'role' => '', 'awaiting_admin' => false];
+        }
+        $role = strtolower(trim((string) ($row['role'] ?? 'user')));
+        if ($role === 'techn') {
+            $upd = $conn->prepare('UPDATE users SET email_verified = 1 WHERE id = ?');
+            $upd->bind_param('i', $userId);
+            $upd->execute();
+            $upd->close();
+            // Keep inactive so Utilities → Activate is required.
+            return ['ok' => true, 'role' => 'techn', 'awaiting_admin' => true];
+        }
+        $upd = $conn->prepare(
+            "UPDATE users SET email_verified = 1, status = 'active' WHERE id = ?"
+        );
+        $upd->bind_param('i', $userId);
+        $upd->execute();
+        $upd->close();
+        return ['ok' => true, 'role' => $role !== '' ? $role : 'user', 'awaiting_admin' => false];
     }
 
     function auth_mail_code_bodies($name, $intro, $code, $hours)

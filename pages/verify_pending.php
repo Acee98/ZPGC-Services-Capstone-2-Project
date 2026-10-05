@@ -57,12 +57,12 @@ if ($email === '' && $error === '' && $success === '') {
                 }
                 echo showSuccess($msg);
                 ?>
-                <h5>After verification, your account is activated automatically — no admin approval needed.</h5>
+                <h5>Users activate automatically after the code. Technician accounts also need an admin to Activate them in Utilities (prevents unauthorized tech access).</h5>
                 <input type="email" name="email" placeholder="TSU email used at signup" autocomplete="email" required
                     value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>">
                 <input type="text" name="code" placeholder="6-digit verification code" inputmode="numeric"
                     pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
-                <button type="submit" name="verify_code">Verify and activate</button>
+                <button type="submit" name="verify_code">Verify email</button>
             </form>
             <form action="../logic/user_mngmnt.php" method="post" style="margin-top:12px;">
 <?php echo zpgc_csrf_field(); ?>

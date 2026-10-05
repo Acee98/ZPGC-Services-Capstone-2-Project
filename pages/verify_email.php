@@ -18,9 +18,13 @@ if ($token === '') {
 
 $userId = auth_mail_consume_token($conn, 'verify_email', $token);
 if ($userId) {
-    auth_mail_activate_verified_user($conn, $userId);
+    $result = auth_mail_activate_verified_user($conn, $userId);
     unset($_SESSION['pending_verify_email']);
-    $_SESSION['login_success'] = 'Email verified and account activated. You can log in now.';
+    if (!empty($result['awaiting_admin'])) {
+        $_SESSION['login_success'] = 'Email verified. Your technician account needs an administrator to Activate it in Utilities before login.';
+    } else {
+        $_SESSION['login_success'] = 'Email verified and account activated. You can log in now.';
+    }
     header('Location: login_signup.php');
     exit();
 }

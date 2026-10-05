@@ -152,7 +152,9 @@ if (isset($_POST['set_status'])) {
     $update->execute();
     $update->close();
     utilities_audit($conn, 'set_status', $id, 'Set account status to ' . $status . '.');
-    utilities_ok($status === 'active' ? 'Account activated (email marked verified).' : 'Account deactivated.');
+    utilities_ok($status === 'active'
+        ? 'Account activated and ready to log in (email marked verified).'
+        : 'Account deactivated.');
 }
 
 if (isset($_POST['delete_user'])) {

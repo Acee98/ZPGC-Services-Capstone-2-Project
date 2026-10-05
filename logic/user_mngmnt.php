@@ -50,7 +50,11 @@ if (isset($_POST['login'])) {
             exit();
         }
         if ($user['status'] !== 'active') {
-            $_SESSION['login_error'] = 'Your account is not active. Complete email verification or contact an administrator.';
+            if ($verified && ($user['role'] ?? '') === 'techn') {
+                $_SESSION['login_error'] = 'Your email is verified. An administrator must Activate your technician account in Utilities before you can log in.';
+            } else {
+                $_SESSION['login_error'] = 'Your account is not active. Complete email verification or contact an administrator.';
+            }
             header('Location: ../pages/login_signup.php');
             exit();
         }
@@ -175,8 +179,13 @@ if (isset($_POST['signup'])) {
     $_SESSION['pending_verify_email'] = $email;
     $sent = auth_mail_send_verify($conn, $userId, $email, $first_name);
     if ($sent['ok']) {
-        $_SESSION['signup_success'] = 'Account created. Check ' . $email
-            . ' (TSU Outlook Inbox and Junk) for a 6-digit code, then paste it on the next screen.';
+        if ($role === 'techn') {
+            $_SESSION['signup_success'] = 'Account created. Check ' . $email
+                . ' (TSU Outlook Inbox and Junk) for a 6-digit code. After you verify, an administrator must still Activate your technician account.';
+        } else {
+            $_SESSION['signup_success'] = 'Account created. Check ' . $email
+                . ' (TSU Outlook Inbox and Junk) for a 6-digit code, then paste it on the next screen to activate.';
+        }
     } else {
         $_SESSION['signup_error'] = 'Account created, but email failed: ' . $sent['error']
             . ' Use Resend below, or ask an admin to Activate you in Utilities.';
@@ -251,9 +260,13 @@ if (isset($_POST['verify_code'])) {
         header('Location: ../pages/verify_pending.php');
         exit();
     }
-    auth_mail_activate_verified_user($conn, $userId);
+    $result = auth_mail_activate_verified_user($conn, $userId);
     unset($_SESSION['pending_verify_email']);
-    $_SESSION['login_success'] = 'Email verified and account activated. You can log in now.';
+    if (!empty($result['awaiting_admin'])) {
+        $_SESSION['login_success'] = 'Email verified. Your technician account is waiting for an administrator to Activate it in Utilities. You cannot log in until then.';
+    } else {
+        $_SESSION['login_success'] = 'Email verified and account activated. You can log in now.';
+    }
     header('Location: ../pages/login_signup.php');
     exit();
 }

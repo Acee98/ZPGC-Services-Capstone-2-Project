@@ -61,7 +61,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
 <?php echo zpgc_csrf_field(); ?>
                 <h1>SIGNUP</h1>
                 <?php echo showError($signup_error); ?>
-                <h5>Use your TSU Outlook only. We email a 6-digit code — paste it to verify and activate your account.</h5>
+                <h5>Use your TSU Outlook only. We email a 6-digit code to verify. Users activate automatically; technician accounts need admin Activate after verification.</h5>
                 <input type="text" name="first_name" placeholder="First Name" required>
                 <input type="text" name="last_name" placeholder="Last Name" required>
                 <input type="email" name="email" placeholder="student00000@student.tsu.edu.ph or name@tsu.edu.ph" required>
