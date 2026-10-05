@@ -111,9 +111,7 @@
             loadScript(ticketsSrc).catch(function () {});
         });
 
-        whenTab('utilities', function () {
-            loadScript(utilitiesSrc).catch(function () {});
-        });
+        // utilities_filter.js is loaded directly from admin.php (must be clickable).
     }
 
     function boot() {

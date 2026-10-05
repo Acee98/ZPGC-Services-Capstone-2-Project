@@ -1101,6 +1101,20 @@ body[data-page="messages"] .showcase #page-messages {
     cursor: pointer;
     transition: 0.2s ease-in-out;
     font-family: "Inter";
+    pointer-events: auto;
+    position: relative;
+    z-index: 2;
+}
+.tickets-filter-tabs,
+#utilities-filter-tabs {
+    position: relative;
+    z-index: 3;
+    pointer-events: auto;
+}
+body[data-page="utilities"] .tickets-toolbar {
+    position: relative;
+    z-index: 3;
+    pointer-events: auto;
 }
 .filter-tab:hover {
     background-color: var(--nav-highlight-bg);

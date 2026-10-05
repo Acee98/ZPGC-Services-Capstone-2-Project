@@ -1,30 +1,30 @@
 /**
- * Admin Utilities user list filters (All / User / Technician / Administrator / Pending).
- * Must init immediately (not wait for DOMContentLoaded) — this file is lazy-loaded
- * after DOMContentLoaded when the utilities tab opens.
+ * Admin Utilities role filters — event delegation so clicks always work
+ * (does not depend on lazy-load timing / DOMContentLoaded).
  */
 (function () {
-    if (window.__zpgcUtilitiesFilterBound) {
+    if (window.__zpgcUtilitiesFilterReady) {
         return;
     }
-    window.__zpgcUtilitiesFilterBound = true;
+    window.__zpgcUtilitiesFilterReady = true;
     window.currentUtilitiesFilter = window.currentUtilitiesFilter || 'all';
 
     function rowMatchesFilter(row, filter) {
+        filter = String(filter || 'all').toLowerCase();
         if (filter === 'all') {
             return true;
         }
         var status = (row.getAttribute('data-status') || '').toLowerCase();
         if (filter === 'pending') {
-            // Pending approval = inactive until admin activates
             return status === 'inactive' || status === 'pending';
         }
+        // user | techn | admin — show every account with that role
         var role = (row.getAttribute('data-role') || '').toLowerCase();
-        return role === String(filter).toLowerCase();
+        return role === filter;
     }
 
     window.applyUtilitiesFilter = function (filter) {
-        filter = filter || 'all';
+        filter = String(filter || 'all').toLowerCase();
         window.currentUtilitiesFilter = filter;
         var container = document.getElementById('utilities-users-body');
         if (!container) {
@@ -33,11 +33,8 @@
 
         var rows = container.querySelectorAll('.ticket-row');
         var anyVisible = false;
-
         rows.forEach(function (row) {
             var matches = rowMatchesFilter(row, filter);
-            // Class + hidden: CSS uses display:grid !important on these rows,
-            // so inline style.display = 'none' alone does not hide them.
             row.classList.toggle('ticket-row-filtered-out', !matches);
             if (matches) {
                 row.removeAttribute('hidden');
@@ -56,32 +53,44 @@
                 noMatchEl.innerHTML = '<p>No accounts match this filter.</p>';
                 container.appendChild(noMatchEl);
             }
-            noMatchEl.style.display = '';
         } else if (noMatchEl) {
             noMatchEl.remove();
         }
     };
 
-    function bindTabs() {
-        var tabs = document.getElementById('utilities-filter-tabs');
-        if (!tabs || tabs.getAttribute('data-filter-bound') === '1') {
+    // Capture-phase delegation: works even if other handlers stop bubbling.
+    document.addEventListener('click', function (event) {
+        var btn = event.target && event.target.closest
+            ? event.target.closest('#utilities-filter-tabs .filter-tab')
+            : null;
+        if (!btn) {
             return;
         }
-        tabs.setAttribute('data-filter-bound', '1');
-
-        tabs.querySelectorAll('.filter-tab').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                tabs.querySelectorAll('.filter-tab').forEach(function (b) {
-                    b.classList.remove('active-tab');
-                });
-                btn.classList.add('active-tab');
-                window.applyUtilitiesFilter(btn.getAttribute('data-filter') || 'all');
-            });
+        event.preventDefault();
+        event.stopPropagation();
+        var tabs = document.getElementById('utilities-filter-tabs');
+        if (!tabs) {
+            return;
+        }
+        tabs.querySelectorAll('.filter-tab').forEach(function (b) {
+            b.classList.remove('active-tab');
         });
+        btn.classList.add('active-tab');
+        window.applyUtilitiesFilter(btn.getAttribute('data-filter') || 'all');
+    }, true);
 
+    function syncActive() {
+        var tabs = document.getElementById('utilities-filter-tabs');
+        if (!tabs) {
+            return;
+        }
         var activeBtn = tabs.querySelector('.filter-tab.active-tab');
         window.applyUtilitiesFilter(activeBtn ? activeBtn.getAttribute('data-filter') : 'all');
     }
 
-    bindTabs();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncActive);
+    } else {
+        syncActive();
+    }
 })();

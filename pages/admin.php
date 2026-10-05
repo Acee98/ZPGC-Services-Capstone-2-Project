@@ -94,13 +94,15 @@ $needsDashboardList = ($tab === 'dashboard');
 $needsTechnicians = in_array($tab, ['tickets', 'messages'], true);
 $hasArchivedCol = ticket_has_column($conn, 'archived_at');
 
-if ($tab === 'utilities') {
-    $result = $conn->query('SELECT id, first_name, last_name, email, role, status FROM users ORDER BY id ASC');
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $all_users[] = $row;
-        }
+// Always load accounts so Utilities role filters have rows after any tab navigation.
+$result = $conn->query('SELECT id, first_name, last_name, email, role, status FROM users ORDER BY id ASC');
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $all_users[] = $row;
     }
+}
+
+if ($tab === 'utilities') {
     audit_ready($conn);
     $auditResult = $conn->query(
         "SELECT a.action, a.detail, a.created_at, u.first_name, u.last_name
@@ -261,7 +263,7 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.15">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.16">
     <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.14">
     <link rel="stylesheet" href="../css/theme.css?v=1.6.14">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
@@ -986,8 +988,9 @@ $ui_theme = current_ui_theme();
     <script>
         window.DASHBOARD_CHART_DATA = <?php echo json_encode($dashboard_charts, JSON_UNESCAPED_UNICODE); ?>;
     </script>
-    <script src="../js/lazy_load.js?v=1.6.15"></script>
-    <script src="../js/behavior.js?v=1.6.15" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.16"></script>
+    <script src="../js/utilities_filter.js?v=1.6.16"></script>
+    <script src="../js/behavior.js?v=1.6.16" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var input = document.getElementById('perf-log-search');
