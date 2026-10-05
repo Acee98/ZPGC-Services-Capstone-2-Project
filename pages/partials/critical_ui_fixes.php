@@ -222,13 +222,59 @@ html[data-theme="dark"] .ticket-row {
     body[data-page="profile"] #page-profile,
     body[data-page="settings"] #page-settings,
     body[data-page="dashboard"] #page-dashboard {
-        padding-bottom: calc(var(--zpgc-tabbar-h) + 56px) !important;
+        padding-bottom: calc(var(--zpgc-tabbar-h) + 80px) !important;
         box-sizing: border-box !important;
     }
     body[data-page="tickets"] .tickets-list-body,
     body[data-page="performance"] .tickets-list-body,
     body[data-page="utilities"] .audit-panel {
         padding-bottom: 28px !important;
+    }
+
+    /* User/tech tickets + dashboard: page must scroll above the tab bar */
+    body[data-page="tickets"] .showcase,
+    body[data-page="dashboard"] .showcase {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        max-height: 100dvh !important;
+    }
+    body[data-page="tickets"] #page-tickets {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+    body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user,
+    body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user--actions,
+    body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-techn-actions {
+        flex: 0 1 auto !important;
+        min-height: 180px !important;
+        max-height: min(46vh, 340px) !important;
+        margin-bottom: 16px !important;
+    }
+    body[data-page="tickets"] #page-tickets .ticket-history-section {
+        flex-shrink: 0 !important;
+        margin-bottom: calc(var(--zpgc-tabbar-h) + 28px) !important;
+        padding-bottom: 12px !important;
+    }
+    body[data-page="tickets"] #page-tickets .ticket-history-list.tickets-list {
+        max-height: min(36vh, 260px) !important;
+        margin-bottom: 8px !important;
+    }
+    body[data-page="dashboard"] #page-dashboard.role-dashboard-page {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0 !important;
+        padding-bottom: calc(var(--zpgc-tabbar-h) + 80px) !important;
+    }
+    body[data-page="dashboard"] #page-dashboard.role-dashboard-page .role-dash-list {
+        flex: 0 1 auto !important;
+        min-height: 160px !important;
+        max-height: min(50vh, 360px) !important;
+        margin-bottom: calc(var(--zpgc-tabbar-h) + 28px) !important;
     }
 
     /* Tickets table: sticky header inside its own scroll box */

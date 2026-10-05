@@ -3702,16 +3702,59 @@ body[data-page="messages"] .mailbox-container {
     body[data-page="profile"] #page-profile,
     body[data-page="settings"] #page-settings,
     body[data-page="dashboard"] #page-dashboard {
-        padding-bottom: calc(var(--zpgc-tabbar-h) + 28px) !important;
+        padding-bottom: calc(var(--zpgc-tabbar-h) + 80px) !important;
     }
 
     /* Keep Save profile / settings actions above the bottom tab bar */
     body[data-page="profile"] .showcase,
     body[data-page="settings"] .showcase,
     body[data-page="performance"] .showcase,
-    body[data-page="utilities"] .showcase {
+    body[data-page="utilities"] .showcase,
+    body[data-page="tickets"] .showcase,
+    body[data-page="dashboard"] .showcase {
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+    }
+
+    body[data-page="tickets"] #page-tickets {
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0;
+    }
+
+    body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user,
+    body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user--actions,
+    body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-techn-actions {
+        flex: 0 1 auto;
+        min-height: 180px;
+        max-height: min(46vh, 340px);
+        margin-bottom: 16px;
+    }
+
+    body[data-page="tickets"] #page-tickets .ticket-history-section {
+        flex-shrink: 0;
+        margin-bottom: calc(var(--zpgc-tabbar-h) + 28px);
+        padding-bottom: 12px;
+    }
+
+    body[data-page="tickets"] #page-tickets .ticket-history-list.tickets-list {
+        max-height: min(36vh, 260px);
+        margin-bottom: 8px;
+    }
+
+    body[data-page="dashboard"] #page-dashboard.role-dashboard-page {
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0;
+    }
+
+    body[data-page="dashboard"] #page-dashboard.role-dashboard-page .role-dash-list {
+        flex: 0 1 auto;
+        min-height: 160px;
+        max-height: min(50vh, 360px);
+        margin-bottom: calc(var(--zpgc-tabbar-h) + 28px);
     }
 
     body[data-page="profile"] .profile-form .settings-save-btn,
@@ -4021,7 +4064,7 @@ body[data-page="messages"] .mailbox-container {
      */
     body[data-page="tickets"] #page-tickets {
         overflow-x: hidden;
-        padding-bottom: 8px;
+        overflow-y: auto;
     }
 
     body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin-five,
