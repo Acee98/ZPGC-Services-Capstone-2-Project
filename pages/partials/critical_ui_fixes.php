@@ -1,0 +1,348 @@
+<?php
+/** Inline theme overrides for dark mode and mobile layout. */
+?>
+<style id="zpgc-theme-overrides">
+/* Dark mode: surfaces + readable text */
+html[data-theme="dark"] body {
+    background: #141418 !important;
+    color: #f2f2f7 !important;
+}
+html[data-theme="dark"] .main-wrap .showcase {
+    background: #141418 !important;
+}
+html[data-theme="dark"] .showcase .head header h1 {
+    color: #f2f2f7 !important;
+}
+
+/* Cards / panels / lists */
+html[data-theme="dark"] .tickets-list,
+html[data-theme="dark"] .tickets-list-body,
+html[data-theme="dark"] .ticket-history-list,
+html[data-theme="dark"] .mailbox-container,
+html[data-theme="dark"] .mailbox-threads,
+html[data-theme="dark"] .mailbox-threads-list,
+html[data-theme="dark"] .mailbox-chat,
+html[data-theme="dark"] .mailbox-compose,
+html[data-theme="dark"] .mailbox-readonly-note,
+html[data-theme="dark"] .mailbox-threads-header,
+html[data-theme="dark"] .mailbox-chat-header,
+html[data-theme="dark"] .mailbox-thread-item,
+html[data-theme="dark"] .audit-panel,
+html[data-theme="dark"] .ticket-retention-card,
+html[data-theme="dark"] .ticket-retention-footer,
+html[data-theme="dark"] .perf-summary-card,
+html[data-theme="dark"] .priority-queue-panel,
+html[data-theme="dark"] .priority-queue-band,
+html[data-theme="dark"] .status-card,
+html[data-theme="dark"] .chart-card,
+html[data-theme="dark"] .user-form-card,
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .profile-card,
+html[data-theme="dark"] .profile-hero,
+html[data-theme="dark"] #page-profile .profile-hero,
+html[data-theme="dark"] #page-profile .profile-card {
+    background: #222228 !important;
+    background-color: #222228 !important;
+    color: #f2f2f7 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: none !important;
+}
+
+/* Mailbox thread rows (were stuck on white) */
+html[data-theme="dark"] button.mailbox-thread-item,
+html[data-theme="dark"] .mailbox-thread-item {
+    background: #222228 !important;
+    background-color: #222228 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #f2f2f7 !important;
+}
+html[data-theme="dark"] .mailbox-thread-item:hover {
+    background: #2a2a32 !important;
+    background-color: #2a2a32 !important;
+}
+html[data-theme="dark"] .mailbox-thread-item.active {
+    background: rgba(139, 74, 82, 0.38) !important;
+    background-color: rgba(139, 74, 82, 0.38) !important;
+    border-left-color: #f2b8bc !important;
+}
+html[data-theme="dark"] .mailbox-thread-subject,
+html[data-theme="dark"] .mailbox-thread-item .mailbox-thread-subject {
+    color: #f2f2f7 !important;
+}
+html[data-theme="dark"] .mailbox-thread-time,
+html[data-theme="dark"] .mailbox-thread-item .mailbox-thread-time {
+    color: #c4c4d0 !important;
+}
+
+html[data-theme="dark"] .tickets-list-header,
+html[data-theme="dark"] .audit-head {
+    background: #2a2a32 !important;
+    color: #c4c4d0 !important;
+}
+
+html[data-theme="dark"] .ticket-row span,
+html[data-theme="dark"] .ticket-row > span,
+html[data-theme="dark"] .tickets-list-header span,
+html[data-theme="dark"] .audit-row,
+html[data-theme="dark"] .audit-panel h2,
+html[data-theme="dark"] .ticket-history-head h2,
+html[data-theme="dark"] .mailbox-threads-title,
+html[data-theme="dark"] .mailbox-chat-header-subject,
+html[data-theme="dark"] .mailbox-msg-time,
+html[data-theme="dark"] .mailbox-thread-party,
+html[data-theme="dark"] .mailbox-thread-preview,
+html[data-theme="dark"] .ticket-retention-card h2,
+html[data-theme="dark"] .ticket-retention-meta-value,
+html[data-theme="dark"] .perf-summary-value,
+html[data-theme="dark"] .perf-section-header h2,
+html[data-theme="dark"] #page-performance .perf-section-header h2,
+html[data-theme="dark"] #page-performance .ticket-row span,
+html[data-theme="dark"] #page-performance .tickets-list-header span,
+html[data-theme="dark"] #page-profile .profile-hero-name,
+html[data-theme="dark"] #page-profile .profile-info-value,
+html[data-theme="dark"] #page-profile .profile-card h2,
+html[data-theme="dark"] #page-profile .profile-pref-label,
+html[data-theme="dark"] .profile-pref-label,
+html[data-theme="dark"] .priority-queue-band-label,
+html[data-theme="dark"] .priority-queue-band-count,
+html[data-theme="dark"] .priority-queue-head h2 {
+    color: #f2f2f7 !important;
+}
+
+html[data-theme="dark"] .ticket-history-subtitle,
+html[data-theme="dark"] .ticket-retention-card .form-subtitle,
+html[data-theme="dark"] .ticket-retention-rules,
+html[data-theme="dark"] .ticket-retention-rules li,
+html[data-theme="dark"] .ticket-retention-meta-label,
+html[data-theme="dark"] .ticket-retention-meta-note,
+html[data-theme="dark"] .audit-empty,
+html[data-theme="dark"] .mailbox-chat-header-sub,
+html[data-theme="dark"] .mailbox-readonly-note,
+html[data-theme="dark"] .perf-summary,
+html[data-theme="dark"] .perf-summary-label,
+html[data-theme="dark"] .perf-summary-hint,
+html[data-theme="dark"] .priority-queue-band-tier,
+html[data-theme="dark"] .priority-queue-note,
+html[data-theme="dark"] #page-profile .profile-info-label,
+html[data-theme="dark"] #page-profile .profile-info-value.profile-info-empty {
+    color: #c4c4d0 !important;
+}
+
+/* Priority queue accents readable on dark cards */
+html[data-theme="dark"] .priority-queue-borrow-hint,
+html[data-theme="dark"] .priority-queue-borrowed-tag {
+    color: #f5a8ae !important;
+}
+html[data-theme="dark"] .priority-queue-bar {
+    background: #3a3a44 !important;
+}
+
+/* Inputs / search */
+html[data-theme="dark"] .mailbox-search,
+html[data-theme="dark"] .mailbox-chat-input,
+html[data-theme="dark"] .showcase .head header .search-bar,
+html[data-theme="dark"] .search-bar-wrapper .search-bar,
+html[data-theme="dark"] input.search-bar,
+html[data-theme="dark"] .admin-ticket-select,
+html[data-theme="dark"] .filter-tab:not(.active-tab),
+html[data-theme="dark"] .profile-pref-select {
+    background: #2a2a32 !important;
+    background-color: #2a2a32 !important;
+    color: #f2f2f7 !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+}
+html[data-theme="dark"] .mailbox-search::placeholder,
+html[data-theme="dark"] .mailbox-chat-input::placeholder,
+html[data-theme="dark"] .showcase .head header .search-bar::placeholder,
+html[data-theme="dark"] .search-bar-wrapper .search-bar::placeholder,
+html[data-theme="dark"] input.search-bar::placeholder {
+    color: #9a9aaa !important;
+    opacity: 1 !important;
+}
+html[data-theme="dark"] .search-bar-wrapper .search-icon {
+    color: #9a9aaa !important;
+}
+
+/* Performance search fields stay light for contrast */
+html[data-theme="dark"] #page-performance .perf-filters-row .search-bar,
+html[data-theme="dark"] #page-performance #perf-log-search,
+html[data-theme="dark"] #page-performance .search-bar-wrapper .search-bar {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    border: 1px solid #d9d9d9 !important;
+}
+html[data-theme="dark"] #page-performance #perf-log-search::placeholder,
+html[data-theme="dark"] #page-performance .search-bar-wrapper .search-bar::placeholder {
+    color: #787777 !important;
+    opacity: 1 !important;
+}
+html[data-theme="dark"] #page-performance .search-bar-wrapper .search-icon {
+    color: #787777 !important;
+}
+html[data-theme="dark"] .filter-tab.active-tab {
+    background: #610107 !important;
+    color: #fff !important;
+}
+html[data-theme="dark"] .mailbox-msg.received .mailbox-msg-bubble {
+    background: #2a2a32 !important;
+    color: #f2f2f7 !important;
+}
+html[data-theme="dark"] .mailbox-back-btn {
+    background: #2a2a32 !important;
+    color: #f5d0d4 !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+}
+html[data-theme="dark"] .mobile-tabbar {
+    background: #1c1c22 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+html[data-theme="dark"] .mobile-tab-btn { color: #e0e0e8 !important; }
+html[data-theme="dark"] .mobile-tab-btn.selected {
+    color: #f5d0d4 !important;
+    background: rgba(139, 74, 82, 0.28) !important;
+}
+html[data-theme="dark"] #page-profile .profile-hero-avatar {
+    background: #32323c !important;
+    color: #f2f2f7 !important;
+}
+html[data-theme="dark"] .ticket-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ========== Mobile: keep content above bottom tab bar ========== */
+@media (max-width: 768px) {
+    body {
+        --zpgc-tabbar-h: calc(58px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(var(--zpgc-tabbar-h) + 16px) !important;
+    }
+    body[data-page="tickets"] #page-tickets,
+    body[data-page="utilities"] #page-utilities,
+    body[data-page="performance"] #page-performance,
+    body[data-page="profile"] #page-profile,
+    body[data-page="settings"] #page-settings,
+    body[data-page="dashboard"] #page-dashboard {
+        padding-bottom: calc(var(--zpgc-tabbar-h) + 56px) !important;
+        box-sizing: border-box !important;
+    }
+    body[data-page="tickets"] .tickets-list-body,
+    body[data-page="performance"] .tickets-list-body,
+    body[data-page="utilities"] .audit-panel {
+        padding-bottom: 28px !important;
+    }
+
+    /* Tickets table: sticky header inside its own scroll box */
+    body[data-page="tickets"] .tickets-list.tickets-list-admin-five {
+        overflow: auto !important;
+        max-height: calc(100dvh - 250px - var(--zpgc-tabbar-h)) !important;
+        margin-bottom: 16px !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    body[data-page="tickets"] .tickets-list-admin-five .tickets-list-header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 8 !important;
+        background: #f5f5f5 !important;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+    }
+    html[data-theme="dark"] body[data-page="tickets"] .tickets-list.tickets-list-admin-five {
+        background: #222228 !important;
+    }
+    html[data-theme="dark"] body[data-page="tickets"] .tickets-list-admin-five .tickets-list-header {
+        background: #2a2a32 !important;
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
+        color: #f2f2f7 !important;
+    }
+    html[data-theme="dark"] body[data-page="tickets"] .tickets-list-admin-five .tickets-list-header span {
+        color: #f2f2f7 !important;
+    }
+    body[data-page="tickets"] .tickets-list-admin-five .ticket-row,
+    body[data-page="tickets"] .tickets-list-admin-five form.ticket-row {
+        background: #ffffff !important;
+    }
+    html[data-theme="dark"] body[data-page="tickets"] .tickets-list-admin-five .ticket-row,
+    html[data-theme="dark"] body[data-page="tickets"] .tickets-list-admin-five form.ticket-row {
+        background: #222228 !important;
+        border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* Mailbox: shell fits above tab bar; compose always visible */
+    body[data-page="messages"] {
+        padding-bottom: 0 !important;
+        overflow: hidden !important;
+        height: 100dvh !important;
+    }
+    body[data-page="messages"] .main-wrap,
+    body[data-page="messages"] .showcase {
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        overflow: hidden !important;
+    }
+    body[data-page="messages"] #page-messages {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    body[data-page="messages"] #page-messages > .head {
+        flex-shrink: 0 !important;
+    }
+    body[data-page="messages"] .mailbox-container {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        margin: 0 0 var(--zpgc-tabbar-h) 0 !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        overflow: hidden !important;
+    }
+    body[data-page="messages"] .mailbox-threads {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        background: #222228 !important;
+    }
+    body[data-page="messages"] .mailbox-threads-list {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 16px !important;
+        background: #222228 !important;
+    }
+    body[data-page="messages"] .mailbox-chat {
+        display: none !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        overflow: hidden !important;
+    }
+    /* Critical: hide list when a ticket chat is open (was blocked by display:flex !important) */
+    body[data-page="messages"] .mailbox-container.is-chat-open .mailbox-threads {
+        display: none !important;
+    }
+    body[data-page="messages"] .mailbox-container.is-chat-open .mailbox-chat {
+        display: flex !important;
+    }
+    body[data-page="messages"] .mailbox-chat-messages {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    body[data-page="messages"] .mailbox-compose,
+    body[data-page="messages"] .mailbox-readonly-note {
+        flex-shrink: 0 !important;
+        position: relative !important;
+        z-index: 6 !important;
+        margin: 0 !important;
+        padding: 10px 12px !important;
+    }
+}
+</style>

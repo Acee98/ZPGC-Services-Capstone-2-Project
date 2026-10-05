@@ -1,0 +1,48 @@
+# Local docs and notes
+docs/
+
+# Database dumps
+database/backups/
+backup_db/
+
+# Secrets
+.env
+ai/.env
+logic/mail.env
+API Key/
+**/api_key.txt
+*SMTP*Pass*
+*App Password*
+Flexible_Server_Creds.txt
+Google SMTP Pass.txt
+
+# Editor / IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.log
+*.tmp
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Large data files
+ai/data/*.csv
+
+# Local-only scripts
+tools/_git_*.sh
+tools/fix_admin_password.php
+pages/dev_fix_admin.php
