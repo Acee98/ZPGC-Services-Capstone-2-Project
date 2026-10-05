@@ -14,7 +14,7 @@ html[data-theme="dark"] .showcase .head header h1 {
     color: #f2f2f7 !important;
 }
 
-/* Ticket History: dedicated Satisfaction Level column (never wrap under ID) */
+/* Ticket History: Satisfaction Level as a fixed trailing column */
 .ticket-history-list--satisfaction .tickets-list-header,
 .ticket-history-list--satisfaction .ticket-row,
 .ticket-history-list:has(.tickets-col-satisfaction) .tickets-list-header,
@@ -22,24 +22,29 @@ html[data-theme="dark"] .showcase .head header h1 {
     display: grid !important;
     grid-template-columns:
         72px
-        minmax(110px, 1.1fr)
-        minmax(130px, 1.35fr)
+        minmax(120px, 1.2fr)
+        minmax(160px, 2fr)
         110px
-        110px
-        minmax(140px, 1fr) !important;
+        100px
+        150px !important;
     column-gap: 12px !important;
     align-items: center !important;
+    justify-content: stretch !important;
 }
 .ticket-history-list .tickets-col-satisfaction {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
+    text-align: left !important;
     min-width: 0 !important;
+    max-width: 100% !important;
     white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 .ticket-history-list .tickets-list-header .tickets-col-satisfaction {
-    justify-content: center !important;
-    text-align: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
 }
 
 /* Cards / panels / lists */
@@ -608,9 +613,9 @@ html[data-theme="dark"] .ticket-row {
     .ticket-history-list--satisfaction .ticket-row,
     .ticket-history-list:has(.tickets-col-satisfaction) .tickets-list-header,
     .ticket-history-list:has(.tickets-col-satisfaction) .ticket-row {
-        grid-template-columns: 56px minmax(110px, 1.1fr) minmax(130px, 1.25fr) 100px 100px minmax(140px, 1fr) !important;
-        min-width: 920px !important;
-        width: 920px !important;
+        grid-template-columns: 56px minmax(120px, 1.15fr) minmax(150px, 1.8fr) 100px 96px 140px !important;
+        min-width: 860px !important;
+        width: 860px !important;
     }
     .ticket-history-list--assigned .tickets-list-header,
     .ticket-history-list--assigned .ticket-row {
