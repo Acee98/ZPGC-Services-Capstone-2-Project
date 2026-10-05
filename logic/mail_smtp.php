@@ -133,8 +133,10 @@ if (!function_exists('mail_send')) {
             $headers = [
                 'Date: ' . date('r'),
                 'From: ' . $encodedFromName . ' <' . $from . '>',
+                'Reply-To: <' . $from . '>',
                 'To: <' . $to . '>',
                 'Subject: ' . $encodedSubject,
+                'Message-ID: <' . bin2hex(random_bytes(12)) . '@zpgc-services>',
                 'MIME-Version: 1.0',
                 'X-Mailer: ZPGC-Services-PHP',
             ];

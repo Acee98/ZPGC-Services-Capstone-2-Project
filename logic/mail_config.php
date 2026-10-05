@@ -66,6 +66,23 @@ if (!function_exists('mail_env_load')) {
             $cached['MAIL_FROM'] = $cached['MAIL_USERNAME'];
         }
         $cached['MAIL_PASSWORD'] = preg_replace('/\s+/', '', $cached['MAIL_PASSWORD']);
+
+        // Prevent Gmail mailbox + Office365 host (or the reverse) which accepts
+        // "configured" UI checks but never delivers verification codes.
+        $userLower = strtolower((string) $cached['MAIL_USERNAME']);
+        $hostLower = strtolower((string) $cached['MAIL_HOST']);
+        if (
+            str_ends_with($userLower, '@gmail.com')
+            && (str_contains($hostLower, 'office365') || str_contains($hostLower, 'outlook'))
+        ) {
+            $cached['MAIL_HOST'] = 'smtp.gmail.com';
+        } elseif (
+            (str_ends_with($userLower, '@tsu.edu.ph') || str_ends_with($userLower, '@student.tsu.edu.ph') || str_ends_with($userLower, '@outlook.com') || str_ends_with($userLower, '@hotmail.com'))
+            && str_contains($hostLower, 'gmail')
+        ) {
+            $cached['MAIL_HOST'] = 'smtp.office365.com';
+        }
+
         return $cached;
     }
 

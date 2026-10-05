@@ -51,8 +51,9 @@ if ($email === '' && $error === '' && $success === '') {
                 <?php echo showError($error); ?>
                 <?php
                 $msg = $success;
-                if ($msg === '' && $email !== '') {
-                    $msg = 'We sent a 6-digit code to ' . $email . '. Open your TSU Outlook, copy the code, and paste it below.';
+                if ($msg === '' && $email !== '' && $error === '') {
+                    $msg = 'Enter the 6-digit code emailed to ' . $email
+                        . '. If nothing arrived, check Junk/Spam, then tap Resend code.';
                 }
                 echo showSuccess($msg);
                 ?>

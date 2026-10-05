@@ -42,7 +42,7 @@ CREATE DATABASE zpgc_services_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_c
 | `DB_NAME` | `zpgc_services_db` |
 | `DB_PORT` | `3306` |
 | `DB_SSL` | `1` |
-| `MAIL_HOST` | `smtp.gmail.com` |
+| `MAIL_HOST` | `smtp.gmail.com` (must match the mailbox — Gmail→gmail.com, TSU Outlook→`smtp.office365.com`) |
 | `MAIL_PORT` | `587` |
 | `MAIL_ENCRYPTION` | `tls` |
 | `MAIL_USERNAME` | your Gmail |

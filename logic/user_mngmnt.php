@@ -27,7 +27,25 @@ if (isset($_POST['login'])) {
         }
         if (!$verified) {
             $_SESSION['pending_verify_email'] = (string) $user['email'];
-            $_SESSION['signup_success'] = 'Enter the 6-digit code we sent to your TSU Outlook. You can resend a new code below.';
+            if (!mail_ready()) {
+                $_SESSION['signup_error'] = 'Your email is not verified yet, and mail is not configured. Ask an admin to Activate your account.';
+                header('Location: ../pages/verify_pending.php');
+                exit();
+            }
+            // Always send a fresh code here — do not claim one was sent without SMTP.
+            $sent = auth_mail_send_verify(
+                $conn,
+                (int) $user['id'],
+                (string) $user['email'],
+                (string) ($user['first_name'] ?? '')
+            );
+            if ($sent['ok']) {
+                $_SESSION['signup_success'] = 'Your account is not verified yet. We just emailed a new 6-digit code to '
+                    . $user['email'] . '. Check TSU Outlook (Inbox and Junk), then paste it below.';
+            } else {
+                $_SESSION['signup_error'] = 'Your account is not verified yet, and we could not email a code ('
+                    . $sent['error'] . '). Tap Resend, or ask an admin to Activate your account.';
+            }
             header('Location: ../pages/verify_pending.php');
             exit();
         }
@@ -90,8 +108,8 @@ if (isset($_POST['signup'])) {
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }
-    if (!auth_mail_is_deliverable_email($email)) {
-        $_SESSION['signup_error'] = 'Use a real email address you can open. Dummy domains are not allowed.';
+    if (!auth_mail_is_tsu_email($email)) {
+        $_SESSION['signup_error'] = auth_mail_tsu_email_hint();
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }
@@ -158,7 +176,7 @@ if (isset($_POST['signup'])) {
     $sent = auth_mail_send_verify($conn, $userId, $email, $first_name);
     if ($sent['ok']) {
         $_SESSION['signup_success'] = 'Account created. Check ' . $email
-            . ' for a 6-digit verification code (TSU Outlook). Paste it on the next screen to activate your account.';
+            . ' (TSU Outlook Inbox and Junk) for a 6-digit code, then paste it on the next screen.';
     } else {
         $_SESSION['signup_error'] = 'Account created, but email failed: ' . $sent['error']
             . ' Use Resend below, or ask an admin to Activate you in Utilities.';
@@ -188,7 +206,7 @@ if (isset($_POST['resend_verify'])) {
     $user = $stmt->get_result()->fetch_assoc();
     $stmt->close();
     // Same generic message whether or not the account exists (avoid account enumeration).
-    $generic = 'If that email still needs verification, we sent a new 6-digit code. Check your TSU Outlook inbox.';
+    $generic = 'If that email still needs verification, we sent a new 6-digit code. Check TSU Outlook Inbox and Junk.';
     if (
         $user
         && (int) ($user['email_verified'] ?? 0) !== 1
