@@ -18,21 +18,23 @@ if (isset($_POST['login'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
+    $stmt->close();
 
     if ($user && password_verify($password, $user['password'])) {
-        $verified = (int) ($user['email_verified'] ?? 0) === 1;
-        // Older active accounts created before verification keep working.
-        if (!$verified && $user['status'] === 'active') {
-            $verified = true;
-        }
-        if (!$verified) {
+        // Canonicalize technician aliases before gate / session.
+        $user['role'] = auth_mail_normalize_role($user['role'] ?? 'user');
+        $gate = auth_mail_login_gate($user);
+
+        if (!$gate['ok'] && !empty($gate['need_verify'])) {
             $_SESSION['pending_verify_email'] = (string) $user['email'];
             if (!mail_ready()) {
-                $_SESSION['signup_error'] = 'Your email is not verified yet, and mail is not configured. Ask an admin to Activate your account.';
+                $_SESSION['signup_error'] = 'Your email is not verified yet, and mail is not configured. '
+                    . (auth_mail_is_technician_role($user['role'])
+                        ? 'Ask an admin to Activate your technician account in Utilities.'
+                        : 'Ask an admin for help.');
                 header('Location: ../pages/verify_pending.php');
                 exit();
             }
-            // Always send a fresh code here — do not claim one was sent without SMTP.
             $sent = auth_mail_send_verify(
                 $conn,
                 (int) $user['id'],
@@ -44,26 +46,31 @@ if (isset($_POST['login'])) {
                     . $user['email'] . '. Check TSU Outlook (Inbox and Junk), then paste it below.';
             } else {
                 $_SESSION['signup_error'] = 'Your account is not verified yet, and we could not email a code ('
-                    . $sent['error'] . '). Tap Resend, or ask an admin to Activate your account.';
+                    . $sent['error'] . '). Tap Resend, or ask an admin for help.';
             }
             header('Location: ../pages/verify_pending.php');
             exit();
         }
-        if ($user['status'] !== 'active') {
-            if ($verified && ($user['role'] ?? '') === 'techn') {
-                $_SESSION['login_error'] = 'Your email is verified. An administrator must Activate your technician account in Utilities before you can log in.';
-            } else {
-                $_SESSION['login_error'] = 'Your account is not active. Complete email verification or contact an administrator.';
-            }
+
+        if (!$gate['ok']) {
+            $_SESSION['login_error'] = $gate['message'] !== ''
+                ? $gate['message']
+                : 'Your account cannot log in yet.';
             header('Location: ../pages/login_signup.php');
             exit();
         }
+
+        // Extra hard stop: technicians must never get a session while inactive.
+        if (auth_mail_is_technician_role($user['role']) && strtolower((string) $user['status']) !== 'active') {
+            $_SESSION['login_error'] = 'Your email is verified. An administrator must Activate your technician account in Utilities before you can log in.';
+            header('Location: ../pages/login_signup.php');
+            exit();
+        }
+
         zpgc_establish_login_session($user);
 
         $returnTo = zpgc_consume_login_return();
         if ($returnTo !== '') {
-            // Only honor return URL when the signed-in role may open that page.
-            // Admin probe / tools stay admin-only; others keep role home.
             $role = strtolower((string) $user['role']);
             $returnBase = strtolower((string) parse_url($returnTo, PHP_URL_PATH));
             $adminOnly = ['ai_status.php', 'mail_status.php'];
@@ -113,6 +120,7 @@ if (isset($_POST['signup'])) {
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }
+    $role = auth_mail_normalize_role($role);
     if (!in_array($role, $allowed, true)) {
         $_SESSION['signup_error'] = 'Choose User or Technician.';
         header('Location: ../pages/login_signup.php?form=signup');
@@ -165,6 +173,8 @@ if (isset($_POST['signup'])) {
     }
 
     $hash = password_hash($password, PASSWORD_DEFAULT);
+    // Always inactive at signup. Users become active after 6-digit verify;
+    // technicians stay inactive until an admin Activates them.
     $status = 'inactive';
     $verified = 0;
     $stmt = $conn->prepare(

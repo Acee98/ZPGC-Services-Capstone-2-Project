@@ -218,9 +218,105 @@ if (!function_exists('auth_mail_ready')) {
     }
 
     /**
+     * Technician roles that must stay inactive until an admin Activates them.
+     */
+    function auth_mail_is_technician_role($role)
+    {
+        $role = strtolower(trim((string) $role));
+        return in_array($role, ['techn', 'technician', 'tech'], true);
+    }
+
+    /**
+     * Normalize signup/DB role values used by the app.
+     */
+    function auth_mail_normalize_role($role)
+    {
+        $role = strtolower(trim((string) $role));
+        if (auth_mail_is_technician_role($role)) {
+            return 'techn';
+        }
+        if ($role === 'admin' || $role === 'administrator') {
+            return 'admin';
+        }
+        return 'user';
+    }
+
+    /**
+     * Decide whether this account may establish a login session.
+     *
+     * Rules (foolproof):
+     * - user: email verified (or legacy active) AND status=active → OK after 6-digit verify
+     * - techn: email_verified=1 AND status=active → only after admin Activate
+     * - admin: status=active (email_verified optional / legacy)
+     *
+     * @return array{ok:bool,need_verify:bool,awaiting_admin:bool,message:string}
+     */
+    function auth_mail_login_gate(array $user)
+    {
+        $role = auth_mail_normalize_role($user['role'] ?? 'user');
+        $status = strtolower(trim((string) ($user['status'] ?? '')));
+        $verified = (int) ($user['email_verified'] ?? 0) === 1;
+
+        if ($role === 'admin') {
+            if ($status !== 'active') {
+                return [
+                    'ok' => false,
+                    'need_verify' => false,
+                    'awaiting_admin' => false,
+                    'message' => 'This administrator account is not active.',
+                ];
+            }
+            return ['ok' => true, 'need_verify' => false, 'awaiting_admin' => false, 'message' => ''];
+        }
+
+        if ($role === 'techn') {
+            // Never treat technicians as "legacy verified" from status alone.
+            if (!$verified) {
+                return [
+                    'ok' => false,
+                    'need_verify' => true,
+                    'awaiting_admin' => false,
+                    'message' => 'Verify your email with the 6-digit code first. After that, an administrator must Activate your technician account.',
+                ];
+            }
+            if ($status !== 'active') {
+                return [
+                    'ok' => false,
+                    'need_verify' => false,
+                    'awaiting_admin' => true,
+                    'message' => 'Your email is verified. An administrator must Activate your technician account in Utilities before you can log in.',
+                ];
+            }
+            return ['ok' => true, 'need_verify' => false, 'awaiting_admin' => false, 'message' => ''];
+        }
+
+        // Regular users: auto-activate after verify; legacy active accounts still work.
+        if (!$verified && $status === 'active') {
+            $verified = true;
+        }
+        if (!$verified) {
+            return [
+                'ok' => false,
+                'need_verify' => true,
+                'awaiting_admin' => false,
+                'message' => 'Your email is not verified yet. Enter the 6-digit code we emailed you.',
+            ];
+        }
+        if ($status !== 'active') {
+            return [
+                'ok' => false,
+                'need_verify' => false,
+                'awaiting_admin' => false,
+                'message' => 'Your account is not active. Complete email verification or contact an administrator.',
+            ];
+        }
+        return ['ok' => true, 'need_verify' => false, 'awaiting_admin' => false, 'message' => ''];
+    }
+
+    /**
      * After a valid verify code/link:
-     * - user (and non-techn roles): email_verified=1 and status=active (auto-activate)
-     * - techn: email_verified=1 but stay inactive until an admin Activates them
+     * - user: email_verified=1 and status=active (auto-activate — no admin needed)
+     * - techn: email_verified=1 and status forced inactive until admin Activates
      *
      * @return array{ok:bool,role:string,awaiting_admin:bool}
      */
@@ -238,23 +334,82 @@ if (!function_exists('auth_mail_ready')) {
         if (!$row) {
             return ['ok' => false, 'role' => '', 'awaiting_admin' => false];
         }
-        $role = strtolower(trim((string) ($row['role'] ?? 'user')));
+        $role = auth_mail_normalize_role($row['role'] ?? 'user');
+
+        // Keep DB role canonical if an alias was stored.
+        if (auth_mail_is_technician_role($row['role'] ?? '') && ($row['role'] ?? '') !== 'techn') {
+            $fix = $conn->prepare("UPDATE users SET role = 'techn' WHERE id = ?");
+            $fix->bind_param('i', $userId);
+            $fix->execute();
+            $fix->close();
+        }
+
         if ($role === 'techn') {
-            $upd = $conn->prepare('UPDATE users SET email_verified = 1 WHERE id = ?');
+            // Explicitly force inactive — never leave a techn active after self-verify.
+            $upd = $conn->prepare(
+                "UPDATE users SET email_verified = 1, status = 'inactive', role = 'techn' WHERE id = ?"
+            );
             $upd->bind_param('i', $userId);
             $upd->execute();
             $upd->close();
-            // Keep inactive so Utilities → Activate is required.
             return ['ok' => true, 'role' => 'techn', 'awaiting_admin' => true];
         }
+
+        if ($role === 'admin') {
+            // Admins are not created via public signup; still mark verified if they verify.
+            $upd = $conn->prepare(
+                "UPDATE users SET email_verified = 1 WHERE id = ?"
+            );
+            $upd->bind_param('i', $userId);
+            $upd->execute();
+            $upd->close();
+            return ['ok' => true, 'role' => 'admin', 'awaiting_admin' => false];
+        }
+
+        // Regular user: auto-activate after 6-digit verification.
         $upd = $conn->prepare(
-            "UPDATE users SET email_verified = 1, status = 'active' WHERE id = ?"
+            "UPDATE users SET email_verified = 1, status = 'active', role = 'user' WHERE id = ?"
         );
         $upd->bind_param('i', $userId);
         $upd->execute();
         $upd->close();
-        return ['ok' => true, 'role' => $role !== '' ? $role : 'user', 'awaiting_admin' => false];
+        return ['ok' => true, 'role' => 'user', 'awaiting_admin' => false];
     }
+
+    /**
+     * Live DB check used by technician pages — kills sessions if deactivated.
+     */
+    function auth_mail_assert_session_still_allowed(mysqli $conn)
+    {
+        $id = (int) ($_SESSION['id'] ?? 0);
+        if ($id <= 0) {
+            return;
+        }
+        $stmt = $conn->prepare('SELECT role, status, email_verified FROM users WHERE id = ? LIMIT 1');
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $user = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if (!$user) {
+            $_SESSION = [];
+            header('Location: ../pages/login_signup.php');
+            exit();
+        }
+        $gate = auth_mail_login_gate($user);
+        if (!$gate['ok']) {
+            $_SESSION = [];
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
+            $_SESSION['login_error'] = $gate['message'] !== ''
+                ? $gate['message']
+                : 'Your account is no longer allowed to sign in.';
+            header('Location: ../pages/login_signup.php');
+            exit();
+        }
+        $_SESSION['role'] = auth_mail_normalize_role($user['role'] ?? ($_SESSION['role'] ?? 'user'));
+    }
+
 
     function auth_mail_code_bodies($name, $intro, $code, $hours)
     {

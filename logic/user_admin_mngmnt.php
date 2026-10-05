@@ -143,6 +143,7 @@ if (isset($_POST['set_status'])) {
 
     // Activating also marks email verified so Azure demo accounts can log in
     // when Gmail SMTP delivery fails from App Service.
+    // Technician Activate is the only path that flips techn status to active.
     if ($status === 'active') {
         $update = $conn->prepare('UPDATE users SET status = ?, email_verified = 1 WHERE id = ?');
     } else {
@@ -151,10 +152,23 @@ if (isset($_POST['set_status'])) {
     $update->bind_param('si', $status, $id);
     $update->execute();
     $update->close();
-    utilities_audit($conn, 'set_status', $id, 'Set account status to ' . $status . '.');
-    utilities_ok($status === 'active'
-        ? 'Account activated and ready to log in (email marked verified).'
-        : 'Account deactivated.');
+
+    $roleStmt = $conn->prepare('SELECT role, email FROM users WHERE id = ? LIMIT 1');
+    $roleStmt->bind_param('i', $id);
+    $roleStmt->execute();
+    $roleRow = $roleStmt->get_result()->fetch_assoc();
+    $roleStmt->close();
+    $roleLabel = strtolower((string) ($roleRow['role'] ?? ''));
+    $who = (string) ($roleRow['email'] ?? ('#' . $id));
+
+    utilities_audit($conn, 'set_status', $id, 'Set account status to ' . $status . ' (' . $roleLabel . ').');
+    if ($status === 'active' && in_array($roleLabel, ['techn', 'technician', 'tech'], true)) {
+        utilities_ok('Technician account activated. ' . $who . ' can log in now.');
+    } elseif ($status === 'active') {
+        utilities_ok('Account activated and ready to log in (email marked verified).');
+    } else {
+        utilities_ok('Account deactivated.');
+    }
 }
 
 if (isset($_POST['delete_user'])) {

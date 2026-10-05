@@ -343,10 +343,28 @@ function require_role($role)
     require_login();
     $current = strtolower(trim((string) ($_SESSION['role'] ?? '')));
     $need = strtolower(trim((string) $role));
+
+    $authMail = __DIR__ . '/auth_mail.php';
+    if (is_file($authMail)) {
+        require_once $authMail;
+    }
+    if (function_exists('auth_mail_normalize_role')) {
+        $current = auth_mail_normalize_role($current);
+        $need = auth_mail_normalize_role($need);
+        $_SESSION['role'] = $current;
+    }
     if ($current !== $need) {
         // Already logged in as another role — send to that role home, not a login loop.
         header('Location: ' . zpgc_role_home($current !== '' ? $current : 'user'));
         exit();
+    }
+
+    // Technicians: re-check DB so a deactivated/pending tech cannot keep using an old session.
+    if ($need === 'techn' && function_exists('auth_mail_assert_session_still_allowed')) {
+        global $conn;
+        if ($conn instanceof mysqli) {
+            auth_mail_assert_session_still_allowed($conn);
+        }
     }
 }
 

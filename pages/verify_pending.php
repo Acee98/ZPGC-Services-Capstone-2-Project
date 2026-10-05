@@ -57,7 +57,7 @@ if ($email === '' && $error === '' && $success === '') {
                 }
                 echo showSuccess($msg);
                 ?>
-                <h5>Users activate automatically after the code. Technician accounts also need an admin to Activate them in Utilities (prevents unauthorized tech access).</h5>
+                <h5>Users activate automatically after the code. Technician accounts stay pending until an admin clicks Activate in Utilities — they cannot log in with the code alone.</h5>
                 <input type="email" name="email" placeholder="TSU email used at signup" autocomplete="email" required
                     value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>">
                 <input type="text" name="code" placeholder="6-digit verification code" inputmode="numeric"
