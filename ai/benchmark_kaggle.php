@@ -5,19 +5,29 @@
  * Usage (from project root or ai/):
  *   php ai/benchmark_kaggle.php --mode=keyword --n=3000
  *   php ai/benchmark_kaggle.php --mode=luna --n=200
+ *   php ai/benchmark_kaggle.php --mode=luna --n=200 --model=gpt-4o-mini --out=ai/data/benchmark_gpt4o_mini_report.json
  *
+ * --model overrides OPENAI_MODEL for this process only (does not edit ai/.env).
  * Gold labels are heuristically mapped from queue/tags/text into ZPGC labels
  * (same approach as the first keyword-only report).
  */
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/logic/ai_classify.php';
+require_once __DIR__ . '/metrics_paper.php';
 
-$opts = getopt('', ['mode::', 'n::', 'seed::', 'out::']);
+$opts = getopt('', ['mode::', 'n::', 'seed::', 'out::', 'model::']);
 $mode = strtolower((string) ($opts['mode'] ?? 'luna'));
 $n = max(1, (int) ($opts['n'] ?? ($mode === 'keyword' ? 3000 : 200)));
 $seed = (int) ($opts['seed'] ?? 42);
 $out = (string) ($opts['out'] ?? '');
+$modelOverride = trim((string) ($opts['model'] ?? ''));
+if ($modelOverride !== '') {
+    // Process-only override so campus live .env / App Settings stay untouched.
+    putenv('OPENAI_MODEL=' . $modelOverride);
+    $_ENV['OPENAI_MODEL'] = $modelOverride;
+    $_SERVER['OPENAI_MODEL'] = $modelOverride;
+}
 
 $csvPath = __DIR__ . '/data/kaggle_tickets_multi_lang.csv';
 if (!is_file($csvPath)) {
@@ -237,9 +247,10 @@ foreach ($sample as $i => $row) {
 }
 
 $report = [
-    'mode' => $mode === 'keyword' ? 'keyword_only' : 'luna_openai',
+    'mode' => $mode === 'keyword' ? 'keyword_only' : 'openai_benchmark',
     'openai' => $mode !== 'keyword',
     'model' => $mode === 'keyword' ? null : $model,
+    'model_override' => $modelOverride !== '' ? $modelOverride : null,
     'n' => $n,
     'seed' => $seed,
     'openai_errors_or_fallbacks' => $errors,
@@ -271,9 +282,22 @@ $report = [
     ],
 ];
 
+// Capstone paper §4.4.4 / Table 3: Accuracy, Precision, Recall, F1 from confusion matrix.
+$report = zpgc_attach_paper_metrics($report);
+if (!empty($report['paper_metrics_category']['table3'])) {
+    $report['accuracy']['paper_table3_category'] = $report['paper_metrics_category']['table3'];
+}
+if (!empty($report['paper_metrics_priority']['table3'])) {
+    $report['accuracy']['paper_table3_priority'] = $report['paper_metrics_priority']['table3'];
+}
+
 if ($out === '') {
     $out = __DIR__ . '/data/benchmark_' . ($mode === 'keyword' ? 'keyword' : 'luna') . '_report.json';
 }
 file_put_contents($out, json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
 fwrite(STDERR, "Wrote {$out}\n");
-echo json_encode($report['accuracy'], JSON_PRETTY_PRINT) . PHP_EOL;
+echo json_encode([
+    'simple_hit_rate' => $report['accuracy'],
+    'paper_table3_category' => $report['paper_metrics_category']['table3'] ?? null,
+    'paper_table3_priority' => $report['paper_metrics_priority']['table3'] ?? null,
+], JSON_PRETTY_PRINT) . PHP_EOL;

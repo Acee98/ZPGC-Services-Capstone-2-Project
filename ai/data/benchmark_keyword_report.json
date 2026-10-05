@@ -1,0 +1,396 @@
+{
+    "mode": "keyword_only",
+    "openai": false,
+    "n": 3000,
+    "filters": {
+        "language": "en",
+        "queues": [
+            "it support",
+            "product support",
+            "service outages and maintenance",
+            "technical support"
+        ],
+        "note": "Gold categories are heuristically mapped from queue/tags/text into ZPGC labels."
+    },
+    "accuracy": {
+        "category": 0.4647,
+        "priority": 0.4223,
+        "category_and_priority": 0.2047
+    },
+    "gold_category_distribution": {
+        "network": 891,
+        "hardware": 154,
+        "software": 1452,
+        "account": 143,
+        "other": 360
+    },
+    "gold_priority_distribution": {
+        "critical": 1448,
+        "moderate": 1159,
+        "low": 393
+    },
+    "pred_category_distribution": {
+        "network": 335,
+        "other": 1563,
+        "software": 868,
+        "account": 122,
+        "hardware": 112
+    },
+    "category_confusion": {
+        "hardware": {
+            "hardware": 59,
+            "software": 31,
+            "network": 7,
+            "account": 0,
+            "other": 57
+        },
+        "software": {
+            "hardware": 18,
+            "software": 613,
+            "network": 8,
+            "account": 20,
+            "other": 793
+        },
+        "network": {
+            "hardware": 34,
+            "software": 182,
+            "network": 311,
+            "account": 16,
+            "other": 348
+        },
+        "account": {
+            "hardware": 0,
+            "software": 18,
+            "network": 3,
+            "account": 84,
+            "other": 38
+        },
+        "other": {
+            "hardware": 1,
+            "software": 24,
+            "network": 6,
+            "account": 2,
+            "other": 327
+        }
+    },
+    "priority_confusion": {
+        "critical": {
+            "critical": 386,
+            "moderate": 960,
+            "low": 102
+        },
+        "moderate": {
+            "critical": 217,
+            "moderate": 863,
+            "low": 79
+        },
+        "low": {
+            "critical": 77,
+            "moderate": 298,
+            "low": 18
+        }
+    },
+    "sample_misses": [
+        {
+            "subject": "",
+            "gold_category": "hardware",
+            "pred_category": "other",
+            "gold_priority": "critical",
+            "pred_priority": "moderate",
+            "queue": "Technical Support"
+        },
+        {
+            "subject": "Problem with Application Crashing During Peak Usage",
+            "gold_category": "network",
+            "pred_category": "other",
+            "gold_priority": "moderate",
+            "pred_priority": "moderate",
+            "queue": "Technical Support"
+        },
+        {
+            "subject": "Recent Security Incident Affecting Medical Records",
+            "gold_category": "network",
+            "pred_category": "other",
+            "gold_priority": "moderate",
+            "pred_priority": "moderate",
+            "queue": "Product Support"
+        },
+        {
+            "subject": "Enhanced Security for Medical Data Systems",
+            "gold_category": "hardware",
+            "pred_category": "network",
+            "gold_priority": "moderate",
+            "pred_priority": "critical",
+            "queue": "Product Support"
+        },
+        {
+            "subject": "Incorporate SendGrid into Our Project Management SaaS",
+            "gold_category": "software",
+            "pred_category": "other",
+            "gold_priority": "moderate",
+            "pred_priority": "low",
+            "queue": "IT Support"
+        },
+        {
+            "subject": "",
+            "gold_category": "software",
+            "pred_category": "software",
+            "gold_priority": "low",
+            "pred_priority": "moderate",
+            "queue": "Product Support"
+        },
+        {
+            "subject": "Request for Guidance on Optimizing Investments with Data Analytics",
+            "gold_category": "software",
+            "pred_category": "other",
+            "gold_priority": "critical",
+            "pred_priority": "moderate",
+            "queue": "Technical Support"
+        },
+        {
+            "subject": "Failures in Digital Tools Occur",
+            "gold_category": "software",
+            "pred_category": "other",
+            "gold_priority": "critical",
+            "pred_priority": "moderate",
+            "queue": "Technical Support"
+        },
+        {
+            "subject": "Concern Regarding SaaS Project Management Integration Issues",
+            "gold_category": "software",
+            "pred_category": "software",
+            "gold_priority": "low",
+            "pred_priority": "moderate",
+            "queue": "Technical Support"
+        },
+        {
+            "subject": "",
+            "gold_category": "account",
+            "pred_category": "account",
+            "gold_priority": "low",
+            "pred_priority": "critical",
+            "queue": "IT Support"
+        },
+        {
+            "subject": "Revise Digital Tools Marketing Strategy",
+            "gold_category": "software",
+            "pred_category": "software",
+            "gold_priority": "critical",
+            "pred_priority": "moderate",
+            "queue": "IT Support"
+        },
+        {
+            "subject": "Healthcare Infrastructure Problem",
+            "gold_category": "network",
+            "pred_category": "software",
+            "gold_priority": "moderate",
+            "pred_priority": "critical",
+            "queue": "Product Support"
+        }
+    ],
+    "methods": {
+        "keyword": 3000
+    },
+    "paper_metrics_category": {
+        "n": 3000,
+        "formulas": {
+            "accuracy": "CA = (sum TP_c) / N = correctly_classified / total",
+            "precision_c": "PR_c = TP_c / (TP_c + FP_c)",
+            "recall_c": "RE_c = TP_c / (TP_c + FN_c)",
+            "f1_c": "F1_c = 2 * PR_c * RE_c / (PR_c + RE_c)",
+            "table3_scalars": "Weighted averages (imbalanced categories); also report macro"
+        },
+        "accuracy": 0.4647,
+        "accuracy_pct": 46.47,
+        "macro": {
+            "precision": 0.6118,
+            "recall": 0.53,
+            "f1": 0.4907
+        },
+        "weighted": {
+            "precision": 0.7025,
+            "recall": 0.4647,
+            "f1": 0.5002
+        },
+        "table3": {
+            "accuracy": 0.4647,
+            "precision": 0.7025,
+            "recall": 0.4647,
+            "f1": 0.5002,
+            "accuracy_pct": "46.5%",
+            "precision_pct": "70.3%",
+            "recall_pct": "46.5%",
+            "f1_pct": "50%"
+        },
+        "per_class": {
+            "hardware": {
+                "tp": 59,
+                "fp": 53,
+                "fn": 95,
+                "tn": 2793,
+                "support": 154,
+                "precision": 0.5268,
+                "recall": 0.3831,
+                "f1": 0.4436
+            },
+            "software": {
+                "tp": 613,
+                "fp": 255,
+                "fn": 839,
+                "tn": 1293,
+                "support": 1452,
+                "precision": 0.7062,
+                "recall": 0.4222,
+                "f1": 0.5284
+            },
+            "network": {
+                "tp": 311,
+                "fp": 24,
+                "fn": 580,
+                "tn": 2085,
+                "support": 891,
+                "precision": 0.9284,
+                "recall": 0.349,
+                "f1": 0.5073
+            },
+            "account": {
+                "tp": 84,
+                "fp": 38,
+                "fn": 59,
+                "tn": 2819,
+                "support": 143,
+                "precision": 0.6885,
+                "recall": 0.5874,
+                "f1": 0.634
+            },
+            "other": {
+                "tp": 327,
+                "fp": 1236,
+                "fn": 33,
+                "tn": 1404,
+                "support": 360,
+                "precision": 0.2092,
+                "recall": 0.9083,
+                "f1": 0.3401
+            }
+        },
+        "confusion": {
+            "hardware": {
+                "hardware": 59,
+                "software": 31,
+                "network": 7,
+                "account": 0,
+                "other": 57
+            },
+            "software": {
+                "hardware": 18,
+                "software": 613,
+                "network": 8,
+                "account": 20,
+                "other": 793
+            },
+            "network": {
+                "hardware": 34,
+                "software": 182,
+                "network": 311,
+                "account": 16,
+                "other": 348
+            },
+            "account": {
+                "hardware": 0,
+                "software": 18,
+                "network": 3,
+                "account": 84,
+                "other": 38
+            },
+            "other": {
+                "hardware": 1,
+                "software": 24,
+                "network": 6,
+                "account": 2,
+                "other": 327
+            }
+        }
+    },
+    "paper_metrics_priority": {
+        "n": 3000,
+        "formulas": {
+            "accuracy": "CA = (sum TP_c) / N = correctly_classified / total",
+            "precision_c": "PR_c = TP_c / (TP_c + FP_c)",
+            "recall_c": "RE_c = TP_c / (TP_c + FN_c)",
+            "f1_c": "F1_c = 2 * PR_c * RE_c / (PR_c + RE_c)",
+            "table3_scalars": "Weighted averages (imbalanced categories); also report macro"
+        },
+        "accuracy": 0.4223,
+        "accuracy_pct": 42.23,
+        "macro": {
+            "precision": 0.355,
+            "recall": 0.3523,
+            "f1": 0.3166
+        },
+        "weighted": {
+            "precision": 0.443,
+            "recall": 0.4223,
+            "f1": 0.3864
+        },
+        "table3": {
+            "accuracy": 0.4223,
+            "precision": 0.443,
+            "recall": 0.4223,
+            "f1": 0.3864,
+            "accuracy_pct": "42.2%",
+            "precision_pct": "44.3%",
+            "recall_pct": "42.2%",
+            "f1_pct": "38.6%"
+        },
+        "per_class": {
+            "critical": {
+                "tp": 386,
+                "fp": 294,
+                "fn": 1062,
+                "tn": 1258,
+                "support": 1448,
+                "precision": 0.5676,
+                "recall": 0.2666,
+                "f1": 0.3628
+            },
+            "moderate": {
+                "tp": 863,
+                "fp": 1258,
+                "fn": 296,
+                "tn": 583,
+                "support": 1159,
+                "precision": 0.4069,
+                "recall": 0.7446,
+                "f1": 0.5262
+            },
+            "low": {
+                "tp": 18,
+                "fp": 181,
+                "fn": 375,
+                "tn": 2426,
+                "support": 393,
+                "precision": 0.0905,
+                "recall": 0.0458,
+                "f1": 0.0608
+            }
+        },
+        "confusion": {
+            "critical": {
+                "critical": 386,
+                "moderate": 960,
+                "low": 102
+            },
+            "moderate": {
+                "critical": 217,
+                "moderate": 863,
+                "low": 79
+            },
+            "low": {
+                "critical": 77,
+                "moderate": 298,
+                "low": 18
+            }
+        }
+    }
+}

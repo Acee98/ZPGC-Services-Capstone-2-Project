@@ -1,10 +1,11 @@
 {
-    "mode": "keyword_only",
-    "openai": false,
-    "model": null,
+    "mode": "openai_benchmark",
+    "openai": true,
+    "model": "gpt-4.1-nano",
+    "model_override": "gpt-4.1-nano",
     "n": 200,
     "seed": 42,
-    "openai_errors_or_fallbacks": 0,
+    "openai_errors_or_fallbacks": 18,
     "filters": {
         "language": "en",
         "queues": [
@@ -16,9 +17,9 @@
         "note": "Gold categories are heuristically mapped from queue/tags/text into ZPGC labels."
     },
     "accuracy": {
-        "category": 0.515,
-        "priority": 0.405,
-        "category_and_priority": 0.205
+        "category": 0.605,
+        "priority": 0.43,
+        "category_and_priority": 0.25
     },
     "gold_category_distribution": {
         "hardware": 13,
@@ -33,89 +34,89 @@
         "low": 28
     },
     "pred_category_distribution": {
-        "hardware": 8,
-        "software": 55,
-        "network": 17,
-        "account": 9,
-        "other": 111
+        "hardware": 3,
+        "software": 131,
+        "network": 32,
+        "account": 6,
+        "other": 28
     },
     "pred_priority_distribution": {
-        "critical": 37,
-        "moderate": 152,
-        "low": 11
+        "critical": 81,
+        "moderate": 89,
+        "low": 30
     },
     "category_confusion": {
         "hardware": {
-            "hardware": 5,
-            "software": 3,
-            "network": 0,
+            "hardware": 2,
+            "software": 9,
+            "network": 2,
             "account": 0,
-            "other": 5
+            "other": 0
         },
         "software": {
             "hardware": 0,
-            "software": 39,
-            "network": 0,
-            "account": 1,
-            "other": 38
+            "software": 67,
+            "network": 2,
+            "account": 0,
+            "other": 9
         },
         "network": {
-            "hardware": 3,
-            "software": 13,
-            "network": 17,
-            "account": 1,
-            "other": 32
+            "hardware": 1,
+            "software": 36,
+            "network": 28,
+            "account": 0,
+            "other": 1
         },
         "account": {
             "hardware": 0,
-            "software": 0,
+            "software": 2,
             "network": 0,
-            "account": 7,
-            "other": 1
+            "account": 6,
+            "other": 0
         },
         "other": {
             "hardware": 0,
-            "software": 0,
+            "software": 17,
             "network": 0,
             "account": 0,
-            "other": 35
+            "other": 18
         }
     },
     "priority_confusion": {
         "critical": {
-            "critical": 23,
-            "moderate": 71,
-            "low": 2
+            "critical": 46,
+            "moderate": 37,
+            "low": 13
         },
         "moderate": {
-            "critical": 11,
-            "moderate": 57,
-            "low": 8
+            "critical": 29,
+            "moderate": 35,
+            "low": 12
         },
         "low": {
-            "critical": 3,
-            "moderate": 24,
-            "low": 1
+            "critical": 6,
+            "moderate": 17,
+            "low": 5
         }
     },
     "sample_misses": [
         {
             "subject": "Errors Detected in Investment Algorithm",
             "gold_category": "software",
-            "pred_category": "other",
+            "pred_category": "software",
             "gold_priority": "moderate",
-            "pred_priority": "moderate",
+            "pred_priority": "critical",
             "queue": "Product Support",
-            "method": "keyword"
+            "method": "openai"
         },
         {
             "subject": "Problem with Data Integration on AWS",
             "gold_category": "network",
-            "pred_category": "other",
+            "pred_category": "software",
             "gold_priority": "moderate",
-            "pred_priority": "moderate",
+            "pred_priority": "critical",
             "queue": "Technical Support",
-            "method": "keyword"
+            "method": "openai"
         },
         {
             "subject": "",
@@ -124,16 +125,16 @@
             "gold_priority": "critical",
             "pred_priority": "moderate",
             "queue": "Technical Support",
-            "method": "keyword"
+            "method": "openai"
         },
         {
-            "subject": "",
+            "subject": "Problem with Analytics Dashboard Display",
             "gold_category": "software",
             "pred_category": "software",
-            "gold_priority": "critical",
-            "pred_priority": "moderate",
-            "queue": "Product Support",
-            "method": "keyword"
+            "gold_priority": "moderate",
+            "pred_priority": "critical",
+            "queue": "IT Support",
+            "method": "openai"
         },
         {
             "subject": "Address Security Concern Detected",
@@ -142,16 +143,16 @@
             "gold_priority": "low",
             "pred_priority": "critical",
             "queue": "Product Support",
-            "method": "keyword"
+            "method": "kw-fallback"
         },
         {
             "subject": "Healthcare provider faced intermittent delays in accessing medical records",
             "gold_category": "network",
-            "pred_category": "other",
+            "pred_category": "network",
             "gold_priority": "moderate",
-            "pred_priority": "moderate",
+            "pred_priority": "critical",
             "queue": "Product Support",
-            "method": "keyword"
+            "method": "openai"
         },
         {
             "subject": "Details on Securing Medical Data for Hospital Products and Services",
@@ -160,16 +161,25 @@
             "gold_priority": "moderate",
             "pred_priority": "moderate",
             "queue": "Product Support",
-            "method": "keyword"
+            "method": "openai"
         },
         {
             "subject": "Enhancing Collaboration with Cisco Webex Meetings Integration",
             "gold_category": "software",
-            "pred_category": "other",
+            "pred_category": "software",
             "gold_priority": "low",
             "pred_priority": "moderate",
             "queue": "Technical Support",
-            "method": "keyword"
+            "method": "openai"
+        },
+        {
+            "subject": "Problem with Slow Loading of Project Dashboard",
+            "gold_category": "software",
+            "pred_category": "network",
+            "gold_priority": "moderate",
+            "pred_priority": "critical",
+            "queue": "Product Support",
+            "method": "openai"
         },
         {
             "subject": "Software Integration Challenge",
@@ -178,38 +188,30 @@
             "gold_priority": "low",
             "pred_priority": "moderate",
             "queue": "Product Support",
-            "method": "keyword"
+            "method": "openai"
         },
         {
             "subject": "Variability in Digital Strategy Metrics Among Various Platforms",
             "gold_category": "software",
-            "pred_category": "other",
+            "pred_category": "software",
             "gold_priority": "low",
             "pred_priority": "moderate",
             "queue": "Product Support",
-            "method": "keyword"
+            "method": "openai"
         },
         {
-            "subject": "Support for Service Interruptions",
-            "gold_category": "network",
-            "pred_category": "other",
+            "subject": "Irregular Investment Forecast Outputs",
+            "gold_category": "account",
+            "pred_category": "software",
             "gold_priority": "critical",
-            "pred_priority": "moderate",
-            "queue": "Service Outages and Maintenance",
-            "method": "keyword"
-        },
-        {
-            "subject": "Support for Expanding a Brand",
-            "gold_category": "other",
-            "pred_category": "other",
-            "gold_priority": "low",
-            "pred_priority": "moderate",
+            "pred_priority": "critical",
             "queue": "Technical Support",
-            "method": "keyword"
+            "method": "openai"
         }
     ],
     "methods": {
-        "keyword": 200
+        "openai": 182,
+        "kw-fallback": 18
     },
     "baseline_keyword_3000": {
         "source": "ai/data/benchmark_keyword_report.json",
@@ -228,115 +230,115 @@
             "f1_c": "F1_c = 2 * PR_c * RE_c / (PR_c + RE_c)",
             "table3_scalars": "Weighted averages (imbalanced categories); also report macro"
         },
-        "accuracy": 0.515,
-        "accuracy_pct": 51.5,
+        "accuracy": 0.605,
+        "accuracy_pct": 60.5,
         "macro": {
-            "precision": 0.6854,
-            "recall": 0.6034,
-            "f1": 0.5551
+            "precision": 0.7392,
+            "recall": 0.5403,
+            "f1": 0.5782
         },
         "weighted": {
-            "precision": 0.7335,
-            "recall": 0.515,
-            "f1": 0.5117
+            "precision": 0.6841,
+            "recall": 0.605,
+            "f1": 0.5891
         },
         "table3": {
-            "accuracy": 0.515,
-            "precision": 0.7335,
-            "recall": 0.515,
-            "f1": 0.5117,
-            "accuracy_pct": "51.5%",
-            "precision_pct": "73.3%",
-            "recall_pct": "51.5%",
-            "f1_pct": "51.2%"
+            "accuracy": 0.605,
+            "precision": 0.6841,
+            "recall": 0.605,
+            "f1": 0.5891,
+            "accuracy_pct": "60.5%",
+            "precision_pct": "68.4%",
+            "recall_pct": "60.5%",
+            "f1_pct": "58.9%"
         },
         "per_class": {
             "hardware": {
-                "tp": 5,
-                "fp": 3,
-                "fn": 8,
-                "tn": 184,
+                "tp": 2,
+                "fp": 1,
+                "fn": 11,
+                "tn": 186,
                 "support": 13,
-                "precision": 0.625,
-                "recall": 0.3846,
-                "f1": 0.4762
+                "precision": 0.6667,
+                "recall": 0.1538,
+                "f1": 0.25
             },
             "software": {
-                "tp": 39,
-                "fp": 16,
-                "fn": 39,
-                "tn": 106,
+                "tp": 67,
+                "fp": 64,
+                "fn": 11,
+                "tn": 58,
                 "support": 78,
-                "precision": 0.7091,
-                "recall": 0.5,
-                "f1": 0.5865
+                "precision": 0.5115,
+                "recall": 0.859,
+                "f1": 0.6411
             },
             "network": {
-                "tp": 17,
-                "fp": 0,
-                "fn": 49,
-                "tn": 134,
+                "tp": 28,
+                "fp": 4,
+                "fn": 38,
+                "tn": 130,
                 "support": 66,
-                "precision": 1,
-                "recall": 0.2576,
-                "f1": 0.4096
+                "precision": 0.875,
+                "recall": 0.4242,
+                "f1": 0.5714
             },
             "account": {
-                "tp": 7,
-                "fp": 2,
-                "fn": 1,
-                "tn": 190,
+                "tp": 6,
+                "fp": 0,
+                "fn": 2,
+                "tn": 192,
                 "support": 8,
-                "precision": 0.7778,
-                "recall": 0.875,
-                "f1": 0.8235
+                "precision": 1,
+                "recall": 0.75,
+                "f1": 0.8571
             },
             "other": {
-                "tp": 35,
-                "fp": 76,
-                "fn": 0,
-                "tn": 89,
+                "tp": 18,
+                "fp": 10,
+                "fn": 17,
+                "tn": 155,
                 "support": 35,
-                "precision": 0.3153,
-                "recall": 1,
-                "f1": 0.4795
+                "precision": 0.6429,
+                "recall": 0.5143,
+                "f1": 0.5714
             }
         },
         "confusion": {
             "hardware": {
-                "hardware": 5,
-                "software": 3,
-                "network": 0,
+                "hardware": 2,
+                "software": 9,
+                "network": 2,
                 "account": 0,
-                "other": 5
+                "other": 0
             },
             "software": {
                 "hardware": 0,
-                "software": 39,
-                "network": 0,
-                "account": 1,
-                "other": 38
+                "software": 67,
+                "network": 2,
+                "account": 0,
+                "other": 9
             },
             "network": {
-                "hardware": 3,
-                "software": 13,
-                "network": 17,
-                "account": 1,
-                "other": 32
+                "hardware": 1,
+                "software": 36,
+                "network": 28,
+                "account": 0,
+                "other": 1
             },
             "account": {
                 "hardware": 0,
-                "software": 0,
+                "software": 2,
                 "network": 0,
-                "account": 7,
-                "other": 1
+                "account": 6,
+                "other": 0
             },
             "other": {
                 "hardware": 0,
-                "software": 0,
+                "software": 17,
                 "network": 0,
                 "account": 0,
-                "other": 35
+                "other": 18
             }
         }
     },
@@ -349,75 +351,75 @@
             "f1_c": "F1_c = 2 * PR_c * RE_c / (PR_c + RE_c)",
             "table3_scalars": "Weighted averages (imbalanced categories); also report macro"
         },
-        "accuracy": 0.405,
-        "accuracy_pct": 40.5,
+        "accuracy": 0.43,
+        "accuracy_pct": 43,
         "macro": {
-            "precision": 0.3625,
-            "recall": 0.3418,
-            "f1": 0.2991
+            "precision": 0.376,
+            "recall": 0.3728,
+            "f1": 0.3721
         },
         "weighted": {
-            "precision": 0.4536,
-            "recall": 0.405,
-            "f1": 0.3632
+            "precision": 0.4454,
+            "recall": 0.43,
+            "f1": 0.4348
         },
         "table3": {
-            "accuracy": 0.405,
-            "precision": 0.4536,
-            "recall": 0.405,
-            "f1": 0.3632,
-            "accuracy_pct": "40.5%",
-            "precision_pct": "45.4%",
-            "recall_pct": "40.5%",
-            "f1_pct": "36.3%"
+            "accuracy": 0.43,
+            "precision": 0.4454,
+            "recall": 0.43,
+            "f1": 0.4348,
+            "accuracy_pct": "43%",
+            "precision_pct": "44.5%",
+            "recall_pct": "43%",
+            "f1_pct": "43.5%"
         },
         "per_class": {
             "critical": {
-                "tp": 23,
-                "fp": 14,
-                "fn": 73,
-                "tn": 90,
+                "tp": 46,
+                "fp": 35,
+                "fn": 50,
+                "tn": 69,
                 "support": 96,
-                "precision": 0.6216,
-                "recall": 0.2396,
-                "f1": 0.3459
+                "precision": 0.5679,
+                "recall": 0.4792,
+                "f1": 0.5198
             },
             "moderate": {
-                "tp": 57,
-                "fp": 95,
-                "fn": 19,
-                "tn": 29,
+                "tp": 35,
+                "fp": 54,
+                "fn": 41,
+                "tn": 70,
                 "support": 76,
-                "precision": 0.375,
-                "recall": 0.75,
-                "f1": 0.5
+                "precision": 0.3933,
+                "recall": 0.4605,
+                "f1": 0.4242
             },
             "low": {
-                "tp": 1,
-                "fp": 10,
-                "fn": 27,
-                "tn": 162,
+                "tp": 5,
+                "fp": 25,
+                "fn": 23,
+                "tn": 147,
                 "support": 28,
-                "precision": 0.0909,
-                "recall": 0.0357,
-                "f1": 0.0513
+                "precision": 0.1667,
+                "recall": 0.1786,
+                "f1": 0.1724
             }
         },
         "confusion": {
             "critical": {
-                "critical": 23,
-                "moderate": 71,
-                "low": 2
+                "critical": 46,
+                "moderate": 37,
+                "low": 13
             },
             "moderate": {
-                "critical": 11,
-                "moderate": 57,
-                "low": 8
+                "critical": 29,
+                "moderate": 35,
+                "low": 12
             },
             "low": {
-                "critical": 3,
-                "moderate": 24,
-                "low": 1
+                "critical": 6,
+                "moderate": 17,
+                "low": 5
             }
         }
     }
