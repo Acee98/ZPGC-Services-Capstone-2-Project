@@ -116,7 +116,7 @@ if (isset($_POST['signup'])) {
             header('Location: ../pages/login_signup.php?form=signup');
             exit();
         }
-        // Stuck unverified signup (common when mail failed earlier): resend the link.
+        // Stuck unverified signup: resend a new 6-digit code.
         $resent = auth_mail_send_verify(
             $conn,
             (int) $existing['id'],
@@ -126,12 +126,12 @@ if (isset($_POST['signup'])) {
         $_SESSION['pending_verify_email'] = $email;
         if ($resent['ok']) {
             $_SESSION['signup_success'] = 'That email is already signed up but not verified. '
-                . 'We sent a new verification link to ' . $email . '. Check Inbox and Spam.';
+                . 'We sent a new 6-digit code to ' . $email . '. Check your TSU Outlook inbox.';
             header('Location: ../pages/verify_pending.php');
             exit();
         }
         $_SESSION['signup_error'] = 'That email is already signed up but not verified, and email failed ('
-            . $resent['error'] . '). Ask an admin to Activate the account in Utilities.';
+            . $resent['error'] . '). Use Resend code, or ask an admin to Activate the account.';
         header('Location: ../pages/verify_pending.php');
         exit();
     }
