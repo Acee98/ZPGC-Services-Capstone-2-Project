@@ -80,6 +80,9 @@ App Service → **Deployment Center** → connect `Acee98/ZPGC-Services-Capstone
 **Option 2 — ZIP**  
 Zip the project (exclude `.git`, `docs`, `ai/data/*.csv`, `.venv`) → App Service → **Advanced Tools (Kudu)** → ZIP deploy, or use VS Code Azure extension.
 
+**Current live App Service (Korea):**  
+`https://zpgc-services-jp-dudeeuefc4eqdgek.koreacentral-01.azurewebsites.net`
+
 Default entry: open `https://YOUR-APP.azurewebsites.net/pages/login_signup.php`  
 (If the site root does not redirect, bookmark that URL for the test.)
 

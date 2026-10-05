@@ -124,6 +124,26 @@ if (!function_exists('auth_mail_ready')) {
         return '';
     }
 
+    /** Sanitize SMTP failures so testers see a clear, non-scary message. */
+    function auth_mail_friendly_mail_error($rawError)
+    {
+        $raw = strtolower((string) $rawError);
+        if ($raw === '') {
+            return 'Email could not be sent. Ask an administrator to check mail settings.';
+        }
+        if (str_contains($raw, 'not configured') || str_contains($raw, 'mail.env')) {
+            return 'Email is not configured on the server. Ask an administrator to set MAIL_USERNAME and MAIL_PASSWORD.';
+        }
+        if (str_contains($raw, '535') || str_contains($raw, 'badcredentials') || str_contains($raw, 'username and password not accepted')) {
+            return 'The server mail login was rejected (invalid MAIL_USERNAME / MAIL_PASSWORD). Ask an administrator to update App Settings, then try again.';
+        }
+        if (str_contains($raw, 'could not connect') || str_contains($raw, 'timed out') || str_contains($raw, 'connection')) {
+            return 'Could not reach the mail server. Ask an administrator to check MAIL_HOST / network settings.';
+        }
+        // Keep short — do not dump full SMTP transcripts to end users.
+        return 'Email could not be sent right now. Ask an administrator to verify mail settings, then try again.';
+    }
+
     function auth_mail_delete_user(mysqli $conn, $userId)
     {
         $userId = (int) $userId;

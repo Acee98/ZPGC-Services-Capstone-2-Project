@@ -216,9 +216,9 @@ if (isset($_POST['signup'])) {
         // Foolproof: never leave a half-created account claiming "check your email".
         auth_mail_delete_user($conn, $userId);
         unset($_SESSION['pending_verify_email']);
-        $_SESSION['signup_error'] = 'Could not send the verification code to ' . $email
-            . ' (' . $sent['error'] . '). No account was kept. '
-            . 'Use your real TSU Outlook email and try again.';
+        $_SESSION['signup_error'] = 'Could not send the verification code to ' . $email . '. '
+            . auth_mail_friendly_mail_error($sent['error'] ?? '')
+            . ' No account was kept.';
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }

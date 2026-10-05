@@ -78,7 +78,8 @@ if (isset($_POST['save_ticket'])) {
         }
     }
     if ($status === 'resolved') {
-        ticket_mark_resolved($conn, $ticket_id);
+        // Defer soft-archive so the reporter can still submit CSAT (History / Rate visit).
+        ticket_mark_resolved($conn, $ticket_id, false);
     }
     audit_write($conn, 'save_ticket', $ticket_id, 'Saved ticket #' . $ticket_id . ' status ' . $status . '.');
 

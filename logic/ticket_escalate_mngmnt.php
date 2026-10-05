@@ -54,8 +54,10 @@ if (isset($_POST['self_help_solved'])) {
     $upd->bind_param('sii', $resolved, $ticket_id, $user_id);
     $upd->execute();
     $upd->close();
-    ticket_mark_resolved($conn, $ticket_id);
-    $_SESSION['confirm_success'] = 'Ticket #' . $ticket_id . ' marked resolved from the troubleshooting steps.';
+    // Defer soft-archive until CSAT is submitted (same path as confirm Solved).
+    ticket_mark_resolved($conn, $ticket_id, false);
+    $_SESSION['rate_ticket_id'] = $ticket_id;
+    $_SESSION['confirm_success'] = 'Ticket #' . $ticket_id . ' marked resolved from the troubleshooting steps. Please rate this visit.';
     header('Location: ../pages/user.php?tab=tickets');
     exit();
 }

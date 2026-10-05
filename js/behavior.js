@@ -719,6 +719,41 @@ function initProfileMenu() {
     });
 }
 
+function initPageSearchBars() {
+    document.querySelectorAll(".page-content .search-bar, .main-content .search-bar").forEach(function (input) {
+        if (input.id === "mailbox-ticket-search" || input.id === "perf-log-search") {
+            return;
+        }
+        if (input.dataset.searchBound === "1") {
+            return;
+        }
+        input.dataset.searchBound = "1";
+        input.addEventListener("input", function () {
+            var q = String(input.value || "").trim().toLowerCase();
+            var page = input.closest(".page-content, [id^='page-'], .tab-panel") || document;
+            var rows = page.querySelectorAll(".ticket-row, .mailbox-thread-item");
+            if (!rows.length) {
+                rows = document.querySelectorAll(
+                    "body[data-page] .ticket-row, body[data-page] .mailbox-thread-item"
+                );
+            }
+            rows.forEach(function (row) {
+                if (row.classList.contains("ticket-row-filtered-out")) {
+                    return;
+                }
+                var hay = (row.textContent || "").toLowerCase();
+                var hide = q !== "" && hay.indexOf(q) === -1;
+                row.classList.toggle("ticket-row-search-hidden", hide);
+                if (hide) {
+                    row.style.display = "none";
+                } else if (row.style.display === "none" && !row.classList.contains("ticket-row-filtered-out")) {
+                    row.style.display = "";
+                }
+            });
+        });
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     initNavClickSelection();
     initMobileTabBar();
@@ -738,4 +773,5 @@ document.addEventListener("DOMContentLoaded", function() {
     initProfileMenu();
     initProfileEdits();
     initMailbox();
+    initPageSearchBars();
 })

@@ -85,23 +85,49 @@ if (isset($_POST['submit-ticket'])) {
     }
     $user_id = (int) $found['id'];
 
-    $hasScore = tickets_has_column($conn, 'severity_score');
+    $hasScore = tickets_has_column($conn, 'severity_score')
+        && tickets_has_column($conn, 'urgency')
+        && tickets_has_column($conn, 'impact_level');
     if ($hasScore) {
         $stmt = $conn->prepare(
             'INSERT INTO tickets (user_id, subject, description, category, priority, urgency, impact_level, severity_score)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
-        $urg = (int) $matrix['urgency'];
-        $imp = (int) $matrix['impact'];
-        $score = (int) $matrix['final_score'];
-        $stmt->bind_param('issssiii', $user_id, $subject, $description, $category, $priority, $urg, $imp, $score);
+        if ($stmt) {
+            $urg = (int) $matrix['urgency'];
+            $imp = (int) $matrix['impact'];
+            $score = (int) $matrix['final_score'];
+            $stmt->bind_param('issssiii', $user_id, $subject, $description, $category, $priority, $urg, $imp, $score);
+        }
     } else {
         $stmt = $conn->prepare(
             'INSERT INTO tickets (user_id, subject, description, category, priority) VALUES (?, ?, ?, ?, ?)'
         );
-        $stmt->bind_param('issss', $user_id, $subject, $description, $category, $priority);
+        if ($stmt) {
+            $stmt->bind_param('issss', $user_id, $subject, $description, $category, $priority);
+        }
     }
-    $stmt->execute();
+    if (!$stmt) {
+        $_SESSION['ticket_form_error'] = 'Could not create the ticket (database schema mismatch). Ask an admin to check the tickets table.';
+        $_SESSION['ticket_form_old'] = [
+            'category' => $category,
+            'subject' => $subject,
+            'description' => $description,
+        ];
+        header('Location: ../pages/ticket.php');
+        exit();
+    }
+    if (!$stmt->execute()) {
+        $_SESSION['ticket_form_error'] = 'Could not save the ticket. Please try again.';
+        $_SESSION['ticket_form_old'] = [
+            'category' => $category,
+            'subject' => $subject,
+            'description' => $description,
+        ];
+        $stmt->close();
+        header('Location: ../pages/ticket.php');
+        exit();
+    }
     $ticket_id = (int) $conn->insert_id;
     $stmt->close();
 
@@ -195,6 +221,15 @@ if (isset($_POST['submit-ticket'])) {
                 );
             }
         }
+    } else {
+        $_SESSION['ticket_form_error'] = 'Ticket was not created. Please try again.';
+        $_SESSION['ticket_form_old'] = [
+            'category' => $category,
+            'subject' => $subject,
+            'description' => $description,
+        ];
+        header('Location: ../pages/ticket.php');
+        exit();
     }
 
     header('Location: ../pages/user.php?tab=tickets');

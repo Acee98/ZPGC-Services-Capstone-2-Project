@@ -223,10 +223,14 @@ if (!function_exists('ai_classifier_base')) {
         }
 
         $model = ai_openai_model();
+        $maxTokens = (int) ai_openai_env('OPENAI_MAX_COMPLETION_TOKENS', (string) $maxTokens);
+        if ($maxTokens < 50) {
+            $maxTokens = 50;
+        }
         $payload = [
             'model' => $model,
             'messages' => $messages,
-            'max_completion_tokens' => (int) $maxTokens,
+            'max_completion_tokens' => $maxTokens,
         ];
         if (!ai_openai_model_locks_temperature($model)) {
             $payload['temperature'] = $temperature;
