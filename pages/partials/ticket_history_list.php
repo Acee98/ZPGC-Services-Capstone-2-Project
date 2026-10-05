@@ -36,7 +36,7 @@ $history_rating_labels = $history_rating_labels ?? [
             <span class="tickets-col-assigned">Assigned To</span>
             <?php } ?>
             <?php if ($history_show_satisfaction) { ?>
-            <span class="tickets-col-satisfaction">Satisfaction</span>
+            <span class="tickets-col-satisfaction">Satisfaction Level</span>
             <?php } ?>
         </div>
         <div class="tickets-list-body">
