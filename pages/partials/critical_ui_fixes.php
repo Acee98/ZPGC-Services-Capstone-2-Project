@@ -576,11 +576,23 @@ html[data-theme="dark"] .ticket-row {
         max-width: none !important;
         box-sizing: border-box !important;
     }
+    .ticket-history-list--satisfaction .tickets-list-header,
+    .ticket-history-list--satisfaction .ticket-row {
+        grid-template-columns: 56px minmax(110px, 1.1fr) minmax(130px, 1.25fr) 100px 100px minmax(120px, 1fr) !important;
+        min-width: 880px !important;
+        width: 880px !important;
+    }
     .ticket-history-list--assigned .tickets-list-header,
     .ticket-history-list--assigned .ticket-row {
         grid-template-columns: 56px minmax(110px, 1.1fr) minmax(130px, 1.25fr) 100px 100px minmax(120px, 1fr) !important;
         min-width: 900px !important;
         width: 900px !important;
+    }
+    .ticket-history-list--assigned.ticket-history-list--satisfaction .tickets-list-header,
+    .ticket-history-list--assigned.ticket-history-list--satisfaction .ticket-row {
+        grid-template-columns: 56px minmax(100px, 1fr) minmax(120px, 1.15fr) 96px 96px minmax(110px, 0.9fr) minmax(120px, 0.95fr) !important;
+        min-width: 1040px !important;
+        width: 1040px !important;
     }
 
     .tickets-list-utilities .tickets-list-header,
