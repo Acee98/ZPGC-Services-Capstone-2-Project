@@ -4155,18 +4155,32 @@ body[data-page="messages"] .mailbox-container {
         height: 34px;
     }
 
-    /* Wide tables: one scrollport so header + rows stay aligned */
+    /* Wide tables: constrained width + internal horizontal scroll */
+    body[data-page="utilities"] .showcase,
+    body[data-page="utilities"] .main-wrap {
+        overflow-x: hidden;
+        max-width: 100vw;
+    }
+
+    body[data-page="utilities"] #page-utilities {
+        padding-left: 12px;
+        padding-right: 12px;
+        box-sizing: border-box;
+    }
+
     .ticket-history-list,
     .tickets-list-user,
     .tickets-list-techn-actions,
+    body[data-page="utilities"] #page-utilities .tickets-list.tickets-list-utilities,
     .tickets-list-utilities,
     .admin-dashboard-history-list {
-        overflow: auto !important;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
-        max-width: calc(100% - 24px);
-        width: auto !important;
-        margin-left: 12px;
-        margin-right: 12px;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0;
+        margin-right: 0;
         box-sizing: border-box;
     }
 
@@ -4179,10 +4193,12 @@ body[data-page="messages"] .mailbox-container {
     }
 
     .ticket-history-section {
-        width: auto !important;
-        max-width: calc(100% - 24px);
-        margin-left: 12px;
-        margin-right: 12px;
+        width: 100% !important;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 12px;
+        padding-right: 12px;
         box-sizing: border-box;
     }
 
@@ -4301,23 +4317,49 @@ body[data-page="messages"] .mailbox-container {
     }
 
     .user-form-card,
-    .audit-panel {
-        width: auto !important;
-        max-width: calc(100% - 24px);
-        margin-left: 12px;
-        margin-right: 12px;
+    .audit-panel,
+    #page-utilities .ticket-retention-card {
+        width: 100% !important;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
         box-sizing: border-box;
     }
 
     .audit-panel {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
+        overflow-x: hidden !important;
     }
 
-    .audit-row {
-        grid-template-columns: 150px 110px 110px minmax(180px, 1.4fr);
-        min-width: 580px;
+    .audit-row.audit-head {
+        display: none !important;
+    }
+
+    .audit-row:not(.audit-head) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px;
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 14px 16px;
         box-sizing: border-box;
+    }
+
+    .audit-row:not(.audit-head) > span {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.4;
+    }
+
+    .audit-row:not(.audit-head) > span::before {
+        content: attr(data-label) ": ";
+        font-weight: 700;
+        color: #6b6b6b;
     }
 
     body[data-page="dashboard"] #page-dashboard,
@@ -4329,8 +4371,8 @@ body[data-page="messages"] .mailbox-container {
     }
 
     body[data-page="utilities"] .tickets-toolbar {
-        padding-left: 12px;
-        padding-right: 12px;
+        padding-left: 0;
+        padding-right: 0;
         box-sizing: border-box;
         max-width: 100%;
     }

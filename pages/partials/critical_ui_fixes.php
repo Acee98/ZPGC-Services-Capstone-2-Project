@@ -382,16 +382,28 @@ html[data-theme="dark"] .ticket-row {
         max-width: 100% !important;
     }
 
+    body[data-page="utilities"] .showcase,
+    body[data-page="utilities"] .main-wrap {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
+
     .ticket-history-list,
+    body[data-page="utilities"] #page-utilities .tickets-list.tickets-list-utilities,
     .tickets-list-utilities,
     .admin-dashboard-history-list {
-        overflow: auto !important;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
-        max-width: calc(100% - 24px) !important;
-        width: auto !important;
-        margin-left: 12px !important;
-        margin-right: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
         box-sizing: border-box !important;
+    }
+    body[data-page="utilities"] #page-utilities {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
     }
     .ticket-history-list .tickets-list-body,
     .tickets-list-utilities .tickets-list-body,
@@ -400,10 +412,12 @@ html[data-theme="dark"] .ticket-row {
         flex: 0 0 auto !important;
     }
     .ticket-history-section {
-        width: auto !important;
-        max-width: calc(100% - 24px) !important;
-        margin-left: 12px !important;
-        margin-right: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
         box-sizing: border-box !important;
     }
 
@@ -458,26 +472,60 @@ html[data-theme="dark"] .ticket-row {
     }
 
     .user-form-card,
-    .audit-panel {
-        width: auto !important;
-        max-width: calc(100% - 24px) !important;
-        margin-left: 12px !important;
-        margin-right: 12px !important;
-        box-sizing: border-box !important;
-    }
-    .audit-panel {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-    }
-    .audit-row {
-        grid-template-columns: 150px 110px 110px minmax(180px, 1.4fr) !important;
-        min-width: 580px !important;
+    .audit-panel,
+    #page-utilities .ticket-retention-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
         box-sizing: border-box !important;
     }
 
+    /* Audit log: stack on phone so nothing clips sideways */
+    .audit-panel {
+        overflow-x: hidden !important;
+        overflow-y: visible !important;
+    }
+    .audit-panel h2 {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+    .audit-row.audit-head {
+        display: none !important;
+    }
+    .audit-row:not(.audit-head) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 14px 16px !important;
+        box-sizing: border-box !important;
+    }
+    .audit-row:not(.audit-head) > span {
+        display: block !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+        line-height: 1.4 !important;
+    }
+    .audit-row:not(.audit-head) > span::before {
+        content: attr(data-label) ": ";
+        font-weight: 700;
+        color: #c4c4d0;
+    }
+    html:not([data-theme="dark"]) .audit-row:not(.audit-head) > span::before {
+        color: #6b6b6b;
+    }
+
     body[data-page="utilities"] .tickets-toolbar {
-        padding-left: 12px !important;
-        padding-right: 12px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
     }

@@ -250,9 +250,9 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.2">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.2">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.2">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.3">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.3">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.3">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -780,10 +780,10 @@ $ui_theme = current_ui_theme();
                     <p class="audit-empty">No admin actions recorded yet. Edit, activate, or save a ticket to add a row.</p>
                     <?php } else { foreach ($audit_rows as $log) { ?>
                     <div class="audit-row">
-                        <span><?php echo htmlspecialchars((string) $log['created_at']); ?></span>
-                        <span><?php echo htmlspecialchars(trim((string) $log['first_name'] . ' ' . (string) $log['last_name'])); ?></span>
-                        <span><?php echo htmlspecialchars((string) $log['action']); ?></span>
-                        <span><?php echo htmlspecialchars((string) $log['detail']); ?></span>
+                        <span data-label="When"><?php echo htmlspecialchars((string) $log['created_at']); ?></span>
+                        <span data-label="Who"><?php echo htmlspecialchars(trim((string) $log['first_name'] . ' ' . (string) $log['last_name'])); ?></span>
+                        <span data-label="Action"><?php echo htmlspecialchars((string) $log['action']); ?></span>
+                        <span data-label="Detail"><?php echo htmlspecialchars((string) $log['detail']); ?></span>
                     </div>
                     <?php } } ?>
                 </div>
@@ -975,8 +975,8 @@ $ui_theme = current_ui_theme();
     <script>
         window.DASHBOARD_CHART_DATA = <?php echo json_encode($dashboard_charts, JSON_UNESCAPED_UNICODE); ?>;
     </script>
-    <script src="../js/lazy_load.js?v=1.6.2"></script>
-    <script src="../js/behavior.js?v=1.6.2" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.3"></script>
+    <script src="../js/behavior.js?v=1.6.3" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var input = document.getElementById('perf-log-search');
