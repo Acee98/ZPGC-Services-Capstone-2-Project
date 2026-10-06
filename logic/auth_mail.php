@@ -416,7 +416,7 @@ if (!function_exists('auth_mail_ready')) {
                     'ok' => false,
                     'need_verify' => true,
                     'awaiting_admin' => false,
-                    'message' => 'Verify your email with the 6-digit code first. After that, an administrator must Activate your technician account.',
+                    'message' => 'Verify your email with the 6-digit code first. After that, complete your technician application for administrator approval.',
                 ];
             }
             if ($status !== 'active') {
@@ -424,7 +424,8 @@ if (!function_exists('auth_mail_ready')) {
                     'ok' => false,
                     'need_verify' => false,
                     'awaiting_admin' => true,
-                    'message' => 'Your email is verified. An administrator must Activate your technician account in Utilities before you can log in.',
+                    'applicant_ok' => true,
+                    'message' => 'Your email is verified. Complete your technician application, then wait for an administrator to approve it.',
                 ];
             }
             return ['ok' => true, 'need_verify' => false, 'awaiting_admin' => false, 'message' => ''];
@@ -540,6 +541,22 @@ if (!function_exists('auth_mail_ready')) {
         }
         $gate = auth_mail_login_gate($user);
         if (!$gate['ok']) {
+            if (!empty($gate['applicant_ok'])) {
+                $_SESSION['techn_applicant'] = 1;
+                $_SESSION['role'] = 'techn';
+                $script = strtolower(basename(str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''))));
+                $allowed = [
+                    'techn_apply.php',
+                    'techn_apply_mngmnt.php',
+                    'techn_role_confirm.php',
+                    'resume_file.php',
+                ];
+                if (in_array($script, $allowed, true)) {
+                    return;
+                }
+                header('Location: ../pages/techn_apply.php');
+                exit();
+            }
             $_SESSION = [];
             if (session_status() === PHP_SESSION_ACTIVE) {
                 session_regenerate_id(true);
@@ -550,6 +567,7 @@ if (!function_exists('auth_mail_ready')) {
             header('Location: ../pages/login_signup.php');
             exit();
         }
+        unset($_SESSION['techn_applicant']);
         $_SESSION['role'] = auth_mail_normalize_role($user['role'] ?? ($_SESSION['role'] ?? 'user'));
     }
 

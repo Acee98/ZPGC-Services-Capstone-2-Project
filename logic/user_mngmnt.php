@@ -36,7 +36,7 @@ if (isset($_POST['login'])) {
             if (!mail_ready()) {
                 $_SESSION['signup_error'] = 'Your email is not verified yet, and mail is not configured. '
                     . (auth_mail_is_technician_role($user['role'])
-                        ? 'Ask an admin to Activate your technician account in Utilities.'
+                        ? 'Ask an admin for help, or complete verification when mail is configured.'
                         : 'Ask an admin for help.');
                 header('Location: ../pages/verify_pending.php');
                 exit();
@@ -59,6 +59,13 @@ if (isset($_POST['login'])) {
         }
 
         if (!$gate['ok']) {
+            if (!empty($gate['applicant_ok'])) {
+                zpgc_rate_limit_clear('login');
+                zpgc_establish_login_session($user);
+                $_SESSION['techn_applicant'] = 1;
+                header('Location: ../pages/techn_apply.php');
+                exit();
+            }
             $_SESSION['login_error'] = $gate['message'] !== ''
                 ? $gate['message']
                 : 'Your account cannot log in yet.';
@@ -66,15 +73,9 @@ if (isset($_POST['login'])) {
             exit();
         }
 
-        // Extra hard stop: technicians must never get a session while inactive.
-        if (auth_mail_is_technician_role($user['role']) && strtolower((string) $user['status']) !== 'active') {
-            $_SESSION['login_error'] = 'Your email is verified. An administrator must Activate your technician account in Utilities before you can log in.';
-            header('Location: ../pages/login_signup.php');
-            exit();
-        }
-
         zpgc_rate_limit_clear('login');
         zpgc_establish_login_session($user);
+        unset($_SESSION['techn_applicant']);
 
         $returnTo = zpgc_consume_login_return();
         if ($returnTo !== '') {
@@ -226,7 +227,7 @@ if (isset($_POST['signup'])) {
     $_SESSION['pending_verify_email'] = $email;
     if ($role === 'techn') {
         $_SESSION['signup_success'] = 'Verification code sent to ' . $email
-            . '. Open that real TSU Outlook inbox (and Junk). After the code, an administrator must still Activate your technician account — inventing an email will not work.';
+            . '. Open that real TSU Outlook inbox (and Junk). After the 6-digit code, complete the technician application (specialty + resume). Inventing an email will not work.';
     } else {
         $_SESSION['signup_success'] = 'Verification code sent to ' . $email
             . '. Open that real TSU Outlook inbox (and Junk), then enter the 6-digit code. '
@@ -329,7 +330,21 @@ if (isset($_POST['verify_code'])) {
     $result = auth_mail_activate_verified_user($conn, $userId);
     unset($_SESSION['pending_verify_email']);
     if (!empty($result['awaiting_admin'])) {
-        $_SESSION['login_success'] = 'Email verified. Your technician account is waiting for an administrator to Activate it in Utilities. You cannot log in until then.';
+        $load = $conn->prepare(
+            'SELECT id, first_name, last_name, email, role, status, email_verified FROM users WHERE id = ? LIMIT 1'
+        );
+        $load->bind_param('i', $userId);
+        $load->execute();
+        $fresh = $load->get_result()->fetch_assoc();
+        $load->close();
+        if ($fresh) {
+            zpgc_establish_login_session($fresh);
+            $_SESSION['techn_applicant'] = 1;
+            $_SESSION['apply_success'] = 'Email verified. Select your technical role and upload your resume to apply.';
+            header('Location: ../pages/techn_apply.php');
+            exit();
+        }
+        $_SESSION['login_success'] = 'Email verified. Sign in to complete your technician application.';
     } else {
         $_SESSION['login_success'] = 'Email verified and account activated. You can log in now.';
     }

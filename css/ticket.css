@@ -77,6 +77,17 @@ body {
     width: 100%;
 }
 
+.ticket-notice-ok {
+    padding: 12px;
+    background-color: #d8f0dc;
+    color: #0f5b1d;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    width: 100%;
+}
+
 .ticket-field label {
     font-size: 14px;
     font-weight: 700;
@@ -85,6 +96,7 @@ body {
 
 .ticket-field select,
 .ticket-field input[type="text"],
+.ticket-field input[type="file"],
 .ticket-field textarea {
     width: 100%;
     background-color: #fff;

@@ -9,7 +9,10 @@ require_once '../logic/performance_report.php';
 require_once '../logic/audit_log.php';
 require_once '../logic/ticket_status.php';
 require_once '../logic/ui_state.php';
+require_once '../logic/techn_apply.php';
 require_role('admin');
+
+techn_apply_ready($conn);
 
 $current_user_id = current_user_id($conn);
 $tab = zpgc_ui_resolve_tab('admin', 'dashboard');
@@ -43,6 +46,8 @@ $role_labels = [
 ];
 
 $all_users = [];
+$techn_applications = [];
+$techn_specialties = [];
 $technicians = [];
 $active_tickets = [];
 $history_tickets = [];
@@ -106,6 +111,8 @@ if ($tab === 'utilities') {
             $all_users[] = $row;
         }
     }
+    $techn_applications = techn_apply_list_open($conn);
+    $techn_specialties = techn_apply_specialties();
 }
 
 if ($tab === 'utilities') {
@@ -584,6 +591,67 @@ $ui_theme = current_ui_theme();
                 <?php if ($utilities_error !== '') { ?>
                 <div class="utilities-notice-error"><?php echo htmlspecialchars($utilities_error); ?></div>
                 <?php } ?>
+
+                <div class="ticket-retention-card techn-apply-card">
+                    <div class="ticket-retention-copy">
+                        <h2>Technician applications</h2>
+                        <p class="form-subtitle">
+                            After Outlook verification, technicians submit a specialty and resume.
+                            Approve activates the account. Modify emails a 24-hour confirmation link.
+                            Reject (or no response in 24 hours after a modify) removes the application.
+                        </p>
+                    </div>
+                    <?php if (empty($techn_applications)) { ?>
+                    <p class="audit-empty">No pending technician applications.</p>
+                    <?php } else { ?>
+                    <div class="techn-apply-list">
+                        <?php foreach ($techn_applications as $appRow) {
+                            $appName = trim((string) $appRow['first_name'] . ' ' . (string) $appRow['last_name']);
+                            $awaiting = ($appRow['status'] ?? '') === 'awaiting_role_change';
+                            ?>
+                        <div class="techn-apply-row">
+                            <div class="techn-apply-meta">
+                                <strong><?php echo htmlspecialchars($appName); ?></strong>
+                                <span><?php echo htmlspecialchars((string) $appRow['email']); ?></span>
+                                <span>Role: <?php echo htmlspecialchars((string) $appRow['specialty']); ?>
+                                    · <?php echo htmlspecialchars(techn_apply_status_label($appRow['status'] ?? '')); ?>
+                                    <?php if ($awaiting) { ?>
+                                    · proposed <?php echo htmlspecialchars((string) $appRow['proposed_specialty']); ?>
+                                    <?php } ?>
+                                </span>
+                                <a href="../logic/resume_file.php?id=<?php echo (int) $appRow['id']; ?>">Download resume</a>
+                            </div>
+                            <div class="techn-apply-actions">
+                                <form action="../logic/techn_apply_admin_mngmnt.php" method="post">
+                                    <?php echo zpgc_csrf_field(); ?>
+                                    <input type="hidden" name="app_id" value="<?php echo (int) $appRow['id']; ?>">
+                                    <button type="submit" name="apply_approve" class="btn-update-status">Approve</button>
+                                </form>
+                                <form action="../logic/techn_apply_admin_mngmnt.php" method="post" class="techn-apply-modify">
+                                    <?php echo zpgc_csrf_field(); ?>
+                                    <input type="hidden" name="app_id" value="<?php echo (int) $appRow['id']; ?>">
+                                    <select name="proposed_specialty" aria-label="Propose specialty" required>
+                                        <?php foreach ($techn_specialties as $spec) { ?>
+                                        <option value="<?php echo htmlspecialchars($spec); ?>"
+                                            <?php echo strcasecmp($spec, (string) $appRow['specialty']) === 0 ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($spec); ?>
+                                        </option>
+                                        <?php } ?>
+                                    </select>
+                                    <button type="submit" name="apply_modify" class="btn-assign">Modify</button>
+                                </form>
+                                <form action="../logic/techn_apply_admin_mngmnt.php" method="post"
+                                    onsubmit="return confirm('Reject and remove this application?');">
+                                    <?php echo zpgc_csrf_field(); ?>
+                                    <input type="hidden" name="app_id" value="<?php echo (int) $appRow['id']; ?>">
+                                    <button type="submit" name="apply_reject" class="btn-delete">Reject</button>
+                                </form>
+                            </div>
+                        </div>
+                        <?php } ?>
+                    </div>
+                    <?php } ?>
+                </div>
 
                 <div class="ticket-retention-card">
                     <div class="ticket-retention-copy">

@@ -57,6 +57,7 @@ function cleanup(mysqli $conn, int $id): void
     if ($id <= 0) {
         return;
     }
+    $conn->query('DELETE FROM technician_applications WHERE user_id = ' . (int) $id);
     $conn->query('DELETE FROM auth_tokens WHERE user_id = ' . (int) $id);
     $conn->query('DELETE FROM users WHERE id = ' . (int) $id);
 }
@@ -85,7 +86,8 @@ $gate = auth_mail_login_gate([
     'status' => $st['status'],
     'email_verified' => (int) $st['email_verified'],
 ]);
-ok('techn cannot login yet', empty($gate['ok']) && !empty($gate['awaiting_admin']), json_encode($gate));
+ok('techn cannot login dashboard yet', empty($gate['ok']) && !empty($gate['awaiting_admin']), json_encode($gate));
+ok('techn applicant portal allowed', !empty($gate['applicant_ok']), json_encode($gate));
 
 $upd = $conn->prepare("UPDATE users SET status = 'active', email_verified = 1 WHERE id = ?");
 $upd->bind_param('i', $technId);

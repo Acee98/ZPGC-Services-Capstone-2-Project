@@ -57,7 +57,7 @@ if ($email === '' && $error === '' && $success === '') {
                 }
                 echo showSuccess($msg);
                 ?>
-                <h5>Codes only arrive in a real TSU Outlook inbox. Users activate automatically after a valid code. Technicians stay pending until an admin Activates them in Utilities.</h5>
+                <h5>Codes only arrive in a real TSU Outlook inbox. Users activate automatically after a valid code. Technicians then complete a specialty + resume application for administrator approval.</h5>
                 <input type="email" name="email" placeholder="TSU email used at signup" autocomplete="email" required
                     value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>">
                 <input type="text" name="code" placeholder="6-digit verification code" inputmode="numeric"

@@ -34,6 +34,10 @@ $files = [
     'logic/auth_mail.php',
     'logic/user_mngmnt.php',
     'logic/user_admin_mngmnt.php',
+    'logic/techn_apply.php',
+    'logic/techn_apply_mngmnt.php',
+    'logic/techn_apply_admin_mngmnt.php',
+    'logic/resume_file.php',
     'logic/ticket_mngmnt.php',
     'logic/ticket_files.php',
     'logic/ticket_attachment_mngmnt.php',
@@ -43,6 +47,8 @@ $files = [
     'pages/techn.php',
     'pages/login_signup.php',
     'pages/verify_pending.php',
+    'pages/techn_apply.php',
+    'pages/techn_role_confirm.php',
     'js/utilities_filter.js',
     'js/tickets_filter.js',
     'js/behavior.js',
@@ -109,6 +115,7 @@ $technPending = [
 ];
 $g = auth_mail_login_gate($technPending);
 check('gate techn awaiting admin', empty($g['ok']) && !empty($g['awaiting_admin']));
+check('gate techn applicant ok', !empty($g['applicant_ok']));
 
 $technActive = [
     'role' => 'techn',

@@ -204,6 +204,12 @@ if (isset($_POST['delete_user'])) {
         utilities_fail("You can't delete your own account while logged in as it.");
     }
 
+    require_once __DIR__ . '/techn_apply.php';
+    $existingApp = techn_apply_get_for_user($conn, $id);
+    if ($existingApp) {
+        techn_apply_delete_row($conn, $existingApp);
+    }
+
     $delete = $conn->prepare('DELETE FROM users WHERE id = ?');
     $delete->bind_param('i', $id);
     if (!$delete->execute() || $delete->affected_rows === 0) {

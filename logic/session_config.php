@@ -327,6 +327,9 @@ function zpgc_role_home($role)
         return '../pages/admin.php';
     }
     if ($role === 'techn') {
+        if (!empty($_SESSION['techn_applicant'])) {
+            return '../pages/techn_apply.php';
+        }
         return '../pages/techn.php';
     }
     return '../pages/user.php';

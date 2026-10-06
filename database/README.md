@@ -11,6 +11,7 @@ Database name used by the app: **`zpgc_services_db`** (`logic/config.php` / `DB_
    - `v1.5_openai_features.sql` / `v1.6_new_features_team.sql`
    - `v1.6_ticket_archive.sql` (`archived_at`)
    - `v1.6_satisfaction.sql` (`satisfaction` CSAT scores)
+   - `v1.6_techn_applications.sql` (`technician_applications` specialty + resume after Outlook verify)
    - `v1.6_performance_times.sql` (`responded_at`, `resolved_at`)
    - `v1.6_performance_indexes.sql` (indexes for lists / Performance)
    - `v1.6_attachments_audit.sql`, `v1.6_severity_matrix.sql`, `v1.6_user_profile_columns.sql` as required by your dump age
