@@ -144,7 +144,8 @@ a {
     flex: 1;
     margin: 0;
     padding: 10px;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .main-wrap .main-head .main-nav .navbar .navbar-nav .nav-list .nav-list-item {
@@ -383,11 +384,16 @@ body[data-page="performance"] .showcase {
     overflow: auto;
 }
 
+body[data-page="tickets"] .showcase {
+    overflow: auto;
+}
+
 body[data-page="tickets"] .showcase #page-tickets {
     display: flex;
     flex: 1;
     min-height: 0;
     flex-direction: column;
+    overflow: auto;
 }
 
 body[data-page="utilities"] .showcase #page-utilities {
@@ -3303,9 +3309,12 @@ body[data-page="tickets"] .main-wrap {
     min-height: 100vh;
 }
 
+/* Active list scrolls inside its box so Ticket History stays below it */
 body[data-page="tickets"] #page-tickets .tickets-list:not(.ticket-history-list) {
-    flex: 1 1 auto;
-    min-height: calc(100vh - 200px);
+    flex: 0 1 auto;
+    min-height: 200px;
+    max-height: min(48vh, 480px);
+    overflow: auto;
 }
 
 body[data-page="tickets"] #page-tickets .tickets-list.ticket-history-list {
@@ -3356,10 +3365,14 @@ body[data-page="messages"] .mailbox-container {
 }
 
 .ticket-history-section {
+    position: relative;
+    z-index: 4;
+    isolation: isolate;
     width: calc(100% - (var(--page-gutter, 16px) * 2));
     max-width: none;
     margin: 12px var(--page-gutter, 16px) 20px;
     box-sizing: border-box;
+    background: #fff;
 }
 
 .ticket-history-head {

@@ -48,6 +48,17 @@ if (!function_exists('zpgc_ui_resolve_tab')) {
     }
 }
 
+if (!function_exists('zpgc_ui_no_store')) {
+    function zpgc_ui_no_store()
+    {
+        if (!headers_sent()) {
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+        }
+    }
+}
+
 if (!function_exists('zpgc_ui_persist_redirect')) {
     /**
      * If the browser refreshed without ?tab=, bounce once to the remembered tab URL.

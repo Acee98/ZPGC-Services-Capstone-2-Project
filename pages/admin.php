@@ -14,6 +14,7 @@ require_role('admin');
 $current_user_id = current_user_id($conn);
 $tab = zpgc_ui_resolve_tab('admin', 'dashboard');
 zpgc_ui_persist_redirect($tab);
+zpgc_ui_no_store();
 
 ticket_ensure_archived_column($conn);
 ticket_ensure_satisfaction_column($conn);
@@ -268,9 +269,10 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.22">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.22">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.18">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.23">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.23">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.23">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -958,7 +960,7 @@ $ui_theme = current_ui_theme();
     </script>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
     <script src="../js/utilities_filter.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.21" defer></script>
+    <script src="../js/behavior.js?v=1.6.23" defer></script>
     <!-- chart.umd.js, dashboard charts, tickets/utilities filters: lazy-loaded per tab via lazy_load.js -->
 </body>
 

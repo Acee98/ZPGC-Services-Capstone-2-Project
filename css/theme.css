@@ -143,6 +143,10 @@
     background-color: var(--theme-surface-3);
 }
 
+[data-theme="dark"] .ticket-history-section {
+    background-color: var(--theme-bg, #141418);
+}
+
 [data-theme="dark"] .tickets-list-header {
     background-color: var(--theme-surface-2);
     border-bottom-color: var(--theme-border);

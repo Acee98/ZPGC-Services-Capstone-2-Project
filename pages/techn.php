@@ -12,6 +12,7 @@ require_role('techn');
 $current_user_id = current_user_id($conn);
 $tab = zpgc_ui_resolve_tab('techn', 'dashboard');
 zpgc_ui_persist_redirect($tab);
+zpgc_ui_no_store();
 $ticket_flash = $_SESSION['ticket_flash'] ?? '';
 unset($_SESSION['ticket_flash']);
 
@@ -64,8 +65,9 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.22">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.18">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.23">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.23">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | Technician</title>
 </head>
@@ -113,9 +115,7 @@ $ui_theme = current_ui_theme();
                                 <a href="?tab=performance" class="nav-link">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                                         viewBox="0 0 24 24">
-                                        <path
-                                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3m-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5m8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5">
-                                        </path>
+                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2M9 17H7v-7h2zm4 0h-2V7h2zm4 0h-2v-4h2z"></path>
                                     </svg>
                                     <span class="link-text">Performance</span>
                                 </a>
@@ -326,7 +326,7 @@ $ui_theme = current_ui_theme();
         </section>
     </main>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.21" defer></script>
+    <script src="../js/behavior.js?v=1.6.23" defer></script>
     <script src="../js/performance_filter.js?v=1.6.22"></script>
 </body>
 

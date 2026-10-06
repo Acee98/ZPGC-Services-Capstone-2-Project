@@ -39,6 +39,7 @@ if (isset($_GET['defer_rate'])) {
 
 $tab = zpgc_ui_resolve_tab('user', 'dashboard');
 zpgc_ui_persist_redirect($tab);
+zpgc_ui_no_store();
 
 $confirm_success = $_SESSION['confirm_success'] ?? '';
 $confirm_error = $_SESSION['confirm_error'] ?? '';
@@ -89,8 +90,9 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.22">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.18">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.23">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.23">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | User</title>
 </head>
@@ -417,7 +419,7 @@ $ui_theme = current_ui_theme();
     </div>
     <?php } ?>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.21" defer></script>
+    <script src="../js/behavior.js?v=1.6.23" defer></script>
 </body>
 
 </html>

@@ -244,6 +244,49 @@ html[data-theme="dark"] .ticket-row {
     border-bottom-color: rgba(255, 255, 255, 0.08) !important;
 }
 
+.tickets-col-category {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 72px !important;
+    text-align: center !important;
+    visibility: visible !important;
+}
+
+/* Keep open tickets from painting over Ticket History */
+body[data-page="tickets"] .showcase {
+    overflow-y: auto !important;
+}
+body[data-page="tickets"] #page-tickets {
+    overflow-y: auto !important;
+}
+body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user,
+body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user--actions,
+body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-techn-actions,
+body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin-five {
+    flex: 0 1 auto !important;
+    min-height: 200px !important;
+    max-height: min(48vh, 480px) !important;
+    overflow: auto !important;
+}
+body[data-page="tickets"] #page-tickets .tickets-list-user--actions .tickets-list-header,
+body[data-page="tickets"] #page-tickets .tickets-list-techn-actions .tickets-list-header,
+body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+}
+body[data-page="tickets"] #page-tickets .ticket-history-section {
+    position: relative !important;
+    z-index: 6 !important;
+    isolation: isolate !important;
+    margin-top: 12px !important;
+    background: #fff !important;
+}
+html[data-theme="dark"] body[data-page="tickets"] #page-tickets .ticket-history-section {
+    background: #141418 !important;
+}
+
 /* ========== Mobile: keep content above bottom tab bar ========== */
 @media (max-width: 768px) {
     body {
@@ -522,8 +565,8 @@ html[data-theme="dark"] .ticket-row {
     .tickets-list-user .tickets-list-body,
     .tickets-list-techn-actions .tickets-list-body,
     .role-dash-list .tickets-list-body {
-        overflow: visible !important;
-        flex: 0 0 auto !important;
+        overflow: auto !important;
+        flex: 1 1 auto !important;
     }
 
     .tickets-list-user--actions .tickets-list-header,
@@ -588,8 +631,8 @@ html[data-theme="dark"] .ticket-row {
     .ticket-history-list .tickets-list-body,
     .tickets-list-utilities .tickets-list-body,
     .admin-dashboard-history-list .tickets-list-body {
-        overflow: visible !important;
-        flex: 0 0 auto !important;
+        overflow: auto !important;
+        flex: 1 1 auto !important;
     }
     .ticket-history-section {
         width: 100% !important;
