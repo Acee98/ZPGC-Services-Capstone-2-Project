@@ -59,8 +59,8 @@ $rating_labels = [
 
 $user_tickets = [];
 $selectCols = $has_ai_guidance
-    ? 'id, subject, description, status, priority, assigned_to, ai_guidance'
-    : 'id, subject, description, status, priority, assigned_to';
+    ? 'id, subject, description, category, status, priority, assigned_to, ai_guidance'
+    : 'id, subject, description, category, status, priority, assigned_to';
 if ($has_satisfaction) {
     $selectCols .= ', satisfaction';
 }
@@ -89,7 +89,7 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.18">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.22">
     <link rel="stylesheet" href="../css/theme.css?v=1.6.18">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | User</title>
@@ -222,6 +222,7 @@ $ui_theme = current_ui_theme();
                 <div class="tickets-list tickets-list-user tickets-list-user--actions">
                 <div class="tickets-list-header">
                     <span class="tickets-col-id">ID</span>
+                    <span class="tickets-col-category">Category</span>
                     <span class="tickets-col-subject">Subject</span>
                     <span class="tickets-col-description">Description</span>
                     <span class="tickets-col-status">Status</span>
@@ -245,6 +246,7 @@ $ui_theme = current_ui_theme();
                         <span class="tickets-col-id">#
                             <?php echo (int) $ticket['id']; ?>
                         </span>
+                        <span class="tickets-col-category"><?php echo htmlspecialchars(ticket_category_label($ticket['category'] ?? '')); ?></span>
                         <span class="tickets-col-subject">
                             <?php echo htmlspecialchars($ticket['subject']); ?>
                             <?php if ($showSelfHelp) { ?>

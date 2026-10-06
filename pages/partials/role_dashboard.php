@@ -24,10 +24,12 @@ $showCategory = !empty($dash_show_category);
 <div class="tickets-list role-dash-list<?php echo $showCategory ? ' role-dash-list--category' : ''; ?>">
     <div class="tickets-list-header">
         <span class="tickets-col-id">ID</span>
+        <?php if ($showCategory) { ?>
+        <span class="tickets-col-category">Category</span>
+        <?php } ?>
         <span class="tickets-col-subject">Subject</span>
         <span class="tickets-col-description">Description</span>
         <?php if ($showCategory) { ?>
-        <span class="dash-col-category">Category</span>
         <span class="dash-col-severity">Severity</span>
         <?php } ?>
         <span class="tickets-col-status">Status</span>
@@ -41,10 +43,12 @@ $showCategory = !empty($dash_show_category);
         ?>
         <div class="ticket-row">
             <span class="tickets-col-id">#<?php echo (int) $row['id']; ?></span>
+            <?php if ($showCategory) { ?>
+            <span class="tickets-col-category"><?php echo htmlspecialchars(ticket_category_label($row['category'] ?? '')); ?></span>
+            <?php } ?>
             <span class="tickets-col-subject"><?php echo htmlspecialchars((string) $row['subject']); ?></span>
             <span class="tickets-col-description"><?php echo htmlspecialchars((string) $row['description']); ?></span>
             <?php if ($showCategory) { ?>
-            <span class="dash-col-category"><?php echo htmlspecialchars(ucfirst((string) ($row['category'] ?? ''))); ?></span>
             <span class="dash-col-severity"><?php echo htmlspecialchars(ucfirst((string) ($row['priority'] ?? '—'))); ?></span>
             <?php } ?>
             <span class="tickets-col-status">

@@ -11,6 +11,7 @@ $tickets = $recent_tickets ?? [];
 <div class="tickets-list admin-dashboard-history-list">
     <div class="tickets-list-header">
         <span class="tcol-id">ID</span>
+        <span class="tcol-category">Category</span>
         <span class="tcol-subject">Subject</span>
         <span class="tcol-priority">Priority</span>
         <span class="tcol-status">Status</span>
@@ -38,6 +39,7 @@ $tickets = $recent_tickets ?? [];
                 ?>
                 <div class="ticket-row admin-history-row" data-status="<?php echo htmlspecialchars($ticket['status']); ?>">
                     <span class="tcol-id">#<?php echo $tid; ?></span>
+                    <span class="tcol-category"><?php echo htmlspecialchars(ticket_category_label($ticket['category'] ?? '')); ?></span>
                     <span class="tcol-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
                     <span class="tcol-priority">
                         <?php if ($pri !== '') { ?>

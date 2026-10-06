@@ -358,14 +358,15 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
         display: grid !important;
         grid-template-columns:
             56px
+            80px
             minmax(110px, 1.1fr)
             minmax(130px, 1.3fr)
             120px
             110px
             minmax(130px, 1fr)
             72px !important;
-        min-width: 920px !important;
-        width: 920px !important;
+        min-width: 1000px !important;
+        width: 1000px !important;
         max-width: none !important;
         border-radius: 0 !important;
         box-shadow: none !important;
@@ -847,6 +848,7 @@ body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user {
 .tickets-list-user.tickets-list-user--actions .ticket-row {
     grid-template-columns:
         72px
+        90px
         minmax(0, 1.25fr)
         minmax(0, 1.55fr)
         minmax(0, 0.95fr)
@@ -877,6 +879,7 @@ body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user {
 }
 
 .tickets-list-user .tickets-col-id,
+.tickets-list-user .tickets-col-category,
 .tickets-list-user .tickets-col-subject,
 .tickets-list-user .tickets-col-description,
 .tickets-list-admin .tcol-id,
@@ -1001,9 +1004,9 @@ body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user {
     body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header,
     body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row:not(.ticket-row-filtered-out) {
         display: grid !important;
-        grid-template-columns: 56px minmax(110px, 1.1fr) minmax(130px, 1.3fr) 120px 110px minmax(130px, 1fr) 72px !important;
-        min-width: 920px !important;
-        width: 920px !important;
+        grid-template-columns: 56px 80px minmax(110px, 1.1fr) minmax(130px, 1.3fr) 120px 110px minmax(130px, 1fr) 72px !important;
+        min-width: 1000px !important;
+        width: 1000px !important;
         max-width: none !important;
     }
 

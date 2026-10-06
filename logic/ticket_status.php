@@ -20,6 +20,15 @@ if (!function_exists('ticket_status_label')) {
         return preg_replace('/[^a-z]/', '', strtolower((string) $status));
     }
 
+    function ticket_category_label($category)
+    {
+        $cat = strtolower(trim((string) $category));
+        if ($cat === '') {
+            return '—';
+        }
+        return ucfirst($cat);
+    }
+
     function ticket_awaiting_confirmation($status)
     {
         return $status === 'awaiting_confirmation';

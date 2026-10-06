@@ -6,6 +6,7 @@ require_once '../logic/ticket_status.php';
 require_once '../logic/ticket_files.php';
 require_once '../logic/ticket_times.php';
 require_once '../logic/ticket_retention.php';
+require_once '../logic/performance_report.php';
 require_role('techn');
 
 $current_user_id = current_user_id($conn);
@@ -48,6 +49,12 @@ if ($replaceTable && $replaceTable->num_rows > 0) {
 $mailbox_tickets = $active_tech_tickets;
 $listed_tickets = ticket_sort_for_attention($active_tech_tickets, $replaceIds);
 $techn_statuses = ticket_techn_allowed_statuses();
+$performance_categories = [];
+$performance_log = [];
+if ($tab === 'performance') {
+    $performance_categories = performance_category_rows($conn, $current_user_id);
+    $performance_log = performance_resolved_log($conn, 100, $current_user_id);
+}
 $ui_theme = current_ui_theme();
 ?>
 
@@ -57,7 +64,7 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.18">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.22">
     <link rel="stylesheet" href="../css/theme.css?v=1.6.18">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | Technician</title>
@@ -100,6 +107,17 @@ $ui_theme = current_ui_theme();
                                         <path d="M15 12h1v2h-1zm0 3h1v2h-1z"></path>
                                     </svg>
                                     <span class="link-text">Tickets</span>
+                                </a>
+                            </li>
+                            <li class="nav-list-item<?php echo zpgc_nav_selected_class($tab, 'performance'); ?>" data-nav="performance">
+                                <a href="?tab=performance" class="nav-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path
+                                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3m-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5m8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5">
+                                        </path>
+                                    </svg>
+                                    <span class="link-text">Performance</span>
                                 </a>
                             </li>
                             <li class="nav-list-item<?php echo zpgc_nav_selected_class($tab, 'messages'); ?>" data-nav="messages">
@@ -177,6 +195,7 @@ $ui_theme = current_ui_theme();
                 <div class="tickets-list tickets-list-techn-actions">
                 <div class="tickets-list-header">
                     <span class="tickets-col-id">ID</span>
+                    <span class="tickets-col-category">Category</span>
                     <span class="tickets-col-subject">Subject</span>
                     <span class="tickets-col-description">Description</span>
                     <span class="tickets-col-status">Status</span>
@@ -199,6 +218,7 @@ $ui_theme = current_ui_theme();
                         <?php echo zpgc_csrf_field(); ?>
                         <input type="hidden" name="ticket_id" value="<?php echo $tid; ?>">
                         <span class="tickets-col-id">#<?php echo $tid; ?></span>
+                        <span class="tickets-col-category"><?php echo htmlspecialchars(ticket_category_label($ticket['category'] ?? '')); ?></span>
                         <span class="tickets-col-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
                         <span class="tickets-col-description"><?php echo htmlspecialchars($ticket['description']); ?></span>
                         <span class="tickets-col-status">
@@ -221,6 +241,7 @@ $ui_theme = current_ui_theme();
                     <?php } else { ?>
                     <div class="ticket-row" data-status="<?php echo htmlspecialchars($st); ?>">
                         <span class="tickets-col-id">#<?php echo $tid; ?></span>
+                        <span class="tickets-col-category"><?php echo htmlspecialchars(ticket_category_label($ticket['category'] ?? '')); ?></span>
                         <span class="tickets-col-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
                         <span class="tickets-col-description"><?php echo htmlspecialchars($ticket['description']); ?></span>
                         <span class="tickets-col-status">
@@ -243,6 +264,24 @@ $ui_theme = current_ui_theme();
                 $history_subtitle = 'Resolved and archived tickets';
                 include __DIR__ . '/partials/ticket_history_list.php';
                 ?>
+            </div>
+            <div class="page-content" id="page-performance">
+                <div class="head">
+                    <header>
+                        <h1>Performance</h1>
+                        <div class="search-bar-wrapper">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
+                                </path>
+                            </svg>
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <?php include __DIR__ . '/partials/profile_menu.php'; ?>
+                    </header>
+                </div>
+                <?php include __DIR__ . '/partials/performance_panel.php'; ?>
             </div>
             <div class="page-content" id="page-messages">
                 <div class="head">
@@ -288,6 +327,7 @@ $ui_theme = current_ui_theme();
     </main>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
     <script src="../js/behavior.js?v=1.6.21" defer></script>
+    <script src="../js/performance_filter.js?v=1.6.22"></script>
 </body>
 
 </html>

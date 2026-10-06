@@ -40,7 +40,7 @@ if (!function_exists('performance_duration_label')) {
         return date('m/d/Y (H:i)', $ts);
     }
 
-    function performance_category_rows(mysqli $conn)
+    function performance_category_rows(mysqli $conn, $assignedTo = 0)
     {
         $order = ['hardware', 'software', 'network', 'account', 'other'];
         $rows = [];
@@ -54,11 +54,16 @@ if (!function_exists('performance_duration_label')) {
                 'low' => 0,
             ];
         }
+        $where = "status = 'resolved'";
+        $assignedTo = (int) $assignedTo;
+        if ($assignedTo > 0) {
+            $where .= ' AND assigned_to = ' . $assignedTo;
+        }
         $sql = "SELECT LOWER(TRIM(category)) AS cat,
                        LOWER(TRIM(IFNULL(priority, ''))) AS pri,
                        COUNT(*) AS cnt
                 FROM tickets
-                WHERE status = 'resolved'
+                WHERE {$where}
                 GROUP BY cat, pri";
         $result = $conn->query($sql);
         if ($result) {
@@ -99,7 +104,7 @@ if (!function_exists('performance_duration_label')) {
     /**
      * Recent resolved tickets for the Performance log.
      */
-    function performance_resolved_log(mysqli $conn, $limit = 100)
+    function performance_resolved_log(mysqli $conn, $limit = 100, $assignedTo = 0)
     {
         $limit = max(1, min(500, (int) $limit));
         $hasCreated = ticket_has_column($conn, 'created_at');
@@ -108,9 +113,14 @@ if (!function_exists('performance_duration_label')) {
         $created = $hasCreated ? 'created_at' : 'NULL AS created_at';
         $responded = $hasResponded ? 'responded_at' : 'NULL AS responded_at';
         $resolved = $hasResolved ? 'resolved_at' : 'NULL AS resolved_at';
+        $where = "status = 'resolved'";
+        $assignedTo = (int) $assignedTo;
+        if ($assignedTo > 0) {
+            $where .= ' AND assigned_to = ' . $assignedTo;
+        }
         $sql = "SELECT id, subject, description, category, priority, {$created}, {$responded}, {$resolved}
                 FROM tickets
-                WHERE status = 'resolved'
+                WHERE {$where}
                 ORDER BY id DESC
                 LIMIT {$limit}";
         $log = [];

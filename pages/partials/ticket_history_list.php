@@ -28,6 +28,7 @@ $history_rating_labels = $history_rating_labels ?? [
     <div class="tickets-list ticket-history-list<?php echo $history_show_assigned ? ' ticket-history-list--assigned' : ''; ?><?php echo $history_show_satisfaction ? ' ticket-history-list--satisfaction' : ''; ?>">
         <div class="tickets-list-header">
             <span class="tickets-col-id">ID</span>
+            <span class="tickets-col-category">Category</span>
             <span class="tickets-col-subject">Subject</span>
             <span class="tickets-col-description">Description</span>
             <span class="tickets-col-status">Status</span>
@@ -62,6 +63,7 @@ $history_rating_labels = $history_rating_labels ?? [
             ?>
             <div class="ticket-row ticket-history-row" data-status="<?php echo htmlspecialchars($st); ?>">
                 <span class="tickets-col-id">#<?php echo (int) $ticket['id']; ?></span>
+                <span class="tickets-col-category"><?php echo htmlspecialchars(ticket_category_label($ticket['category'] ?? '')); ?></span>
                 <span class="tickets-col-subject"><?php echo htmlspecialchars((string) ($ticket['subject'] ?? '')); ?></span>
                 <span class="tickets-col-description"><?php echo htmlspecialchars((string) ($ticket['description'] ?? '')); ?></span>
                 <span class="tickets-col-status">

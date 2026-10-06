@@ -5,7 +5,6 @@ require_once '../logic/priority_queue.php';
 require_once '../logic/dashboard_stats.php';
 require_once '../logic/ticket_times.php';
 require_once '../logic/ticket_retention.php';
-require_once '../logic/performance_report.php';
 require_once '../logic/audit_log.php';
 require_once '../logic/ticket_status.php';
 require_once '../logic/ui_state.php';
@@ -53,8 +52,6 @@ $mailbox_tickets = [];
 $recent_tickets = [];
 $attention_tickets = [];
 $replacement_requests = [];
-$performance_categories = [];
-$performance_log = [];
 $audit_rows = [];
 $queue_snapshot = [
     'bands' => [],
@@ -144,7 +141,7 @@ if ($needsTechnicians) {
 }
 
 if ($needsTickets || $needsDashboardList) {
-    $ticketCols = 't.id, t.subject, t.description, t.status, t.priority, t.assigned_to'
+    $ticketCols = 't.id, t.subject, t.description, t.category, t.status, t.priority, t.assigned_to'
         . ($hasArchivedCol ? ', t.archived_at' : '')
         . ',
             u.first_name, u.last_name,
@@ -247,11 +244,6 @@ if ($tab === 'dashboard') {
         }
     }
 }
-if ($tab === 'performance') {
-    $performance_categories = performance_category_rows($conn);
-    $performance_log = performance_resolved_log($conn, 100);
-}
-
 $utilities_action = $_GET['action'] ?? '';
 $edit_id = (int) ($_GET['edit_id'] ?? 0);
 $editing_user = null;
@@ -276,8 +268,8 @@ $ui_theme = current_ui_theme();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.18">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.18">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.22">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.22">
     <link rel="stylesheet" href="../css/theme.css?v=1.6.18">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
@@ -300,9 +292,9 @@ $ui_theme = current_ui_theme();
             body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header,
             body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row:not(.ticket-row-filtered-out) {
                 display: grid !important;
-                grid-template-columns: 56px minmax(110px, 1.1fr) minmax(130px, 1.3fr) 120px 110px minmax(130px, 1fr) 72px !important;
-                min-width: 920px !important;
-                width: 920px !important;
+                grid-template-columns: 56px 80px minmax(110px, 1.1fr) minmax(130px, 1.3fr) 120px 110px minmax(130px, 1fr) 72px !important;
+                min-width: 1000px !important;
+                width: 1000px !important;
                 max-width: none !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
@@ -386,17 +378,6 @@ $ui_theme = current_ui_theme();
                                     <span class="link-text">Utilities</span>
                                 </a>
                             </li>
-                            <li class="nav-list-item<?php echo zpgc_nav_selected_class($tab, 'performance'); ?>" data-nav="performance">
-                                <a href="?tab=performance" class="nav-link">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path
-                                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3m-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5m8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5">
-                                        </path>
-                                    </svg>
-                                    <span class="link-text">Performance</span>
-                                </a>
-                            </li>
                             <li class="nav-list-item<?php echo zpgc_nav_selected_class($tab, 'messages'); ?>" data-nav="messages">
                                 <a href="?tab=messages" class="nav-link">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
@@ -475,6 +456,7 @@ $ui_theme = current_ui_theme();
                 <div class="tickets-list tickets-list-admin-five">
                     <div class="tickets-list-header">
                         <span class="tickets-col-id">ID</span>
+                        <span class="tickets-col-category">Category</span>
                         <span class="tickets-col-subject">Subject</span>
                         <span class="tickets-col-description">Description</span>
                         <span class="tickets-col-status">Status</span>
@@ -507,6 +489,7 @@ $ui_theme = current_ui_theme();
                             <?php echo zpgc_csrf_field(); ?>
                             <input type="hidden" name="ticket_id" value="<?php echo $tid; ?>">
                             <span class="tickets-col-id">#<?php echo $tid; ?></span>
+                            <span class="tickets-col-category"><?php echo htmlspecialchars(ticket_category_label($ticket['category'] ?? '')); ?></span>
                             <span class="tickets-col-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
                             <span class="tickets-col-description"><?php echo htmlspecialchars($ticket['description']); ?></span>
                             <span class="tickets-col-status">
@@ -879,109 +862,6 @@ $ui_theme = current_ui_theme();
                 </div>
                 <?php } ?>
             </div>
-            <div class="page-content" id="page-performance">
-                <div class="head">
-                    <header>
-                        <h1>Performance</h1>
-                        <div class="search-bar-wrapper">
-                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                fill="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
-                                </path>
-                            </svg>
-                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
-                        </div>
-                        <?php include __DIR__ . '/partials/profile_menu.php'; ?>
-                    </header>
-                </div>
-                <div class="perf-section-header">
-                    <h2>Resolved by Category</h2>
-                </div>
-                <div class="tickets-list perf-category-list">
-                    <div class="tickets-list-header">
-                        <span class="pcol-category">Category</span>
-                        <span class="pcol-resolved">Tickets Resolved</span>
-                        <span class="pcol-critical">Critical</span>
-                        <span class="pcol-moderate">Moderate</span>
-                        <span class="pcol-low">Low</span>
-                    </div>
-                    <div class="tickets-list-body">
-                        <?php foreach ($performance_categories as $perfRow) { ?>
-                        <div class="ticket-row">
-                            <span class="pcol-category"><?php echo htmlspecialchars($perfRow['label']); ?></span>
-                            <span class="pcol-resolved"><?php echo (int) $perfRow['total']; ?></span>
-                            <span class="pcol-critical"><span class="perf-count critical"><?php echo (int) $perfRow['critical']; ?></span></span>
-                            <span class="pcol-moderate"><span class="perf-count moderate"><?php echo (int) $perfRow['moderate']; ?></span></span>
-                            <span class="pcol-low"><span class="perf-count low"><?php echo (int) $perfRow['low']; ?></span></span>
-                        </div>
-                        <?php } ?>
-                    </div>
-                </div>
-                <div class="perf-table-spacer"></div>
-                <div class="perf-filters-row">
-                    <div class="search-bar-wrapper">
-                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                            fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path
-                                d="M18 10c0-4.41-3.59-8-8-8s-8 3.59-8 8 3.59 8 8 8c1.85 0 3.54-.63 4.9-1.69l5.1 5.1L21.41 20l-5.1-5.1A8 8 0 0 0 18 10M4 10c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6-6-2.69-6-6">
-                            </path>
-                        </svg>
-                        <input type="search" class="search-bar" id="perf-log-search" placeholder="Search ticket ID, subject, times..." aria-label="Search resolved tickets">
-                    </div>
-                </div>
-                <div class="tickets-list perf-detail-list">
-                    <div class="tickets-list-header">
-                        <span class="dcol-category">Category</span>
-                        <span class="dcol-ticket">Ticket ID</span>
-                        <span class="dcol-subject">Subject</span>
-                        <span class="dcol-description">Description</span>
-                        <span class="dcol-reg">Registration Date &amp; Time</span>
-                        <span class="dcol-response">Response Time</span>
-                        <span class="dcol-resolution">Resolution Time</span>
-                        <span class="dcol-severity">Severity Level</span>
-                    </div>
-                    <div class="tickets-list-body" id="perf-log-body">
-                        <?php if (empty($performance_log)) { ?>
-                        <div class="tickets-empty-state">
-                            <p>No resolved tickets yet.</p>
-                        </div>
-                        <?php } else { ?>
-                        <?php foreach ($performance_log as $logRow) {
-                            $sev = $logRow['priority'];
-                            $searchBlob = strtolower(implode(' ', [
-                                (string) $logRow['category_label'],
-                                (string) $logRow['id'],
-                                '#' . (string) $logRow['id'],
-                                (string) $logRow['subject'],
-                                (string) $logRow['description'],
-                                (string) $logRow['registered'],
-                                (string) $logRow['response'],
-                                (string) $logRow['resolution'],
-                                (string) $logRow['priority_label'],
-                            ]));
-                        ?>
-                        <div class="ticket-row" data-perf-search="<?php echo htmlspecialchars($searchBlob); ?>">
-                            <span class="dcol-category"><?php echo htmlspecialchars($logRow['category_label']); ?></span>
-                            <span class="dcol-ticket">#<?php echo (int) $logRow['id']; ?></span>
-                            <span class="dcol-subject"><?php echo htmlspecialchars($logRow['subject']); ?></span>
-                            <span class="dcol-description"><?php echo htmlspecialchars($logRow['description']); ?></span>
-                            <span class="dcol-reg"><?php echo htmlspecialchars($logRow['registered']); ?></span>
-                            <span class="dcol-response"><?php echo htmlspecialchars($logRow['response']); ?></span>
-                            <span class="dcol-resolution"><?php echo htmlspecialchars($logRow['resolution']); ?></span>
-                            <span class="dcol-severity">
-                                <?php if ($sev !== '') { ?>
-                                <span class="severity-badge <?php echo htmlspecialchars($sev); ?>"><?php echo htmlspecialchars($logRow['priority_label']); ?></span>
-                                <?php } else { ?>
-                                <span class="severity-badge undefined">None</span>
-                                <?php } ?>
-                            </span>
-                        </div>
-                        <?php } ?>
-                        <?php } ?>
-                    </div>
-                </div>
-            </div>
             <div class="page-content" id="page-messages">
                 <div class="head">
                     <header>
@@ -1079,48 +959,6 @@ $ui_theme = current_ui_theme();
     <script src="../js/lazy_load.js?v=1.6.18"></script>
     <script src="../js/utilities_filter.js?v=1.6.18"></script>
     <script src="../js/behavior.js?v=1.6.21" defer></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var input = document.getElementById('perf-log-search');
-            var body = document.getElementById('perf-log-body');
-            if (!input || !body) return;
-
-            var emptyEl = null;
-            function ensureEmptyNotice() {
-                if (emptyEl) return emptyEl;
-                emptyEl = document.createElement('div');
-                emptyEl.className = 'tickets-empty-state perf-filter-empty perf-filter-empty--hidden';
-                emptyEl.innerHTML = '<p>No matching tickets.</p>';
-                body.appendChild(emptyEl);
-                return emptyEl;
-            }
-
-            function applyPerfFilter() {
-                var q = (input.value || '').toLowerCase().trim();
-                var visible = 0;
-                body.querySelectorAll('.ticket-row').forEach(function (row) {
-                    var blob = row.getAttribute('data-perf-search') || '';
-                    var match = q === '' || blob.indexOf(q) !== -1;
-                    row.classList.toggle('perf-row-hidden', !match);
-                    if (match) visible += 1;
-                });
-                var notice = ensureEmptyNotice();
-                var hasRows = body.querySelectorAll('.ticket-row').length > 0;
-                var showEmpty = hasRows && q !== '' && visible === 0;
-                notice.classList.toggle('perf-filter-empty--hidden', !showEmpty);
-            }
-
-            input.addEventListener('input', applyPerfFilter);
-            input.addEventListener('search', applyPerfFilter);
-
-            // Performance search only matters on that tab; wire immediately (tiny).
-            if (window.ZpgcLazy) {
-                window.ZpgcLazy.whenTab('performance', function () {
-                    applyPerfFilter();
-                });
-            }
-        });
-    </script>
     <!-- chart.umd.js, dashboard charts, tickets/utilities filters: lazy-loaded per tab via lazy_load.js -->
 </body>
 

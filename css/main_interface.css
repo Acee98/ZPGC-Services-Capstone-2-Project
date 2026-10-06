@@ -597,6 +597,14 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
     flex: 0 0 10%;
 }
 
+.tickets-col-category {
+    flex: 0 0 12%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .tickets-col-subject {
     flex: 1 1 30%;
 }
@@ -622,6 +630,7 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
     display: grid;
     grid-template-columns:
         68px
+        90px
         minmax(120px, 1.15fr)
         minmax(140px, 1.45fr)
         128px
@@ -647,7 +656,8 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
 }
 
 .tickets-list-admin-five .tickets-col-subject,
-.tickets-list-admin-five .tickets-col-description {
+.tickets-list-admin-five .tickets-col-description,
+.tickets-list-admin-five .tickets-col-category {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1152,7 +1162,7 @@ body[data-page="utilities"] .tickets-toolbar {
 .tickets-list-user--actions .tickets-list-header,
 .tickets-list-user--actions .ticket-row {
     display: grid;
-    grid-template-columns: 72px minmax(0, 1.2fr) minmax(0, 1.6fr) 110px minmax(140px, 1fr) 48px;
+    grid-template-columns: 72px 90px minmax(0, 1.2fr) minmax(0, 1.6fr) 110px minmax(140px, 1fr) 48px;
     column-gap: 10px;
     align-items: center;
 }
@@ -1199,6 +1209,7 @@ body[data-page="utilities"] .tickets-toolbar {
     display: grid;
     grid-template-columns:
         68px
+        90px
         minmax(140px, 1.3fr)
         minmax(160px, 1.7fr)
         140px
@@ -3146,8 +3157,8 @@ body[data-page="utilities"] #page-utilities .tickets-list-body {
 #page-performance .perf-detail-list .tickets-list-header,
 #page-performance .perf-detail-list .ticket-row {
     grid-template-columns:
-        minmax(80px, 0.85fr)
         72px
+        minmax(80px, 0.85fr)
         minmax(110px, 1.15fr)
         minmax(120px, 1.25fr)
         minmax(118px, 1fr)
@@ -3266,21 +3277,21 @@ body[data-page="dashboard"] .showcase #page-dashboard.role-dashboard-page {
 
 #page-dashboard.role-dashboard-page .role-dash-list.role-dash-list--category .tickets-list-header,
 #page-dashboard.role-dashboard-page .role-dash-list.role-dash-list--category .ticket-row {
-    grid-template-columns: 72px minmax(0, 1.1fr) minmax(0, 1.4fr) 100px 100px 120px;
+    grid-template-columns: 72px 90px minmax(0, 1.1fr) minmax(0, 1.4fr) 100px 120px;
 }
 
 #page-dashboard.role-dashboard-page .role-dash-list .tickets-col-id,
+#page-dashboard.role-dashboard-page .role-dash-list .tickets-col-category,
 #page-dashboard.role-dashboard-page .role-dash-list .tickets-col-subject,
 #page-dashboard.role-dashboard-page .role-dash-list .tickets-col-description,
 #page-dashboard.role-dashboard-page .role-dash-list .tickets-col-status,
-#page-dashboard.role-dashboard-page .role-dash-list .dash-col-category,
 #page-dashboard.role-dashboard-page .role-dash-list .dash-col-severity {
     flex: unset !important;
     min-width: 0;
 }
 
 #page-dashboard.role-dashboard-page .role-dash-list .tickets-col-status,
-#page-dashboard.role-dashboard-page .role-dash-list .dash-col-category,
+#page-dashboard.role-dashboard-page .role-dash-list .tickets-col-category,
 #page-dashboard.role-dashboard-page .role-dash-list .dash-col-severity {
     text-align: center;
     justify-self: center;
@@ -3398,6 +3409,7 @@ body[data-page="messages"] .mailbox-container {
     display: grid !important;
     grid-template-columns:
         72px
+        90px
         minmax(120px, 1.2fr)
         minmax(140px, 1.5fr)
         120px
@@ -3415,6 +3427,7 @@ body[data-page="messages"] .mailbox-container {
 .ticket-history-list:has(.tickets-col-satisfaction) .ticket-row {
     grid-template-columns:
         72px
+        90px
         minmax(120px, 1.2fr)
         minmax(160px, 2fr)
         110px
@@ -3426,6 +3439,7 @@ body[data-page="messages"] .mailbox-container {
 .ticket-history-list--assigned .ticket-row {
     grid-template-columns:
         68px
+        90px
         minmax(110px, 1.1fr)
         minmax(120px, 1.25fr)
         118px
@@ -3437,6 +3451,7 @@ body[data-page="messages"] .mailbox-container {
 .ticket-history-list--assigned.ticket-history-list--satisfaction .ticket-row {
     grid-template-columns:
         64px
+        90px
         minmax(100px, 1fr)
         minmax(110px, 1.15fr)
         100px
@@ -3461,6 +3476,7 @@ body[data-page="messages"] .mailbox-container {
 }
 
 .ticket-history-list .tickets-col-id,
+.ticket-history-list .tickets-col-category,
 .ticket-history-list .tickets-col-subject,
 .ticket-history-list .tickets-col-description,
 .ticket-history-list .tickets-col-assigned,
@@ -3697,6 +3713,7 @@ body[data-page="messages"] .mailbox-container {
     .ticket-history-list .ticket-row {
         grid-template-columns:
             64px
+            80px
             minmax(100px, 1.1fr)
             minmax(110px, 1.2fr)
             108px
@@ -3709,6 +3726,7 @@ body[data-page="messages"] .mailbox-container {
     .ticket-history-list:has(.tickets-col-satisfaction) .ticket-row {
         grid-template-columns:
             64px
+            80px
             minmax(110px, 1.15fr)
             minmax(140px, 1.8fr)
             100px
@@ -4281,6 +4299,7 @@ body[data-page="messages"] .mailbox-container {
         display: grid !important;
         grid-template-columns:
             56px
+            80px
             minmax(110px, 1.1fr)
             minmax(130px, 1.3fr)
             120px
@@ -4289,8 +4308,8 @@ body[data-page="messages"] .mailbox-container {
             72px !important;
         grid-template-rows: auto !important;
         gap: 0 10px !important;
-        min-width: 920px !important;
-        width: 920px !important;
+        min-width: 1000px !important;
+        width: 1000px !important;
         max-width: none !important;
         margin: 0 !important;
         padding: 12px 16px !important;
@@ -4322,7 +4341,7 @@ body[data-page="messages"] .mailbox-container {
 
     .tickets-list-admin-five .tickets-list-body {
         overflow: visible !important;
-        min-width: 920px !important;
+        min-width: 1000px !important;
         gap: 0 !important;
         padding: 0 0 8px !important;
         background: transparent !important;
@@ -4332,6 +4351,7 @@ body[data-page="messages"] .mailbox-container {
     .tickets-list-admin-five .ticket-row > span::before,
     .tickets-list-admin-five form.ticket-row > span::before,
     .tickets-list-admin-five .tickets-col-id::before,
+    .tickets-list-admin-five .tickets-col-category::before,
     .tickets-list-admin-five .tickets-col-subject::before,
     .tickets-list-admin-five .tickets-col-description::before,
     .tickets-list-admin-five .tickets-col-status::before,
@@ -4445,13 +4465,14 @@ body[data-page="messages"] .mailbox-container {
         display: grid !important;
         grid-template-columns:
             56px
+            80px
             minmax(140px, 1.2fr)
             minmax(160px, 1.4fr)
             100px
             minmax(120px, 1fr)
             48px !important;
-        min-width: 860px !important;
-        width: 860px !important;
+        min-width: 940px !important;
+        width: 940px !important;
         max-width: none !important;
         box-sizing: border-box;
     }
@@ -4495,13 +4516,13 @@ body[data-page="messages"] .mailbox-container {
     #page-dashboard.role-dashboard-page .role-dash-list.role-dash-list--category .ticket-row {
         grid-template-columns:
             56px
+            80px
             minmax(120px, 1.1fr)
             minmax(140px, 1.3fr)
             90px
-            90px
             100px !important;
-        min-width: 720px !important;
-        width: 720px !important;
+        min-width: 800px !important;
+        width: 800px !important;
     }
 
     .role-dash-list .tickets-col-subject,
@@ -4516,12 +4537,13 @@ body[data-page="messages"] .mailbox-container {
         display: grid !important;
         grid-template-columns:
             56px
+            80px
             minmax(140px, 1.2fr)
             minmax(160px, 1.4fr)
             120px
             110px !important;
-        min-width: 720px !important;
-        width: 720px !important;
+        min-width: 800px !important;
+        width: 800px !important;
         max-width: none !important;
         box-sizing: border-box;
     }
@@ -4541,12 +4563,13 @@ body[data-page="messages"] .mailbox-container {
         display: grid !important;
         grid-template-columns:
             56px
+            80px
             minmax(120px, 1.2fr)
             minmax(140px, 1.4fr)
             100px
             100px !important;
-        min-width: 720px !important;
-        width: 720px !important;
+        min-width: 800px !important;
+        width: 800px !important;
         max-width: none !important;
         box-sizing: border-box;
     }
@@ -4557,40 +4580,43 @@ body[data-page="messages"] .mailbox-container {
     .ticket-history-list:has(.tickets-col-satisfaction) .ticket-row {
         grid-template-columns:
             56px
+            80px
             minmax(120px, 1.15fr)
             minmax(150px, 1.8fr)
             100px
             96px
             140px !important;
-        min-width: 860px !important;
-        width: 860px !important;
+        min-width: 940px !important;
+        width: 940px !important;
     }
 
     .ticket-history-list--assigned .tickets-list-header,
     .ticket-history-list--assigned .ticket-row {
         grid-template-columns:
             56px
+            80px
             minmax(110px, 1.1fr)
             minmax(130px, 1.25fr)
             100px
             100px
             minmax(120px, 1fr) !important;
-        min-width: 900px !important;
-        width: 900px !important;
+        min-width: 980px !important;
+        width: 980px !important;
     }
 
     .ticket-history-list--assigned.ticket-history-list--satisfaction .tickets-list-header,
     .ticket-history-list--assigned.ticket-history-list--satisfaction .ticket-row {
         grid-template-columns:
             56px
+            80px
             minmax(100px, 1fr)
             minmax(120px, 1.15fr)
             96px
             96px
             minmax(110px, 0.9fr)
             minmax(120px, 0.95fr) !important;
-        min-width: 1040px !important;
-        width: 1040px !important;
+        min-width: 1120px !important;
+        width: 1120px !important;
     }
 
     .tickets-list-utilities .tickets-list-header,
@@ -4619,12 +4645,13 @@ body[data-page="messages"] .mailbox-container {
         display: grid !important;
         grid-template-columns:
             56px
+            80px
             minmax(130px, 1.4fr)
             96px
             96px
             minmax(110px, 1fr) !important;
-        min-width: 560px !important;
-        width: 560px !important;
+        min-width: 640px !important;
+        width: 640px !important;
         max-width: none !important;
         column-gap: 10px;
         align-items: center;
@@ -4632,6 +4659,7 @@ body[data-page="messages"] .mailbox-container {
     }
 
     .admin-dashboard-history-list .tcol-id,
+    .admin-dashboard-history-list .tcol-category,
     .admin-dashboard-history-list .tcol-subject,
     .admin-dashboard-history-list .tcol-priority,
     .admin-dashboard-history-list .tcol-status,
