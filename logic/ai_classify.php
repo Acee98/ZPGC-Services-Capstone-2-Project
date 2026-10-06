@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/severity_matrix.php';
+
 if (!function_exists('ai_classifier_base')) {
     /**
      * Optional Flask helper URL.
@@ -368,35 +370,33 @@ if (!function_exists('ai_classifier_base')) {
     {
         $blob = strtolower(trim((string) $subject . ' ' . (string) $description));
         $category = 'other';
-        $priority = 'moderate';
         $rules = [
-            ['/\b(password|login|otp|2fa|account|username|lock(ed)?|reset)\b/i', 'account', 'critical'],
-            ['/\b(wifi|wi-?fi|internet|network|lan|vpn|router|dns|offline|disconnect)\b/i', 'network', 'critical'],
-            ['/\b(blue\s*screen|bsod|overheat|fan|battery|charger|keyboard|mouse|monitor|printer|hardware|ram|ssd|hdd)\b/i', 'hardware', 'moderate'],
-            ['/\b(install|update|crash|freeze|slow|software|app|excel|word|chrome|outlook|license|activation)\b/i', 'software', 'moderate'],
-            ['/\b(urgent|critical|down|outage|cannot\s+work|emergency)\b/i', 'other', 'critical'],
+            ['/\b(password|login|otp|2fa|account|username|lock(ed)?|reset|sign\s*in|profile picture)\b/i', 'account'],
+            ['/\b(wifi|wi-?fi|internet|network|lan|vpn|router|dns|offline|disconnect|website)\b/i', 'network'],
+            ['/\b(blue\s*screen|bsod|overheat|fan|battery|charger|keyboard|mouse|monitor|printer|hardware|ram|ssd|hdd|computer will not|turn on)\b/i', 'hardware'],
+            ['/\b(install|update|crash|freeze|slow|software|app|excel|word|chrome|outlook|license|activation|program)\b/i', 'software'],
         ];
         foreach ($rules as $rule) {
             if (preg_match($rule[0], $blob)) {
                 $category = $rule[1];
-                $priority = $rule[2];
                 break;
             }
         }
-        if (preg_match('/\b(urgent|critical|emergency|cannot\s+work|outage)\b/i', $blob)) {
-            $priority = 'critical';
-        } elseif (preg_match('/\b(asap|important|blocking)\b/i', $blob) && $priority === 'moderate') {
-            $priority = 'critical';
-        } elseif (preg_match('/\b(minor|small|question|how\s+to|curious)\b/i', $blob)) {
-            $priority = 'low';
-        }
+        $axes = function_exists('severity_estimate_axes')
+            ? severity_estimate_axes($subject, $description)
+            : ['urgency' => 1, 'impact' => 1];
+        $urgency = max(1, min(3, (int) ($axes['urgency'] ?? 1)));
+        $impact = max(1, min(3, (int) ($axes['impact'] ?? 1)));
+        $priority = function_exists('severity_from_score')
+            ? severity_from_score($urgency * $impact)
+            : 'low';
 
         return [
             'ok' => true,
             'category' => $category,
             'priority' => $priority,
-            'urgency' => $priority === 'low' ? 1 : ($priority === 'critical' ? 3 : 2),
-            'impact' => 1,
+            'urgency' => $urgency,
+            'impact' => $impact,
             'confidence' => 0.55,
             'method' => 'keyword',
             'model' => null,
@@ -407,12 +407,20 @@ if (!function_exists('ai_classifier_base')) {
 
     function ai_openai_classify($subject, $description)
     {
-        $system = 'You classify IT helpdesk tickets for a school campus (ZPGC). '
+        $system = 'You classify campus IT helpdesk tickets for ZPGC. '
+            . 'Do not assign priority. The system computes priority as Urgency×Impact '
+            . '(1–2 Low, 3–6 Moderate, 9 Critical) and adds +40 if 30+ identical open reports exist. '
             . 'Reply with ONLY valid JSON: '
             . '{"category":"hardware|software|network|account|other",'
-            . '"priority":"critical|moderate|low","confidence":0.0-1.0,'
-            . '"rationale":"short reason"}';
-        $user = "Title: {$subject}\nDescription: {$description}";
+            . '"urgency":1,'
+            . '"impact":1,'
+            . '"confidence":0.0,'
+            . '"rationale":"short reason"} '
+            . 'category from the ticket text only (hardware, software, network, account/access, or other). '
+            . 'urgency 1=can wait, 2=needs attention soon, 3=must be fixed immediately (blocked work, outage). '
+            . 'impact 1=one person, 2=group/class/lab, 3=department or whole campus. '
+            . 'urgency and impact must be integers 1, 2, or 3.';
+        $user = "Subject: {$subject}\nDescription: {$description}";
         $chat = ai_openai_chat([
             ['role' => 'system', 'content' => $system],
             ['role' => 'user', 'content' => $user],
@@ -437,21 +445,23 @@ if (!function_exists('ai_classifier_base')) {
 
         $allowedCat = ['hardware', 'software', 'account', 'network', 'other'];
         $cat = strtolower((string) ($data['category'] ?? ''));
-        $pri = ai_map_priority($data['priority'] ?? '');
-        if (!in_array($cat, $allowedCat, true) || $pri === null) {
+        $urgency = (int) ($data['urgency'] ?? 0);
+        $impact = (int) ($data['impact'] ?? 0);
+        if (!in_array($cat, $allowedCat, true) || $urgency < 1 || $urgency > 3 || $impact < 1 || $impact > 3) {
             return [
                 'ok' => false,
-                'error' => 'OpenAI JSON missing category/priority.',
+                'error' => 'OpenAI JSON missing category, urgency, or impact.',
                 'fallback_reason' => 'openai_error',
             ];
         }
+        $priority = severity_from_score($urgency * $impact);
 
         return [
             'ok' => true,
             'category' => $cat,
-            'priority' => $pri,
-            'urgency' => $pri === 'low' ? 1 : ($pri === 'critical' ? 3 : 2),
-            'impact' => 1,
+            'priority' => $priority,
+            'urgency' => $urgency,
+            'impact' => $impact,
             'confidence' => isset($data['confidence']) ? (float) $data['confidence'] : 0.8,
             'method' => 'openai',
             'model' => ai_openai_model(),

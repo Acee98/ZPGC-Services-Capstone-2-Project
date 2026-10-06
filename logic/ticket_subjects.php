@@ -58,18 +58,13 @@ if (!function_exists('ticket_subject_word_limit')) {
         return count(preg_split('/\s+/u', $text));
     }
 
-    function ticket_subject_from_post($category, $subject, $description)
+    function ticket_subject_from_post($subject, $description)
     {
-        $lists = ticket_common_questions();
-        $category = (string) $category;
         $subject = trim(preg_replace('/\s+/u', ' ', (string) $subject));
         $description = trim(preg_replace('/\s+/u', ' ', (string) $description));
 
-        if (!isset($lists[$category])) {
-            return ['ok' => false, 'error' => 'Choose a category.'];
-        }
         if ($subject === '') {
-            return ['ok' => false, 'error' => 'Choose a common subject, or type your own under Others.'];
+            return ['ok' => false, 'error' => 'Choose a common subject, or type your own.'];
         }
         if (ticket_word_count($subject) > ticket_subject_word_limit()) {
             return ['ok' => false, 'error' => 'Subject can be at most ' . ticket_subject_word_limit() . ' words.'];

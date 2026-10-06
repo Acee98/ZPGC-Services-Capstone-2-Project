@@ -146,6 +146,16 @@ $m = zpgc_metrics_from_confusion($conf, ['hardware', 'software', 'network', 'acc
 check('metrics accuracy', abs($m['accuracy'] - (7 / 8)) < 0.0001, (string) $m['accuracy']);
 check('metrics table3 present', isset($m['table3']['accuracy_pct']));
 
+require_once $root . '/logic/severity_matrix.php';
+$m1 = severity_apply_matrix(1, 1, 1);
+check('matrix 1x1 low', ($m1['priority'] ?? '') === 'low' && (int) $m1['base_score'] === 1);
+$m2 = severity_apply_matrix(2, 2, 1);
+check('matrix 2x2 moderate', ($m2['priority'] ?? '') === 'moderate' && (int) $m2['base_score'] === 4);
+$m3 = severity_apply_matrix(3, 3, 1);
+check('matrix 3x3 critical', ($m3['priority'] ?? '') === 'critical' && (int) $m3['base_score'] === 9);
+$m4 = severity_apply_matrix(1, 1, 30);
+check('matrix +40 escalation critical', !empty($m4['escalated']) && ($m4['priority'] ?? '') === 'critical' && (int) $m4['final_score'] === 41);
+
 // 5) DB connect (local)
 $_SERVER['DB_HOST'] = $_SERVER['DB_HOST'] ?? 'localhost';
 try {

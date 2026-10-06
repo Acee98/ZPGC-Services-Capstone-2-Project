@@ -4,17 +4,20 @@ if (!function_exists('severity_estimate_axes')) {
     function severity_estimate_axes($subject, $description)
     {
         $blob = strtolower($subject . ' ' . $description);
+
+        // Urgency = how quickly the issue must be fixed (paper Severity Matrix).
         $urgency = 1;
-        if (preg_match('/\b(outage|down|stopped|stoppage|cannot work|can\'t work|blocker|emergency|total)\b/', $blob)) {
+        if (preg_match('/\b(outage|down|stopped|stoppage|cannot work|can\'t work|cannot log|can\'t log|blocker|emergency|total|no internet|won\'t turn on|will not turn on)\b/', $blob)) {
             $urgency = 3;
-        } elseif (preg_match('/\b(slow|crash|error|degraded|not working|freeze|frozen)\b/', $blob)) {
+        } elseif (preg_match('/\b(slow|crash|error|degraded|not working|freeze|frozen|intermittent|keeps)\b/', $blob)) {
             $urgency = 2;
         }
 
+        // Impact = scope: one person → group/class/lab → department/campus.
         $impact = 1;
-        if (preg_match('/\b(server|department|everyone|all users|whole|campus|organization|organisational|laboratory|entire)\b/', $blob)) {
+        if (preg_match('/\b(server|department|everyone|all users|whole|campus|organization|organisational|entire|building)\b/', $blob)) {
             $impact = 3;
-        } elseif (preg_match('/\b(group|several|multiple|class|faculty|we |our )\b/', $blob)) {
+        } elseif (preg_match('/\b(group|several|multiple|class|faculty|laboratory|lab |we |our |room )\b/', $blob)) {
             $impact = 2;
         }
 
@@ -26,7 +29,8 @@ if (!function_exists('severity_estimate_axes')) {
     function severity_from_score($score)
     {
         $score = (int) $score;
-        if ($score >= 7) {
+        // Capstone Table 4: 1–2 Low, 3–6 Moderate, 9 Critical (U×I). +40 escalation is also Critical.
+        if ($score >= 9) {
             return 'critical';
         }
         if ($score >= 3) {

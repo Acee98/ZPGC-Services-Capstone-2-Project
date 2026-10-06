@@ -22,13 +22,36 @@ CATEGORIES = ("hardware", "software", "network", "account", "other")
                                       
 PRIORITIES = ("critical", "moderate", "low")
 
-KEYWORD_RULES: list[tuple[str, str, str]] = [
-    (r"\b(password|login|otp|2fa|account|username|lock(ed)?|reset)\b", "account", "critical"),
-    (r"\b(wifi|wi-?fi|internet|network|lan|vpn|router|dns|offline|disconnect)\b", "network", "critical"),
-    (r"\b(blue\s*screen|bsod|overheat|fan|battery|charger|keyboard|mouse|monitor|printer|hardware|ram|ssd|hdd)\b", "hardware", "moderate"),
-    (r"\b(install|update|crash|freeze|slow|software|app|excel|word|chrome|outlook|license|activation)\b", "software", "moderate"),
-    (r"\b(urgent|critical|down|outage|cannot\s+work|emergency)\b", "other", "critical"),
+KEYWORD_RULES: list[tuple[str, str]] = [
+    (r"\b(password|login|otp|2fa|account|username|lock(ed)?|reset|sign\s*in)\b", "account"),
+    (r"\b(wifi|wi-?fi|internet|network|lan|vpn|router|dns|offline|disconnect|website)\b", "network"),
+    (r"\b(blue\s*screen|bsod|overheat|fan|battery|charger|keyboard|mouse|monitor|printer|hardware|ram|ssd|hdd|turn on)\b", "hardware"),
+    (r"\b(install|update|crash|freeze|slow|software|app|excel|word|chrome|outlook|license|activation|program)\b", "software"),
 ]
+
+
+def _score_priority(urgency: int, impact: int) -> str:
+    score = max(1, min(3, urgency)) * max(1, min(3, impact))
+    if score >= 9:
+        return "critical"
+    if score >= 3:
+        return "moderate"
+    return "low"
+
+
+def _estimate_axes(title: str, description: str) -> tuple[int, int]:
+    blob = f"{title} {description}".lower()
+    urgency = 1
+    if re.search(r"\b(outage|down|stopped|stoppage|cannot work|can't work|blocker|emergency|total|won't turn on|will not turn on)\b", blob):
+        urgency = 3
+    elif re.search(r"\b(slow|crash|error|degraded|not working|freeze|frozen|intermittent|keeps)\b", blob):
+        urgency = 2
+    impact = 1
+    if re.search(r"\b(server|department|everyone|all users|whole|campus|organization|entire|building)\b", blob):
+        impact = 3
+    elif re.search(r"\b(group|several|multiple|class|faculty|laboratory|lab |we |our |room )\b", blob):
+        impact = 2
+    return urgency, impact
 
 def _normalize_category(value: Any) -> str:
     text = str(value or "").strip().lower()
@@ -53,29 +76,21 @@ def _text_fields(payload: dict[str, Any]) -> tuple[str, str]:
 def _keyword_classify(title: str, description: str) -> dict[str, Any]:
     blob = f"{title} {description}".lower()
     category = "other"
-    priority = "moderate"
     matched: list[str] = []
 
-    for pattern, cat, pri in KEYWORD_RULES:
+    for pattern, cat in KEYWORD_RULES:
         if re.search(pattern, blob, flags=re.IGNORECASE):
             category = cat
-            priority = pri
             matched.append(pattern)
             break
 
-    if re.search(r"\b(urgent|critical|emergency|cannot\s+work|outage)\b", blob, flags=re.IGNORECASE):
-        priority = "critical"
-    elif re.search(r"\b(asap|important|blocking)\b", blob, flags=re.IGNORECASE) and priority == "moderate":
-        priority = "critical"
-    elif re.search(r"\b(minor|small|question|how\s+to|curious)\b", blob, flags=re.IGNORECASE):
-        priority = "low"
-
+    urgency, impact = _estimate_axes(title, description)
     confidence = 0.72 if matched else 0.45
     return {
         "category": category,
-        "priority": priority,
-        "urgency": 1 if priority == "low" else (3 if priority == "critical" else 2),
-        "impact": 1,
+        "priority": _score_priority(urgency, impact),
+        "urgency": urgency,
+        "impact": impact,
         "confidence": confidence,
         "method": "keyword",
         "model": None,
@@ -108,11 +123,16 @@ def _openai_classify(title: str, description: str) -> dict[str, Any] | None:
         return None
 
     system = (
-        "You classify IT helpdesk tickets for a school campus (ZPGC). "
+        "You classify campus IT helpdesk tickets for ZPGC. "
+        "Do not assign priority. The system computes priority as Urgency×Impact "
+        "(1-2 Low, 3-6 Moderate, 9 Critical) and adds +40 if 30+ identical open reports exist. "
         "Reply with ONLY valid JSON: "
         '{"category":"hardware|software|network|account|other",'
-        '"priority":"critical|moderate|low","confidence":0.0-1.0,'
-        '"rationale":"short reason"}'
+        '"urgency":1,"impact":1,"confidence":0.0,"rationale":"short reason"} '
+        "category from the ticket text only. "
+        "urgency 1=can wait, 2=needs attention soon, 3=must be fixed immediately. "
+        "impact 1=one person, 2=group/class/lab, 3=department or whole campus. "
+        "urgency and impact must be integers 1, 2, or 3."
     )
     user = f"Title: {title}\nDescription: {description}"
 
@@ -133,9 +153,15 @@ def _openai_classify(title: str, description: str) -> dict[str, Any] | None:
         resp = client.chat.completions.create(**kwargs)
         content = _strip_json_fence(resp.choices[0].message.content or "")
         data = json.loads(content)
+        urgency = int(data.get("urgency") or 0)
+        impact = int(data.get("impact") or 0)
+        if urgency not in (1, 2, 3) or impact not in (1, 2, 3):
+            return None
         return {
             "category": _normalize_category(data.get("category")),
-            "priority": _normalize_priority(data.get("priority")),
+            "priority": _score_priority(urgency, impact),
+            "urgency": urgency,
+            "impact": impact,
             "confidence": float(data.get("confidence") or 0.8),
             "method": "openai",
             "model": OPENAI_MODEL,

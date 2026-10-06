@@ -7,7 +7,6 @@ require_role('user');
 $formError = $_SESSION['ticket_form_error'] ?? '';
 $old = $_SESSION['ticket_form_old'] ?? [];
 unset($_SESSION['ticket_form_error'], $_SESSION['ticket_form_old']);
-$oldCategory = (string) ($old['category'] ?? '');
 $oldSubject = (string) ($old['subject'] ?? '');
 $oldDescription = (string) ($old['description'] ?? '');
 $subjectLists = ticket_common_questions();
@@ -27,7 +26,7 @@ $descriptionLimit = ticket_description_word_limit();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(zpgc_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-    <link rel="stylesheet" href="../css/ticket.css?v=1.6.2">
+    <link rel="stylesheet" href="../css/ticket.css?v=1.6.20">
     <title>ZPGC Services | Ticket Creation</title>
 </head>
 <body>
@@ -35,26 +34,14 @@ $descriptionLimit = ticket_description_word_limit();
         <form action="../logic/ticket_mngmnt.php" class="ticket-form" method="post" id="ticket-form">
 <?php echo zpgc_csrf_field(); ?>
             <h1 class="ticket-form-title">Submit New Ticket</h1>
-            <p class="ticket-intro">Describe the issue. Priority and technician are assigned automatically when you submit.</p>
+            <p class="ticket-intro">Describe the issue. AI assigns the category from your subject and description. Priority uses Urgency × Impact (1–2 Low, 3–6 Moderate, 9 Critical); 30 or more identical open reports add +40 and become Critical.</p>
             <?php if ($formError !== '') { ?>
             <div class="ticket-notice-error"><?php echo htmlspecialchars($formError); ?></div>
             <?php } ?>
 
             <div class="ticket-field">
-                <label for="category">Category:</label>
-                <select name="category" id="category" required>
-                    <option value="" disabled <?php echo $oldCategory === '' ? 'selected' : ''; ?>>Select an issue category</option>
-                    <?php foreach ($categoryLabels as $value => $label) { ?>
-                    <option value="<?php echo htmlspecialchars($value); ?>" <?php echo $oldCategory === $value ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($label); ?>
-                    </option>
-                    <?php } ?>
-                </select>
-            </div>
-
-            <div class="ticket-field">
                 <label for="subject">Subject:</label>
-                <p class="ticket-hint">Common subjects appear as you type. Pick one, or type your own if none fit.</p>
+                <p class="ticket-hint">Common subjects appear as you type. Pick one, or type your own if none fit. Category is set by AI, not by this list.</p>
                 <div class="subject-combo">
                     <input type="text" id="subject" name="subject" required autocomplete="off"
                         role="combobox" aria-expanded="false" aria-controls="subject-menu" aria-autocomplete="list"
@@ -89,7 +76,6 @@ $descriptionLimit = ticket_description_word_limit();
         var order = ["hardware", "software", "network", "account", "other"];
         var subjectLimit = <?php echo (int) $subjectLimit; ?>;
         var descriptionLimit = <?php echo (int) $descriptionLimit; ?>;
-        var category = document.getElementById("category");
         var input = document.getElementById("subject");
         var menu = document.getElementById("subject-menu");
         var opener = document.getElementById("subject-open");
@@ -116,16 +102,6 @@ $descriptionLimit = ticket_description_word_limit();
             paintCount(descriptionCount, words(description.value), descriptionLimit);
         }
 
-        function groups() {
-            var picked = category.value;
-            var keys = order.slice();
-            if (picked && keys.indexOf(picked) !== -1) {
-                keys.splice(keys.indexOf(picked), 1);
-                keys.unshift(picked);
-            }
-            return keys;
-        }
-
         function matches(item, query) {
             return item.toLowerCase().indexOf(query) !== -1;
         }
@@ -134,15 +110,14 @@ $descriptionLimit = ticket_description_word_limit();
             var query = input.value.trim().toLowerCase();
             var html = "";
             var count = 0;
-            groups().forEach(function (key) {
+            order.forEach(function (key) {
                 var items = (lists[key] || []).filter(function (item) {
                     return !query || matches(item, query);
                 });
                 if (!items.length) {
                     return;
                 }
-                var heading = key === category.value ? "Common subjects" : labels[key];
-                html += '<p class="subject-menu-label">' + heading + "</p>";
+                html += '<p class="subject-menu-label">' + labels[key] + "</p>";
                 items.forEach(function (item) {
                     html += '<button type="button" class="subject-option" data-index="' + count + '" data-value="'
                         + item.replace(/"/g, "&quot;") + '">' + item + "</button>";
@@ -186,11 +161,6 @@ $descriptionLimit = ticket_description_word_limit();
                 input.focus();
             } else {
                 closeMenu();
-            }
-        });
-        category.addEventListener("change", function () {
-            if (!menu.hidden) {
-                openMenu();
             }
         });
         menu.addEventListener("click", function (event) {

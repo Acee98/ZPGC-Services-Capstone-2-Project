@@ -61,6 +61,12 @@
         var parts = [];
         parts.push('Category: ' + (data.category || '—'));
         parts.push('Priority: ' + (data.priority || '—'));
+        if (data.urgency != null) {
+          parts.push('Urgency: ' + data.urgency);
+        }
+        if (data.impact != null) {
+          parts.push('Impact: ' + data.impact);
+        }
         if (data.confidence != null) {
           parts.push('Confidence: ' + Math.round(Number(data.confidence) * 100) + '%');
         }
@@ -73,7 +79,7 @@
         if (!data.priority) {
           setStatus('Category filled. Priority missing from AI response (check classifier JSON).', true);
         } else {
-          setStatus('Suggestion applied. You can still change the dropdowns.', false);
+          setStatus('Suggestion applied. Category and priority come from AI and the severity matrix.', false);
         }
       })
       .catch(function () {

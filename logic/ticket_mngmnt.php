@@ -22,16 +22,13 @@ function tickets_has_column(mysqli $conn, $column)
 }
 
 if (isset($_POST['submit-ticket'])) {
-    $category = trim($_POST['category'] ?? '');
     $checked = ticket_subject_from_post(
-        $category,
         $_POST['subject'] ?? '',
         $_POST['description'] ?? ''
     );
     if (!$checked['ok']) {
         $_SESSION['ticket_form_error'] = $checked['error'];
         $_SESSION['ticket_form_old'] = [
-            'category' => $category,
             'subject' => trim((string) ($_POST['subject'] ?? '')),
             'description' => trim((string) ($_POST['description'] ?? '')),
         ];
@@ -45,15 +42,13 @@ if (isset($_POST['submit-ticket'])) {
     $axes = severity_estimate_axes($subject, $description);
     $urgency = $axes['urgency'];
     $impact = $axes['impact'];
-    if (($ai['method'] ?? '') === 'openai') {
-        $aiUrgency = (int) ($ai['urgency'] ?? 0);
-        $aiImpact = (int) ($ai['impact'] ?? 0);
-        if ($aiUrgency >= 1 && $aiUrgency <= 3) {
-            $urgency = $aiUrgency;
-        }
-        if ($aiImpact >= 1 && $aiImpact <= 3) {
-            $impact = $aiImpact;
-        }
+    $aiUrgency = (int) ($ai['urgency'] ?? 0);
+    $aiImpact = (int) ($ai['impact'] ?? 0);
+    if ($aiUrgency >= 1 && $aiUrgency <= 3) {
+        $urgency = $aiUrgency;
+    }
+    if ($aiImpact >= 1 && $aiImpact <= 3) {
+        $impact = $aiImpact;
     }
     $openSame = severity_identical_open_count($conn, $subject);
     $matrix = severity_apply_matrix($urgency, $impact, $openSame + 1);
@@ -64,9 +59,9 @@ if (isset($_POST['submit-ticket'])) {
     }
 
     $allowedCat = ['hardware', 'software', 'account', 'network', 'other'];
+    $category = strtolower(trim((string) ($ai['category'] ?? '')));
     if (!in_array($category, $allowedCat, true)) {
-        header('Location: ../pages/ticket.php');
-        exit();
+        $category = 'other';
     }
 
     if (!isset($_SESSION['email'])) {
@@ -110,7 +105,6 @@ if (isset($_POST['submit-ticket'])) {
     if (!$stmt) {
         $_SESSION['ticket_form_error'] = 'Could not create the ticket (database schema mismatch). Ask an admin to check the tickets table.';
         $_SESSION['ticket_form_old'] = [
-            'category' => $category,
             'subject' => $subject,
             'description' => $description,
         ];
@@ -120,7 +114,6 @@ if (isset($_POST['submit-ticket'])) {
     if (!$stmt->execute()) {
         $_SESSION['ticket_form_error'] = 'Could not save the ticket. Please try again.';
         $_SESSION['ticket_form_old'] = [
-            'category' => $category,
             'subject' => $subject,
             'description' => $description,
         ];
@@ -220,7 +213,6 @@ if (isset($_POST['submit-ticket'])) {
     } else {
         $_SESSION['ticket_form_error'] = 'Ticket was not created. Please try again.';
         $_SESSION['ticket_form_old'] = [
-            'category' => $category,
             'subject' => $subject,
             'description' => $description,
         ];
