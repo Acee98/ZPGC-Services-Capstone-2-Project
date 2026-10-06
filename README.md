@@ -8,16 +8,25 @@ Web-based IT helpdesk for Zamboanga Peninsula Green Haven College. End users sub
 - MySQL 8 (or compatible)
 - Optional: OpenAI API key for classification; SMTP for verification and password reset mail
 
-## Local setup (XAMPP)
+## Clone for teammates (Cursor + XAMPP)
 
-1. Place the project under `htdocs` (for example `CP2_V1.6`).
-2. Create database `zpgc_services_db` and import the team base dump, then any needed scripts listed in [`database/README.md`](database/README.md).
-3. For local mail or AI helpers, copy:
+GitHub: [Acee98/ZPGC-Services-Capstone-2-Project](https://github.com/Acee98/ZPGC-Services-Capstone-2-Project)
+
+1. In Cursor: **File → Open Folder**, or clone first:
+   ```bash
+   cd C:/xampp/htdocs
+   git clone https://github.com/Acee98/ZPGC-Services-Capstone-2-Project.git CP2_V1.6
+   ```
+2. In Cursor, open `C:\xampp\htdocs\CP2_V1.6`.
+3. Create MySQL database `zpgc_services_db` and import the team dump, then patches in [`database/README.md`](database/README.md).
+4. Copy env templates (do **not** commit the filled copies):
    - `logic/mail.env.example` → `logic/mail.env`
    - `ai/.env.example` → `ai/.env`
-4. Start Apache and MySQL, then open:
+5. Start **Apache** and **MySQL** in XAMPP, then open:
 
 `http://localhost/CP2_V1.6/pages/login_signup.php`
+
+Secrets (`logic/mail.env`, `ai/.env`, Gmail/Azure passwords) stay on each machine. Ask an admin for SMTP and OpenAI values; never push them to GitHub.
 
 Cloud deployment (Azure / Hostinger), App Settings, and smoke tests are in [`DEPLOY.md`](DEPLOY.md).
 

@@ -1,0 +1,223 @@
+{
+    "mode": "openai_model",
+    "openai": true,
+    "model": "gpt-4.1-mini",
+    "model_override": "gpt-4.1-mini",
+    "n": 200,
+    "seed": 42,
+    "openai_errors_or_fallbacks": 0,
+    "filters": {
+        "language": "en",
+        "queues": [
+            "it support",
+            "product support",
+            "service outages and maintenance",
+            "technical support"
+        ],
+        "note": "Gold categories are heuristically mapped from queue/tags/text into ZPGC labels."
+    },
+    "accuracy": {
+        "category": 0.58,
+        "priority": 0.455,
+        "category_and_priority": 0.23
+    },
+    "gold_category_distribution": {
+        "hardware": 13,
+        "software": 78,
+        "network": 66,
+        "account": 8,
+        "other": 35
+    },
+    "gold_priority_distribution": {
+        "critical": 96,
+        "moderate": 76,
+        "low": 28
+    },
+    "pred_category_distribution": {
+        "hardware": 4,
+        "software": 133,
+        "network": 20,
+        "account": 9,
+        "other": 34
+    },
+    "pred_priority_distribution": {
+        "critical": 70,
+        "moderate": 84,
+        "low": 46
+    },
+    "category_confusion": {
+        "hardware": {
+            "hardware": 3,
+            "software": 10,
+            "network": 0,
+            "account": 0,
+            "other": 0
+        },
+        "software": {
+            "hardware": 0,
+            "software": 67,
+            "network": 0,
+            "account": 0,
+            "other": 11
+        },
+        "network": {
+            "hardware": 1,
+            "software": 41,
+            "network": 20,
+            "account": 1,
+            "other": 3
+        },
+        "account": {
+            "hardware": 0,
+            "software": 2,
+            "network": 0,
+            "account": 6,
+            "other": 0
+        },
+        "other": {
+            "hardware": 0,
+            "software": 13,
+            "network": 0,
+            "account": 2,
+            "other": 20
+        }
+    },
+    "priority_confusion": {
+        "critical": {
+            "critical": 46,
+            "moderate": 32,
+            "low": 18
+        },
+        "moderate": {
+            "critical": 19,
+            "moderate": 37,
+            "low": 20
+        },
+        "low": {
+            "critical": 5,
+            "moderate": 15,
+            "low": 8
+        }
+    },
+    "sample_misses": [
+        {
+            "subject": "Errors Detected in Investment Algorithm",
+            "gold_category": "software",
+            "pred_category": "software",
+            "gold_priority": "moderate",
+            "pred_priority": "critical",
+            "queue": "Product Support",
+            "method": "openai"
+        },
+        {
+            "subject": "Problem with Data Integration on AWS",
+            "gold_category": "network",
+            "pred_category": "software",
+            "gold_priority": "moderate",
+            "pred_priority": "critical",
+            "queue": "Technical Support",
+            "method": "openai"
+        },
+        {
+            "subject": "",
+            "gold_category": "software",
+            "pred_category": "software",
+            "gold_priority": "critical",
+            "pred_priority": "moderate",
+            "queue": "Technical Support",
+            "method": "openai"
+        },
+        {
+            "subject": "Address Security Concern Detected",
+            "gold_category": "network",
+            "pred_category": "network",
+            "gold_priority": "low",
+            "pred_priority": "critical",
+            "queue": "Product Support",
+            "method": "openai"
+        },
+        {
+            "subject": "Healthcare provider faced intermittent delays in accessing medical records",
+            "gold_category": "network",
+            "pred_category": "network",
+            "gold_priority": "moderate",
+            "pred_priority": "critical",
+            "queue": "Product Support",
+            "method": "openai"
+        },
+        {
+            "subject": "Details on Securing Medical Data for Hospital Products and Services",
+            "gold_category": "software",
+            "pred_category": "other",
+            "gold_priority": "moderate",
+            "pred_priority": "low",
+            "queue": "Product Support",
+            "method": "openai"
+        },
+        {
+            "subject": "Software Integration Challenge",
+            "gold_category": "software",
+            "pred_category": "software",
+            "gold_priority": "low",
+            "pred_priority": "moderate",
+            "queue": "Product Support",
+            "method": "openai"
+        },
+        {
+            "subject": "Variability in Digital Strategy Metrics Among Various Platforms",
+            "gold_category": "software",
+            "pred_category": "other",
+            "gold_priority": "low",
+            "pred_priority": "low",
+            "queue": "Product Support",
+            "method": "openai"
+        },
+        {
+            "subject": "Support for Service Interruptions",
+            "gold_category": "network",
+            "pred_category": "software",
+            "gold_priority": "critical",
+            "pred_priority": "critical",
+            "queue": "Service Outages and Maintenance",
+            "method": "openai"
+        },
+        {
+            "subject": "Irregular Investment Forecast Outputs",
+            "gold_category": "account",
+            "pred_category": "software",
+            "gold_priority": "critical",
+            "pred_priority": "moderate",
+            "queue": "Technical Support",
+            "method": "openai"
+        },
+        {
+            "subject": "Boost Investment in Data Analytics",
+            "gold_category": "software",
+            "pred_category": "other",
+            "gold_priority": "moderate",
+            "pred_priority": "low",
+            "queue": "IT Support",
+            "method": "openai"
+        },
+        {
+            "subject": "",
+            "gold_category": "other",
+            "pred_category": "other",
+            "gold_priority": "moderate",
+            "pred_priority": "low",
+            "queue": "Product Support",
+            "method": "openai"
+        }
+    ],
+    "methods": {
+        "openai": 200
+    },
+    "baseline_keyword_3000": {
+        "source": "ai/data/benchmark_keyword_report.json",
+        "accuracy": {
+            "category": 0.4647,
+            "priority": 0.4223,
+            "category_and_priority": 0.2047
+        }
+    }
+}
