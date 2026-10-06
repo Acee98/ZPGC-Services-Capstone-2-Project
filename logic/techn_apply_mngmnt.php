@@ -47,8 +47,61 @@ function apply_ok($msg)
     apply_redirect();
 }
 
+function apply_json($payload, $code = 200)
+{
+    http_response_code($code);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode($payload);
+    exit();
+}
+
 techn_apply_ready($conn);
 $app = techn_apply_get_for_user($conn, $userId);
+
+if (isset($_POST['resume_chunk'])) {
+    $uploadId = strtolower(preg_replace('/[^a-f0-9]/', '', (string) ($_POST['upload_id'] ?? '')));
+    $index = (int) ($_POST['index'] ?? -1);
+    $total = (int) ($_POST['total'] ?? 0);
+    $origName = basename((string) ($_POST['orig_name'] ?? 'resume.pdf'));
+    if (strlen($uploadId) < 16 || strlen($uploadId) > 64 || $index < 0 || $total < 1 || $total > 20 || $index >= $total) {
+        apply_json(['ok' => false, 'error' => 'Invalid upload chunk.'], 400);
+    }
+    $part = $_FILES['chunk'] ?? [];
+    if ((int) ($part['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        apply_json(['ok' => false, 'error' => 'Chunk did not arrive. Try a smaller file.'], 400);
+    }
+    $chunkSize = (int) ($part['size'] ?? 0);
+    if ($chunkSize <= 0 || $chunkSize > 600 * 1024) {
+        apply_json(['ok' => false, 'error' => 'Chunk is too large.'], 400);
+    }
+    $tmpRoot = techn_apply_upload_root() . '/tmp_' . $userId . '_' . $uploadId;
+    if (!is_dir($tmpRoot)) {
+        @mkdir($tmpRoot, 0775, true);
+    }
+    $partPath = $tmpRoot . '/p' . str_pad((string) $index, 3, '0', STR_PAD_LEFT);
+    if (!@move_uploaded_file((string) $part['tmp_name'], $partPath)) {
+        apply_json(['ok' => false, 'error' => 'Could not store the upload chunk.'], 500);
+    }
+    if ($index + 1 < $total) {
+        apply_json(['ok' => true, 'done' => false]);
+    }
+    $bytes = '';
+    for ($i = 0; $i < $total; $i++) {
+        $p = $tmpRoot . '/p' . str_pad((string) $i, 3, '0', STR_PAD_LEFT);
+        if (!is_file($p)) {
+            apply_json(['ok' => false, 'error' => 'Upload was incomplete. Try again.'], 400);
+        }
+        $bytes .= (string) file_get_contents($p);
+        @unlink($p);
+    }
+    @rmdir($tmpRoot);
+    $up = techn_apply_store_resume_bytes($bytes, $origName);
+    if (empty($up['ok'])) {
+        apply_json(['ok' => false, 'error' => $up['error'] ?? 'Could not save resume.'], 400);
+    }
+    $_SESSION['resume_staged'] = $up;
+    apply_json(['ok' => true, 'done' => true]);
+}
 
 if (isset($_POST['delete_application'])) {
     if (!$app || ($app['status'] ?? '') === 'approved') {
@@ -84,8 +137,17 @@ if (isset($_POST['submit_application']) || isset($_POST['update_application'])) 
     $stored = $app['resume_stored_name'] ?? '';
     $orig = $app['resume_original_name'] ?? '';
     $mime = $app['resume_mime'] ?? 'application/octet-stream';
+    $staged = $_SESSION['resume_staged'] ?? null;
     $hasFile = isset($_FILES['resume']) && (int) ($_FILES['resume']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
-    if (!$isUpdate || $hasFile) {
+    if (is_array($staged) && !empty($staged['stored'])) {
+        unset($_SESSION['resume_staged']);
+        if ($isUpdate && $stored !== '') {
+            techn_apply_unlink_resume($stored);
+        }
+        $stored = (string) $staged['stored'];
+        $orig = (string) ($staged['original'] ?? 'resume');
+        $mime = (string) ($staged['mime'] ?? 'application/octet-stream');
+    } elseif (!$isUpdate || $hasFile) {
         $up = techn_apply_store_resume($_FILES['resume'] ?? []);
         if (empty($up['ok'])) {
             apply_fail($up['error'] ?? 'Resume upload failed.');

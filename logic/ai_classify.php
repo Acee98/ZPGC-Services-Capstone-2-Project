@@ -145,7 +145,7 @@ if (!function_exists('ai_classifier_base')) {
                 CURLOPT_POSTFIELDS => $body,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_CONNECTTIMEOUT => 2,
-                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_TIMEOUT => 5,
             ]);
             $resp = curl_exec($ch);
             $errno = curl_errno($ch);
@@ -293,8 +293,8 @@ if (!function_exists('ai_classifier_base')) {
                 ],
                 CURLOPT_POSTFIELDS => $body,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_CONNECTTIMEOUT => 5,
-                CURLOPT_TIMEOUT => 12,
+                CURLOPT_CONNECTTIMEOUT => 3,
+                CURLOPT_TIMEOUT => 5,
             ];
             // XAMPP often has empty curl.cainfo; use bundled Mozilla CA file when present.
             $caBundle = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'ai' . DIRECTORY_SEPARATOR . 'cacert.pem';
@@ -534,7 +534,7 @@ if (!function_exists('ai_classifier_base')) {
                 'subject' => (string) $subject,
                 'title' => (string) $subject,
                 'description' => (string) $description,
-            ], 12);
+            ], 5);
             $result['raw'] = $http['raw'];
             if ($http['ok']) {
                 $data = $http['data'];

@@ -130,6 +130,7 @@ if (isset($_POST['submit-ticket'])) {
     }
     $ticket_id = (int) $conn->insert_id;
     $stmt->close();
+    $mailJobs = [];
 
     if ($ticket_id > 0) {
         $hasMethod = tickets_has_column($conn, 'ai_method');
@@ -162,30 +163,27 @@ if (isset($_POST['submit-ticket'])) {
                 $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id
                     . ' submitted as Low (' . $scoreNote . '). Try the troubleshooting steps first. '
                     . 'If they do not help, request a technician.';
-                notify_user_email(
-                    $conn,
+                $mailJobs[] = [
                     $user_id,
                     'Ticket #' . $ticket_id . ' received',
-                    "Your ticket #{$ticket_id} was submitted as Low ({$scoreNote}).\nSubject: {$subject}\nTry the troubleshooting steps in ZPGC Services first."
-                );
+                    "Your ticket #{$ticket_id} was submitted as Low ({$scoreNote}).\nSubject: {$subject}\nTry the troubleshooting steps in ZPGC Services first.",
+                ];
             } else {
                 $tech = ticket_auto_assign($conn, $ticket_id, 'ongoing');
                 $_SESSION['ticket_flash'] = $tech
                     ? ('Ticket #' . $ticket_id . ' is Low (' . $scoreNote . ') but tips were unavailable, so a technician was assigned.')
                     : ('Ticket #' . $ticket_id . ' submitted as Low (' . $scoreNote . '). No technician is available yet.');
-                notify_user_email(
-                    $conn,
+                $mailJobs[] = [
                     $user_id,
                     'Ticket #' . $ticket_id . ' received',
-                    "Your ticket #{$ticket_id} was submitted as Low ({$scoreNote}).\nSubject: {$subject}"
-                );
+                    "Your ticket #{$ticket_id} was submitted as Low ({$scoreNote}).\nSubject: {$subject}",
+                ];
                 if ($tech) {
-                    notify_user_email(
-                        $conn,
+                    $mailJobs[] = [
                         (int) $tech,
                         'Ticket #' . $ticket_id . ' assigned to you',
-                        "Ticket #{$ticket_id} was assigned to you.\nSubject: {$subject}"
-                    );
+                        "Ticket #{$ticket_id} was assigned to you.\nSubject: {$subject}",
+                    ];
                 }
             }
         } else {
@@ -206,19 +204,17 @@ if (isset($_POST['submit-ticket'])) {
                     . ' submitted with priority ' . $priLabel
                     . ' (' . $scoreNote . '). No active technician is available yet.';
             }
-            notify_user_email(
-                $conn,
+            $mailJobs[] = [
                 $user_id,
                 'Ticket #' . $ticket_id . ' received',
-                "Your ticket #{$ticket_id} was submitted with priority {$priLabel} ({$scoreNote}).\nSubject: {$subject}"
-            );
+                "Your ticket #{$ticket_id} was submitted with priority {$priLabel} ({$scoreNote}).\nSubject: {$subject}",
+            ];
             if ($tech) {
-                notify_user_email(
-                    $conn,
+                $mailJobs[] = [
                     (int) $tech,
                     'Ticket #' . $ticket_id . ' assigned to you',
-                    "Ticket #{$ticket_id} was assigned to you.\nSubject: {$subject}"
-                );
+                    "Ticket #{$ticket_id} was assigned to you.\nSubject: {$subject}",
+                ];
             }
         }
     } else {
@@ -233,6 +229,13 @@ if (isset($_POST['submit-ticket'])) {
     }
 
     header('Location: ../pages/user.php?tab=tickets');
+    if (!empty($mailJobs)) {
+        zpgc_after_response(static function () use ($conn, $mailJobs) {
+            foreach ($mailJobs as $job) {
+                notify_user_email($conn, (int) $job[0], (string) $job[1], (string) $job[2]);
+            }
+        });
+    }
     exit();
 }
 header('Location: ../pages/ticket.php');

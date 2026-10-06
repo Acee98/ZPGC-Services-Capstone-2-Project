@@ -35,6 +35,7 @@ if ((int) ($me['email_verified'] ?? 0) !== 1) {
 
 $_SESSION['techn_applicant'] = 1;
 techn_apply_ready($conn);
+techn_apply_expire_stale($conn, false);
 $app = techn_apply_get_for_user($conn, $userId);
 $error = $_SESSION['apply_error'] ?? '';
 $success = $_SESSION['apply_success'] ?? '';
@@ -113,5 +114,95 @@ $awaiting = $app && ($app['status'] ?? '') === 'awaiting_role_change';
         <p class="ticket-hint"><a href="../logic/logout.php">Sign out</a></p>
     </form>
 </div>
+<script>
+(function () {
+    var form = document.querySelector('.ticket-form');
+    var input = document.getElementById('resume');
+    if (!form || !input) {
+        return;
+    }
+    var MAX = 5 * 1024 * 1024;
+    var CHUNK = 400 * 1024;
+    form.addEventListener('submit', function (e) {
+        var action = (e.submitter && e.submitter.getAttribute('name')) || '';
+        if (action === 'delete_application' || action === 'accept_role_change') {
+            return;
+        }
+        var file = input.files && input.files[0];
+        if (!file) {
+            return;
+        }
+        if (file.size > MAX) {
+            e.preventDefault();
+            alert('Resume must be 5 MB or smaller.');
+            return;
+        }
+        if (file.size <= CHUNK) {
+            return;
+        }
+        e.preventDefault();
+        var csrf = form.querySelector('input[name="_csrf"]');
+        var specialty = form.querySelector('[name="specialty"]');
+        var token = csrf ? csrf.value : '';
+        var id = '';
+        var bytes = new Uint8Array(16);
+        if (window.crypto && crypto.getRandomValues) {
+            crypto.getRandomValues(bytes);
+            id = Array.from(bytes).map(function (b) {
+                return ('0' + b.toString(16)).slice(-2);
+            }).join('');
+        } else {
+            id = String(Date.now()) + String(Math.random()).replace('.', '');
+        }
+        var total = Math.ceil(file.size / CHUNK);
+        var index = 0;
+        var btn = e.submitter;
+        if (btn) {
+            btn.disabled = true;
+        }
+        function fail(msg) {
+            if (btn) {
+                btn.disabled = false;
+            }
+            alert(msg || 'Resume upload failed. Try a PDF under 5 MB.');
+        }
+        function sendChunk() {
+            var start = index * CHUNK;
+            var blob = file.slice(start, start + CHUNK);
+            var data = new FormData();
+            data.append('_csrf', token);
+            data.append('resume_chunk', '1');
+            data.append('upload_id', id);
+            data.append('index', String(index));
+            data.append('total', String(total));
+            data.append('orig_name', file.name);
+            data.append('chunk', blob, 'part.bin');
+            fetch('../logic/techn_apply_mngmnt.php', { method: 'POST', body: data, credentials: 'same-origin' })
+                .then(function (res) { return res.json().then(function (j) { return { ok: res.ok, j: j }; }); })
+                .then(function (out) {
+                    if (!out.j || !out.j.ok) {
+                        fail(out.j && out.j.error);
+                        return;
+                    }
+                    index += 1;
+                    if (index < total) {
+                        sendChunk();
+                        return;
+                    }
+                    var field = document.createElement('input');
+                    field.type = 'hidden';
+                    field.name = action || 'submit_application';
+                    field.value = '1';
+                    form.appendChild(field);
+                    input.removeAttribute('required');
+                    input.value = '';
+                    form.submit();
+                })
+                .catch(function () { fail('Network error while uploading the resume.'); });
+        }
+        sendChunk();
+    });
+})();
+</script>
 </body>
 </html>

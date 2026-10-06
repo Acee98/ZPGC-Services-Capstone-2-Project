@@ -165,6 +165,39 @@ if (!function_exists('techn_apply_specialties')) {
         ];
     }
 
+    function techn_apply_store_resume_bytes($bytes, $origName)
+    {
+        $bytes = (string) $bytes;
+        $orig = basename((string) $origName);
+        $ext = strtolower(pathinfo($orig, PATHINFO_EXTENSION));
+        $size = strlen($bytes);
+        if ($size <= 0 || $size > 5 * 1024 * 1024) {
+            return ['ok' => false, 'error' => 'Resume must be 5 MB or smaller.'];
+        }
+        $mime = 'application/octet-stream';
+        if (function_exists('finfo_open')) {
+            $fi = finfo_open(FILEINFO_MIME_TYPE);
+            if ($fi) {
+                $mime = (string) finfo_buffer($fi, $bytes);
+                finfo_close($fi);
+            }
+        }
+        if (!techn_apply_allowed_resume_mime($mime, $ext)) {
+            return ['ok' => false, 'error' => 'Resume must be a PDF, DOC, or DOCX file.'];
+        }
+        $stored = 'cv_' . date('YmdHis') . '_' . bin2hex(random_bytes(6)) . '.' . $ext;
+        $dest = techn_apply_upload_root() . '/' . $stored;
+        if (@file_put_contents($dest, $bytes) === false) {
+            return ['ok' => false, 'error' => 'Could not save the resume on the server.'];
+        }
+        return [
+            'ok' => true,
+            'stored' => $stored,
+            'original' => $orig !== '' ? $orig : 'resume.' . $ext,
+            'mime' => $mime !== '' ? $mime : 'application/octet-stream',
+        ];
+    }
+
     function techn_apply_ready(mysqli $conn)
     {
         static $done = false;
@@ -173,7 +206,6 @@ if (!function_exists('techn_apply_specialties')) {
         }
         if (function_exists('zpgc_runtime_ddl_allowed') && !zpgc_runtime_ddl_allowed()) {
             $done = true;
-            techn_apply_expire_stale($conn);
             return;
         }
         $conn->query(
@@ -195,7 +227,6 @@ if (!function_exists('techn_apply_specialties')) {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
         $done = true;
-        techn_apply_expire_stale($conn);
     }
 
     function techn_apply_get_for_user(mysqli $conn, $userId)
@@ -294,7 +325,7 @@ if (!function_exists('techn_apply_specialties')) {
         return $ok;
     }
 
-    function techn_apply_expire_stale(mysqli $conn)
+    function techn_apply_expire_stale(mysqli $conn, $notify = false)
     {
         $result = @$conn->query(
             "SELECT * FROM technician_applications
@@ -310,7 +341,7 @@ if (!function_exists('techn_apply_specialties')) {
             $userId = (int) ($row['user_id'] ?? 0);
             if (techn_apply_delete_row($conn, $row)) {
                 $n++;
-                if ($userId > 0) {
+                if ($notify && $userId > 0) {
                     notify_user_email(
                         $conn,
                         $userId,

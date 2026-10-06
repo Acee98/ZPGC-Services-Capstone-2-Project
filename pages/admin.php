@@ -12,8 +12,6 @@ require_once '../logic/ui_state.php';
 require_once '../logic/techn_apply.php';
 require_role('admin');
 
-techn_apply_ready($conn);
-
 $current_user_id = current_user_id($conn);
 $tab = zpgc_ui_resolve_tab('admin', 'dashboard');
 zpgc_ui_persist_redirect($tab);
@@ -111,6 +109,7 @@ if ($tab === 'utilities') {
             $all_users[] = $row;
         }
     }
+    techn_apply_expire_stale($conn, false);
     $techn_applications = techn_apply_list_open($conn);
     $techn_specialties = techn_apply_specialties();
 }

@@ -266,6 +266,34 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/csrf.php';
 
+if (!function_exists('zpgc_after_response')) {
+    /**
+     * Send the HTTP response first, then run slow work (SMTP) so the UI is not blocked.
+     */
+    function zpgc_after_response(callable $fn)
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        if (function_exists('fastcgi_finish_request')) {
+            @fastcgi_finish_request();
+        } elseif (function_exists('litespeed_finish_request')) {
+            @litespeed_finish_request();
+        } else {
+            if (!headers_sent()) {
+                header('Connection: close');
+            }
+            @ob_end_flush();
+            @flush();
+        }
+        try {
+            $fn();
+        } catch (Throwable $e) {
+            // Background notify must never surface to the user.
+        }
+    }
+}
+
 if (!function_exists('zpgc_establish_login_session')) {
     function zpgc_establish_login_session(array $user)
     {
