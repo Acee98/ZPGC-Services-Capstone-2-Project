@@ -4,6 +4,10 @@ require_once '../logic/config.php';
 require_once '../logic/ticket_subjects.php';
 require_role('user');
 
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 $formError = $_SESSION['ticket_form_error'] ?? '';
 $old = $_SESSION['ticket_form_old'] ?? [];
 unset($_SESSION['ticket_form_error'], $_SESSION['ticket_form_old']);
@@ -26,7 +30,8 @@ $descriptionLimit = ticket_description_word_limit();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(zpgc_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-    <link rel="stylesheet" href="../css/ticket.css?v=1.6.20">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <link rel="stylesheet" href="../css/ticket.css?v=1.6.21">
     <title>ZPGC Services | Ticket Creation</title>
 </head>
 <body>

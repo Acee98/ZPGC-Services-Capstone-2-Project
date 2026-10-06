@@ -202,7 +202,7 @@ $ui_theme = current_ui_theme();
                     </header>
                 </div>
                 <div class="tickets-toolbar">
-                    <a href="ticket.php" class="btn-new-ticket">
+                    <a href="ticket.php?v=1.6.21" class="btn-new-ticket">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                             viewBox="0 0 24 24">
                             <path d="M3 13h8v8h2v-8h8v-2h-8V3h-2v8H3z"></path>
