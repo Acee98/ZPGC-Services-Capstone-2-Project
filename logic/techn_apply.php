@@ -121,7 +121,11 @@ if (!function_exists('techn_apply_specialties')) {
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
             return ['ok' => false, 'error' => 'Upload a PDF, DOC, or DOCX resume.'];
         }
-        if ((int) ($file['error'] ?? 0) !== UPLOAD_ERR_OK) {
+        $err = (int) ($file['error'] ?? 0);
+        if ($err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE) {
+            return ['ok' => false, 'error' => 'Resume is too large. Use a PDF, DOC, or DOCX under 5 MB.'];
+        }
+        if ($err !== UPLOAD_ERR_OK) {
             return ['ok' => false, 'error' => 'Resume upload failed. Try a smaller PDF, DOC, or DOCX file.'];
         }
         $tmp = (string) ($file['tmp_name'] ?? '');

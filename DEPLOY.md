@@ -72,6 +72,14 @@ If `probe.method` is `keyword`, read `probe.error` / `probe.fallback_reason`.
 
 8. **Single-instance alert**: Free **F1** App Service cannot scale to 2+ instances. That Azure warning is expected on the student/free plan. Use a paid B1+ plan only if you need zero-downtime platform upgrades.
 
+9. **HTTP 413 on resume / photo upload (Linux PHP 8):** nginx defaults to a **1 MB** body. After deploy, set **Configuration → General settings → Startup Command** to:
+
+```text
+bash /home/web_sierra/wwwroot/startup.sh
+```
+
+Save (the app restarts). Also add App Setting `PHP_INI_SCAN_DIR` = `/usr/local/etc/php/conf.d:/home/site/wwwroot/ini` so PHP accepts files up to 16 MB (the form still caps resumes at 5 MB). Windows App Service uses `web.config` (32 MB) instead of the startup script.
+
 ### C. Deploy the code
 
 **Option 1 — GitHub (recommended)**  
