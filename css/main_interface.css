@@ -1159,11 +1159,24 @@ body[data-page="utilities"] .tickets-toolbar {
     color: #fff;
     white-space: nowrap;
 }
-.status-badge.ongoing    { background-color: #00ABB1; }
-.status-badge.processing { background-color: #FF8D28; }
-.status-badge.resolved   { background-color: #34C759; }
-.status-badge.pending    { background-color: #818181; }
-.status-badge.awaitingconfirmation { background-color: #8B5CF6; }
+/* Queue → in progress → waiting on reporter → done */
+.status-badge.pending { background-color: #6B7280; }
+.status-badge.ongoing { background-color: #2563EB; }
+.status-badge.processing { background-color: #0D9488; }
+.status-badge.awaitingconfirmation { background-color: #7C3AED; }
+.status-badge.resolved { background-color: #15803D; }
+
+.status-card.status-card--pending,
+.status-card.status-pending { --status-color: #6B7280; }
+.status-card.status-card--ongoing,
+.status-card.status-ongoing { --status-color: #2563EB; }
+.status-card.status-card--processing,
+.status-card.status-processing { --status-color: #0D9488; }
+.status-card.status-card--awaiting_confirmation,
+.status-card.status-card--confirming,
+.status-card.status-confirming { --status-color: #7C3AED; }
+.status-card.status-card--resolved,
+.status-card.status-resolved { --status-color: #15803D; }
 
 .tickets-list-user--actions .tickets-list-header,
 .tickets-list-user--actions .ticket-row {
@@ -1301,34 +1314,44 @@ body[data-page="utilities"] .tickets-toolbar {
     text-align: center;
 }
 
-.status-badge.active-account   { background-color: #34C759; }
-.status-badge.inactive-account { background-color: #818181; }
+.status-badge.active-account   { background-color: #15803D; }
+.status-badge.inactive-account { background-color: #6B7280; }
 
 .ticket-row .status-badge { color: #fff; }
 .ticket-row .severity-badge,
-.ticket-row .priority-badge { color: #fff; }
-.ticket-row .severity-badge.medium,
-.ticket-row .priority-badge.medium { color: #1a1a1a; }
-.ticket-row .severity-badge.undefined,
-.ticket-row .priority-badge.undefined { color: #888; }
+.ticket-row .priority-badge {
+    background: none;
+    background-color: transparent;
+}
 
-.priority-badge {
+.priority-badge,
+.severity-badge {
     display: inline-block;
-    padding: 3px 10px;
-    border-radius: 12px;
+    padding: 0;
+    border-radius: 0;
     font-size: 12px;
-    font-weight: 600;
-    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    background: none;
+    background-color: transparent;
     white-space: nowrap;
 }
-.priority-badge.critical { background-color: #FF3B30; }
-.priority-badge.high     { background-color: #FF8D28; }
-.priority-badge.medium   { background-color: #FFCC00; color: #1a1a1a; }
-.priority-badge.low      { background-color: #34C759; }
-.priority-badge.undefined {
-    background-color: #e8e8e8;
-    color: #888;
-    font-weight: 500;
+.priority-badge.critical,
+.severity-badge.critical { color: #DC2626; }
+.priority-badge.high,
+.severity-badge.high { color: #EA580C; }
+.priority-badge.moderate,
+.severity-badge.moderate,
+.priority-badge.medium,
+.severity-badge.medium { color: #CA8A04; }
+.priority-badge.low,
+.severity-badge.low { color: #1D4ED8; }
+.priority-badge.undefined,
+.severity-badge.undefined,
+.priority-badge.unassigned,
+.severity-badge.unassigned {
+    color: #9CA3AF;
+    font-weight: 600;
 }
 
 .ticket-icon-btn {
@@ -2582,25 +2605,14 @@ body[data-page="utilities"] .tickets-toolbar {
     height: 13px;
 }
 
-.severity-badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #fff;
-    white-space: nowrap;
-}
-.severity-badge.critical { background-color: #FF3B30; }
-.severity-badge.high     { background-color: #FF8D28; }
-.severity-badge.medium   { background-color: #FFCC00; color: #1a1a1a; }
-.severity-badge.low      { background-color: #34C759; }
-
-.severity-badge.moderate { background-color: #FF8D28; }
+.severity-badge.critical { color: #DC2626; }
+.severity-badge.high { color: #EA580C; }
+.severity-badge.medium { color: #CA8A04; }
+.severity-badge.low { color: #1D4ED8; }
+.severity-badge.moderate { color: #CA8A04; }
 .severity-badge.undefined {
-    background-color: #e8e8e8;
-    color: #888;
-    font-weight: 500;
+    color: #9CA3AF;
+    font-weight: 600;
 }
 
 .techn-ticket-form {

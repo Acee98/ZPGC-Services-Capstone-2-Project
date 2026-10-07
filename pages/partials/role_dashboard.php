@@ -12,8 +12,10 @@ $rows = $dash_tickets ?? [];
 $showCategory = !empty($dash_show_category);
 ?>
 <div class="status-cards role-dash-cards">
-    <?php foreach ($cards as $key) { ?>
-    <div class="status-card tech-accent">
+    <?php foreach ($cards as $key) {
+        $cardClass = preg_replace('/[^a-z_]/', '', strtolower((string) $key));
+    ?>
+    <div class="status-card tech-accent status-card--<?php echo htmlspecialchars($cardClass); ?>">
         <div class="status-card-info">
             <span class="status-card-count"><?php echo (int) ($counts[$key] ?? 0); ?></span>
             <span class="status-card-label"><?php echo htmlspecialchars($labels[$key] ?? $key); ?></span>

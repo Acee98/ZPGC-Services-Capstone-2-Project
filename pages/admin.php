@@ -270,9 +270,9 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.23">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.23">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.23">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.24">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.24">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.24">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {

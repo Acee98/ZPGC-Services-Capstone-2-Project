@@ -547,8 +547,8 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
 }
 
 .severity-badge.unassigned {
-    background-color: #B9BDC6;
-    color: #fff;
+    background: none;
+    color: #9CA3AF;
 }
 
 .perf-view-all { cursor: pointer; }
@@ -557,18 +557,21 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
     .perf-summary-cards { grid-template-columns: 1fr; }
 }
 
-.priority-badge.moderate { background-color: #FF8D28; }
+.priority-badge.moderate { background: none; color: #CA8A04; }
 
 .priority-badge.unassigned,
 .severity-badge.unassigned {
-    background-color: #B9BDC6;
-    color: #fff;
+    background: none;
+    color: #9CA3AF;
 }
 
-.status-badge.awaitingconfirmation,
-.priority-badge.awaitingconfirmation {
-    background-color: #7B61FF;
+.status-badge.awaitingconfirmation {
+    background-color: #7C3AED;
     color: #fff;
+}
+.priority-badge.awaitingconfirmation {
+    background: none;
+    color: #7C3AED;
 }
 
 .status-cards {
