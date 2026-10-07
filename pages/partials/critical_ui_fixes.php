@@ -332,6 +332,31 @@ html[data-theme="dark"] body[data-page="tickets"] #page-tickets .ticket-history-
     background: #141418 !important;
 }
 
+/* Admin dashboard: let Ticket History sit below the charts instead of collapsing */
+body[data-page="dashboard"] .showcase {
+    overflow-y: auto !important;
+}
+body[data-page="dashboard"] #page-dashboard.admin-dashboard-page {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 0 0 auto !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+body[data-page="dashboard"] #page-dashboard.admin-dashboard-page .admin-dashboard-history-list {
+    flex: 0 0 auto !important;
+    min-height: 280px !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin-bottom: 24px !important;
+}
+body[data-page="dashboard"] #page-dashboard.admin-dashboard-page .admin-dashboard-history-list .tickets-list-body {
+    flex: 0 0 auto !important;
+    min-height: 80px !important;
+    overflow: visible !important;
+}
+
 /* ========== Mobile: keep content above bottom tab bar ========== */
 @media (max-width: 768px) {
     body {

@@ -85,9 +85,11 @@
 
 body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
     display: flex;
-    flex: 1;
-    min-height: 0;
     flex-direction: column;
+    flex: 0 0 auto;
+    min-height: auto;
+    height: auto;
+    overflow: visible;
 }
 
 #page-dashboard.admin-dashboard-page .status-cards,
@@ -107,13 +109,18 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
 }
 
 #page-dashboard.admin-dashboard-page .admin-dashboard-history-list {
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
+    min-height: 280px;
+    height: auto;
+    overflow: visible;
     margin-top: 0;
+    margin-bottom: 24px;
 }
 
 #page-dashboard.admin-dashboard-page .admin-dashboard-history-list .tickets-list-body {
-    overflow-y: auto;
+    flex: 0 0 auto;
+    min-height: 80px;
+    overflow: visible;
 }
 
 #page-dashboard.admin-dashboard-page .admin-history-row .tcol-assigned {
