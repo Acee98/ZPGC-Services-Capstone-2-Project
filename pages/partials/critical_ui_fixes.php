@@ -15,10 +15,10 @@ html[data-theme="dark"] .showcase .head header h1 {
 }
 
 /* Ticket History: Satisfaction Level as a fixed trailing column */
-.ticket-history-list--satisfaction .tickets-list-header,
-.ticket-history-list--satisfaction .ticket-row,
-.ticket-history-list:has(.tickets-col-satisfaction) .tickets-list-header,
-.ticket-history-list:has(.tickets-col-satisfaction) .ticket-row {
+.ticket-history-list--satisfaction:not(.ticket-history-list--times) .tickets-list-header,
+.ticket-history-list--satisfaction:not(.ticket-history-list--times) .ticket-row,
+.ticket-history-list:not(.ticket-history-list--times):has(.tickets-col-satisfaction) .tickets-list-header,
+.ticket-history-list:not(.ticket-history-list--times):has(.tickets-col-satisfaction) .ticket-row {
     display: grid !important;
     grid-template-columns:
         72px
@@ -743,10 +743,10 @@ body[data-page="dashboard"] #page-dashboard.admin-dashboard-page .admin-dashboar
         max-width: none !important;
         box-sizing: border-box !important;
     }
-    .ticket-history-list--satisfaction .tickets-list-header,
-    .ticket-history-list--satisfaction .ticket-row,
-    .ticket-history-list:has(.tickets-col-satisfaction) .tickets-list-header,
-    .ticket-history-list:has(.tickets-col-satisfaction) .ticket-row {
+    .ticket-history-list--satisfaction:not(.ticket-history-list--times) .tickets-list-header,
+    .ticket-history-list--satisfaction:not(.ticket-history-list--times) .ticket-row,
+    .ticket-history-list:not(.ticket-history-list--times):has(.tickets-col-satisfaction) .tickets-list-header,
+    .ticket-history-list:not(.ticket-history-list--times):has(.tickets-col-satisfaction) .ticket-row {
         grid-template-columns: 56px 80px minmax(120px, 1.15fr) minmax(150px, 1.8fr) 100px 96px 140px !important;
         min-width: 940px !important;
         width: 940px !important;
@@ -756,6 +756,12 @@ body[data-page="dashboard"] #page-dashboard.admin-dashboard-page .admin-dashboar
         grid-template-columns: 52px 72px minmax(100px, 1fr) minmax(110px, 1.1fr) 90px 84px 140px 120px !important;
         min-width: 1040px !important;
         width: 1040px !important;
+    }
+    .ticket-history-list--times.ticket-history-list--assigned .tickets-list-header,
+    .ticket-history-list--times.ticket-history-list--assigned .ticket-row {
+        grid-template-columns: 48px 68px minmax(90px, 1fr) minmax(100px, 1.05fr) 84px 80px 132px 112px minmax(120px, 0.95fr) !important;
+        min-width: 1180px !important;
+        width: 1180px !important;
     }
     .ticket-history-list--times.ticket-history-list--satisfaction .tickets-list-header,
     .ticket-history-list--times.ticket-history-list--satisfaction .ticket-row {

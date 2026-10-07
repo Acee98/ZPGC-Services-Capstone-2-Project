@@ -281,7 +281,7 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.33">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.34">
     <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.32">
     <link rel="stylesheet" href="../css/theme.css?v=1.6.32">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
@@ -569,7 +569,7 @@ $ui_theme = current_ui_theme();
                     </div>
                 </div>
                 <?php
-                $history_show_assigned = true;
+                $history_show_assigned = false;
                 $history_title = 'Ticket History';
                 $history_subtitle = 'Resolved and archived tickets';
                 $history_empty = 'No resolved tickets in history yet.';
