@@ -4,6 +4,20 @@
  * Loaded from session_config.php on every request that starts a session.
  */
 
+require_once __DIR__ . '/rate_limit.php';
+
+if (!function_exists('zpgc_app_log')) {
+    function zpgc_app_log($message)
+    {
+        $dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'logs';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0750, true);
+        }
+        $line = date('c') . ' ' . str_replace(["\r", "\n"], ' ', (string) $message) . "\n";
+        @file_put_contents($dir . DIRECTORY_SEPARATOR . 'app.log', $line, FILE_APPEND | LOCK_EX);
+    }
+}
+
 if (!function_exists('zpgc_security_headers')) {
     function zpgc_is_production_host()
     {
@@ -30,10 +44,25 @@ if (!function_exists('zpgc_security_headers')) {
             @ini_set('display_errors', '0');
             @ini_set('display_startup_errors', '0');
             error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
+            zpgc_register_error_loggers();
         }
 
         if (PHP_SAPI === 'cli' || headers_sent()) {
             return;
+        }
+
+        if (zpgc_is_production_host()
+            && function_exists('zpgc_request_is_https')
+            && !zpgc_request_is_https()
+        ) {
+            $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+            if (!preg_match('#/health\.php(\?|$)#', $uri)) {
+                $host = preg_replace('/[^a-zA-Z0-9.\-:]/', '', (string) ($_SERVER['HTTP_HOST'] ?? ''));
+                if ($host !== '') {
+                    header('Location: https://' . $host . $uri, true, 301);
+                    exit();
+                }
+            }
         }
 
         header('X-Content-Type-Options: nosniff');
@@ -88,6 +117,10 @@ if (!function_exists('zpgc_security_headers')) {
             $_SESSION[$key] = $hits;
             return false;
         }
+        if (function_exists('zpgc_rate_limit_ip') && !zpgc_rate_limit_ip($bucket, $maxAttempts, $windowSeconds)) {
+            $_SESSION[$key] = $hits;
+            return false;
+        }
         $hits[] = $now;
         $_SESSION[$key] = $hits;
         return true;
@@ -98,6 +131,50 @@ if (!function_exists('zpgc_security_headers')) {
     {
         $bucket = preg_replace('/[^a-z0-9_\-]/i', '', (string) $bucket);
         unset($_SESSION['_rl_' . $bucket]);
+        if (function_exists('zpgc_rate_limit_ip_clear')) {
+            zpgc_rate_limit_ip_clear($bucket);
+        }
+    }
+
+    function zpgc_register_error_loggers()
+    {
+        static $registered = false;
+        if ($registered) {
+            return;
+        }
+        $registered = true;
+        set_error_handler(static function ($severity, $message, $file, $line) {
+            if (!(error_reporting() & $severity)) {
+                return false;
+            }
+            zpgc_app_log("PHP {$severity} {$message} @ {$file}:{$line}");
+            return false;
+        });
+        set_exception_handler(static function ($e) {
+            zpgc_app_log('EX ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+            if (!headers_sent()) {
+                http_response_code(500);
+            }
+            $page = dirname(__DIR__) . '/pages/error_500.php';
+            if (is_file($page)) {
+                require $page;
+            }
+            exit();
+        });
+        register_shutdown_function(static function () {
+            $err = error_get_last();
+            if (!$err || !in_array((int) $err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+                return;
+            }
+            zpgc_app_log('FATAL ' . $err['message'] . ' @ ' . $err['file'] . ':' . $err['line']);
+            if (!headers_sent() && function_exists('zpgc_is_production_host') && zpgc_is_production_host()) {
+                http_response_code(500);
+                $page = dirname(__DIR__) . '/pages/error_500.php';
+                if (is_file($page)) {
+                    require $page;
+                }
+            }
+        });
     }
 
     /**

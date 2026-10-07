@@ -36,6 +36,11 @@ Desktop.ini
 uploads/*
 !uploads/.gitkeep
 
+# Runtime logs (keep folder + deny rule)
+logs/*
+!logs/.htaccess
+!logs/.gitkeep
+
 # Large data files and scratch benchmark logs
 ai/data/*.csv
 ai/data/_bm_*

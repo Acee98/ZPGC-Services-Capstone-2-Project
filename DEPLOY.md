@@ -118,13 +118,17 @@ Tear down the Azure MySQL + Web App when the smoke test is done so you are not b
 ## 3. Hostinger (production after Azure)
 
 1. Hostinger hPanel → **Websites** → create site / subdomain.
-2. **PHP** 8.1+ (prefer 8.2).
-3. **MySQL**: create database + user; import the same SQL as Azure.
-4. Upload via Git deploy, File Manager, or FTP — same repo contents.
-5. Set environment / `.env` / panel variables the same way (`DB_*`, `MAIL_*`).
+2. **PHP** 8.1+ (prefer 8.2). Enable `mysqli`, `openssl`, `curl`, `fileinfo`.
+3. **MySQL**: create database + user; import the same SQL as Azure, then `database/v1.6_rate_limits.sql` (or leave `ZPGC_ALLOW_RUNTIME_DDL=1` once).
+4. Upload via Git deploy, File Manager, or FTP — same repo contents. Keep the root `.htaccess` (HTTPS, secret blocking, static cache). Do **not** rely on `startup.sh` (Azure nginx only).
+5. Set environment / `.env` / panel variables the same way (`DB_*`, `MAIL_*`, `OPENAI_*`).
    - On shared hosting without App Settings, edit `logic/mail.env` on the server only and set `MAIL_APP_URL=https://your-domain.com`.
    - For MySQL on Hostinger, usually `DB_SSL` is **not** needed; leave unset.
-6. Point the domain document root at the project folder (or `public` if you later add one). Entry remains `pages/login_signup.php` unless you add an `index.php` redirect.
+6. Point the domain document root at the project folder. `index.php` sends visitors to login.
+7. **SSL** — issue a Let’s Encrypt certificate in hPanel so the `.htaccess` HTTPS redirect succeeds.
+8. **Health** — `/health.php` (liveness) and `/health.php?db=1` (MySQL ping).
+9. **Backups** — hPanel → Cron, daily: `php /home/USER/public_html/tools/backup_db.php` (keeps 14 dumps under `database/backups/`, not web-readable). Also keep Hostinger’s own MySQL backup if the plan includes it.
+10. Optional **CDN** — enable Hostinger CDN / Cloudflare; static `css`/`js`/`png` already send 7-day `Cache-Control`.
 
 ---
 

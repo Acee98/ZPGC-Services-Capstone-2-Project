@@ -1,0 +1,10 @@
+<FilesMatch "^(probe_|benchmark_|eval_|rebuild_|smoke_)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+<IfModule mod_authz_core.c>
+    <Files "cacert.pem">
+        Require all denied
+    </Files>
+</IfModule>

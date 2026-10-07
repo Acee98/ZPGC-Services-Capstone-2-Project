@@ -5,6 +5,13 @@ require_once 'ai_classify.php';
 require_role('user');
 zpgc_csrf_require();
 
+if (!zpgc_rate_limit('ai_suggest', 20, 900)) {
+    http_response_code(429);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['ok' => false, 'error' => 'Too many AI requests. Try again in a few minutes.']);
+    exit();
+}
+
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

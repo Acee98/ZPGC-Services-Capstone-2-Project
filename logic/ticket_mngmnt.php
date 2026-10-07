@@ -9,6 +9,16 @@ require_once 'auth_mail.php';
 require_role('user');
 zpgc_csrf_require();
 
+if (isset($_POST['submit-ticket']) && !zpgc_rate_limit('ticket_submit', 8, 900)) {
+    $_SESSION['ticket_form_error'] = 'Too many tickets were submitted. Wait a few minutes, then try again.';
+    $_SESSION['ticket_form_old'] = [
+        'subject' => trim((string) ($_POST['subject'] ?? '')),
+        'description' => trim((string) ($_POST['description'] ?? '')),
+    ];
+    header('Location: ../pages/ticket.php');
+    exit();
+}
+
 function tickets_has_column(mysqli $conn, $column)
 {
     static $cache = [];

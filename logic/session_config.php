@@ -43,9 +43,16 @@ if (!function_exists('zpgc_is_cloud_root_host')) {
         if (str_ends_with($host, '.azurewebsites.net')) {
             return true;
         }
-        // Hostinger / custom domain: treat as site root unless path clearly has a subfolder.
         if (!empty($_SERVER['WEBSITE_SITE_NAME']) || !empty($_SERVER['WEBSITE_HOSTNAME'])) {
             return true;
+        }
+        // Hostinger (or any live domain) at document root: /pages/... not /folder/pages/...
+        $local = str_contains($host, 'localhost') || str_contains($host, '127.0.0.1');
+        if (!$local && $host !== '') {
+            $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+            if (preg_match('#^/(pages|logic|index\.php)#', $script)) {
+                return true;
+            }
         }
         return false;
     }

@@ -1,0 +1,59 @@
+# Hostinger / Apache (XAMPP). Azure Linux uses nginx + startup.sh instead.
+DirectoryIndex index.php pages/login_signup.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # HTTPS on real hosts only (leave http://localhost for XAMPP).
+    RewriteCond %{HTTP_HOST} !^localhost [NC]
+    RewriteCond %{HTTP_HOST} !^127\.0\.0\.1$
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    RewriteRule (^|/)\.git - [F,L]
+    RewriteRule \.env$ - [F,L]
+    RewriteRule ^logic/mail\.env$ - [F,L]
+    RewriteRule ^(logs|docs|tools|database|vendor|\.venv)(/|$) - [F,L]
+    RewriteRule ^ai/data/ - [F,L]
+    RewriteRule ^ai/(probe_|benchmark_|eval_|rebuild_|smoke_) - [F,L]
+    RewriteRule ^uploads/ - [F,L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . pages/error_404.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always unset X-Powered-By
+    <FilesMatch "\.(css|js|png|jpe?g|gif|webp|ico|svg|woff2)$">
+        Header set Cache-Control "public, max-age=604800, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(php|html)$">
+        Header set Cache-Control "private, no-store"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+    ExpiresByType image/png "access plus 7 days"
+    ExpiresByType image/jpeg "access plus 7 days"
+    ExpiresByType image/webp "access plus 7 days"
+</IfModule>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/css application/javascript text/html application/json
+</IfModule>
+
+ErrorDocument 500 pages/error_500.php
+
+<FilesMatch "\.(sql|md|sh|bat|pem|zip)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
