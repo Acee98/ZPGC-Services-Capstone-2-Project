@@ -58,7 +58,7 @@ $tickets = $recent_tickets ?? [];
                     </span>
                     <span class="tcol-assigned"><?php echo htmlspecialchars($assignedLabel); ?></span>
                     <span class="tcol-reg"><?php echo htmlspecialchars(function_exists('performance_registered_label') ? performance_registered_label($ticket['created_at'] ?? null) : '—'); ?></span>
-                    <span class="tcol-resolution"><?php echo htmlspecialchars(function_exists('performance_duration_label') ? performance_duration_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null) : '—'); ?></span>
+                    <span class="tcol-resolution"><?php echo htmlspecialchars(function_exists('ticket_resolution_timer_label') ? ticket_resolution_timer_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null) : '—'); ?></span>
                 </div>
             <?php } ?>
         <?php } ?>

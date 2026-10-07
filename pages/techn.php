@@ -75,8 +75,8 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.32">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.32">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.33">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.33">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | Technician</title>
 </head>
@@ -230,7 +230,7 @@ $ui_theme = current_ui_theme();
                             $queueLive
                         );
                         $queueStart = strtotime((string) ($ticket['created_at'] ?? '')) ?: 0;
-                        $resLabel = performance_duration_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null);
+                        $resLabel = ticket_resolution_timer_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null);
                         $queueAttr = ($queueLive && $queueStart > 0) ? ' data-queue-start="' . (int) $queueStart . '"' : '';
                     ?>
                     <?php if ($canEditStatus) { ?>

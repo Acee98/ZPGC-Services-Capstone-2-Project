@@ -80,6 +80,14 @@ if (!function_exists('performance_duration_label')) {
         return strtolower(trim((string) $status)) !== 'resolved';
     }
 
+    function ticket_resolution_timer_label($createdAt, $resolvedAt)
+    {
+        if ($resolvedAt === null || trim((string) $resolvedAt) === '') {
+            return '—';
+        }
+        return ticket_clock_label($createdAt, $resolvedAt);
+    }
+
     function performance_category_rows(mysqli $conn, $assignedTo = 0)
     {
         $order = ['hardware', 'software', 'network', 'account', 'other'];
@@ -183,7 +191,7 @@ if (!function_exists('performance_duration_label')) {
                 'priority_label' => $pri === '' ? 'None' : ucfirst($pri),
                 'registered' => performance_registered_label($row['created_at'] ?? null),
                 'response' => performance_duration_label($row['created_at'] ?? null, $row['responded_at'] ?? null),
-                'resolution' => performance_duration_label($row['created_at'] ?? null, $row['resolved_at'] ?? null),
+                'resolution' => ticket_resolution_timer_label($row['created_at'] ?? null, $row['resolved_at'] ?? null),
             ];
         }
         return $log;

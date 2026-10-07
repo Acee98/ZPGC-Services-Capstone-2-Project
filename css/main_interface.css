@@ -673,7 +673,10 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
     white-space: nowrap;
     font-size: 13px;
 }
-.tickets-col-queue {
+.tickets-col-queue,
+.tickets-col-resolution,
+.tcol-resolution,
+.dcol-resolution {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
     letter-spacing: 0.02em;
