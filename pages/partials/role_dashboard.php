@@ -51,7 +51,15 @@ $showCategory = !empty($dash_show_category);
             <span class="tickets-col-subject"><?php echo htmlspecialchars((string) $row['subject']); ?></span>
             <span class="tickets-col-description"><?php echo htmlspecialchars((string) $row['description']); ?></span>
             <?php if ($showCategory) { ?>
-            <span class="dash-col-severity"><?php echo htmlspecialchars(ucfirst((string) ($row['priority'] ?? '—'))); ?></span>
+            <span class="dash-col-severity">
+                <?php
+                    $sev = preg_replace('/[^a-z]/', '', strtolower((string) ($row['priority'] ?? '')));
+                    $sevLabel = $sev !== '' ? ucfirst((string) $row['priority']) : '—';
+                ?>
+                <span class="severity-badge <?php echo $sev !== '' ? htmlspecialchars($sev) : 'undefined'; ?>">
+                    <?php echo htmlspecialchars($sevLabel); ?>
+                </span>
+            </span>
             <?php } ?>
             <span class="tickets-col-status">
                 <span class="status-badge <?php echo htmlspecialchars(ticket_status_class($st)); ?>">

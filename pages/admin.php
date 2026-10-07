@@ -270,9 +270,9 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.24">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.24">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.24">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.25">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.25">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.25">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -495,7 +495,7 @@ $ui_theme = current_ui_theme();
                             <span class="tickets-col-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
                             <span class="tickets-col-description"><?php echo htmlspecialchars($ticket['description']); ?></span>
                             <span class="tickets-col-status">
-                                <select name="status" class="admin-ticket-select" aria-label="Status for ticket <?php echo $tid; ?>">
+                                <select name="status" class="admin-ticket-select ticket-select-status" data-select-tone="status" data-value="<?php echo htmlspecialchars($st); ?>" aria-label="Status for ticket <?php echo $tid; ?>">
                                     <?php foreach (['pending', 'ongoing', 'processing', 'awaiting_confirmation', 'resolved'] as $opt) { ?>
                                     <option value="<?php echo $opt; ?>" <?php echo ($st === $opt) ? 'selected' : ''; ?>>
                                         <?php
@@ -510,7 +510,7 @@ $ui_theme = current_ui_theme();
                                 </select>
                             </span>
                             <span class="tickets-col-priority">
-                                <select name="priority" class="admin-ticket-select" aria-label="Priority for ticket <?php echo $tid; ?>">
+                                <select name="priority" class="admin-ticket-select ticket-select-priority" data-select-tone="priority" data-value="<?php echo htmlspecialchars((string) $pri); ?>" aria-label="Priority for ticket <?php echo $tid; ?>">
                                     <option value="" <?php echo ($pri === '' || $pri === null) ? 'selected' : ''; ?>>None</option>
                                     <?php foreach (['critical' => 'Critical', 'moderate' => 'Moderate', 'low' => 'Low'] as $pval => $plabel) { ?>
                                     <option value="<?php echo $pval; ?>" <?php echo ($pri === $pval) ? 'selected' : ''; ?>>
@@ -960,7 +960,7 @@ $ui_theme = current_ui_theme();
     </script>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
     <script src="../js/utilities_filter.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.23" defer></script>
+    <script src="../js/behavior.js?v=1.6.25" defer></script>
     <!-- chart.umd.js, dashboard charts, tickets/utilities filters: lazy-loaded per tab via lazy_load.js -->
 </body>
 

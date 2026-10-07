@@ -763,7 +763,17 @@ function initPageSearchBars() {
     });
 }
 
+function initTicketSelectTones() {
+    document.querySelectorAll("select.ticket-select-status, select.ticket-select-priority").forEach(function (el) {
+        el.setAttribute("data-value", el.value || "");
+        el.addEventListener("change", function () {
+            el.setAttribute("data-value", el.value || "");
+        });
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function() {
+    initTicketSelectTones();
     initNavClickSelection();
     initMobileTabBar();
     initSidebarCollapse();

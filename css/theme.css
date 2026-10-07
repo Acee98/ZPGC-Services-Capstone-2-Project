@@ -172,27 +172,30 @@
     color: #fff;
 }
 
-[data-theme="dark"] .ticket-row .severity-badge,
 [data-theme="dark"] .ticket-row .priority-badge {
     background: none;
     background-color: transparent;
 }
 
-[data-theme="dark"] .priority-badge.critical,
-[data-theme="dark"] .severity-badge.critical { color: #F87171; }
-[data-theme="dark"] .priority-badge.high,
-[data-theme="dark"] .severity-badge.high { color: #FB923C; }
+[data-theme="dark"] .priority-badge.critical { color: #F87171; }
+[data-theme="dark"] .priority-badge.high { color: #FB923C; }
 [data-theme="dark"] .priority-badge.moderate,
-[data-theme="dark"] .severity-badge.moderate,
-[data-theme="dark"] .priority-badge.medium,
-[data-theme="dark"] .severity-badge.medium { color: #FBBF24; }
-[data-theme="dark"] .priority-badge.low,
-[data-theme="dark"] .severity-badge.low { color: #60A5FA; }
+[data-theme="dark"] .priority-badge.medium { color: #FBBF24; }
+[data-theme="dark"] .priority-badge.low { color: #4ADE80; }
 [data-theme="dark"] .priority-badge.undefined,
-[data-theme="dark"] .severity-badge.undefined,
-[data-theme="dark"] .priority-badge.unassigned,
-[data-theme="dark"] .severity-badge.unassigned {
+[data-theme="dark"] .priority-badge.unassigned {
     color: #9CA3AF;
+}
+
+[data-theme="dark"] .severity-badge.critical { background-color: #DC2626; color: #fff; }
+[data-theme="dark"] .severity-badge.high { background-color: #EA580C; color: #fff; }
+[data-theme="dark"] .severity-badge.moderate,
+[data-theme="dark"] .severity-badge.medium { background-color: #D97706; color: #fff; }
+[data-theme="dark"] .severity-badge.low { background-color: #15803D; color: #fff; }
+[data-theme="dark"] .severity-badge.undefined,
+[data-theme="dark"] .severity-badge.unassigned {
+    background-color: #6B7280;
+    color: #fff;
 }
 
 [data-theme="dark"] .ticket-row:hover {
@@ -437,8 +440,8 @@
     background-color: var(--theme-surface-3);
 }
 
-[data-theme="dark"] .admin-ticket-select,
-[data-theme="dark"] .techn-ticket-form select {
+[data-theme="dark"] .admin-ticket-select:not(.ticket-select-status):not(.ticket-select-priority),
+[data-theme="dark"] .techn-ticket-form select:not(.ticket-select-status):not(.ticket-select-priority) {
     background-color: var(--theme-input-bg);
     border-color: var(--theme-border-strong);
     color: var(--theme-text);
@@ -597,10 +600,14 @@
     box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
 }
 
-[data-theme="dark"] .priority-badge.undefined,
-[data-theme="dark"] .severity-badge.undefined {
+[data-theme="dark"] .priority-badge.undefined {
     background: none;
     color: var(--theme-text-muted);
+}
+
+[data-theme="dark"] .severity-badge.undefined {
+    background-color: #6B7280;
+    color: #fff;
 }
 
 [data-theme="dark"] .ticket-row.row-new {
@@ -700,7 +707,7 @@ html[data-theme="dark"] .mailbox-chat-input,
 html[data-theme="dark"] .showcase .head header .search-bar,
 html[data-theme="dark"] .perf-filters-row .search-bar,
 html[data-theme="dark"] #perf-log-search,
-html[data-theme="dark"] .admin-ticket-select,
+html[data-theme="dark"] .admin-ticket-select:not(.ticket-select-status):not(.ticket-select-priority),
 html[data-theme="dark"] .filter-tab:not(.active-tab) {
     background: #2a2a32 !important;
     background-color: #2a2a32 !important;

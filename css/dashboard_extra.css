@@ -547,8 +547,8 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
 }
 
 .severity-badge.unassigned {
-    background: none;
-    color: #9CA3AF;
+    background-color: #6B7280;
+    color: #fff;
 }
 
 .perf-view-all { cursor: pointer; }
@@ -559,10 +559,13 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
 
 .priority-badge.moderate { background: none; color: #CA8A04; }
 
-.priority-badge.unassigned,
-.severity-badge.unassigned {
+.priority-badge.unassigned {
     background: none;
     color: #9CA3AF;
+}
+.severity-badge.unassigned {
+    background-color: #6B7280;
+    color: #fff;
 }
 
 .status-badge.awaitingconfirmation {

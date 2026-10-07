@@ -66,8 +66,8 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.24">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.24">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.25">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.25">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | Technician</title>
 </head>
@@ -222,7 +222,7 @@ $ui_theme = current_ui_theme();
                         <span class="tickets-col-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
                         <span class="tickets-col-description"><?php echo htmlspecialchars($ticket['description']); ?></span>
                         <span class="tickets-col-status">
-                            <select name="status" class="admin-ticket-select" aria-label="Status for ticket <?php echo $tid; ?>">
+                            <select name="status" class="admin-ticket-select ticket-select-status" data-select-tone="status" data-value="<?php echo htmlspecialchars($st); ?>" aria-label="Status for ticket <?php echo $tid; ?>">
                                 <?php foreach ($techn_statuses as $opt) { ?>
                                 <option value="<?php echo htmlspecialchars($opt); ?>"
                                     <?php echo ($st === $opt) ? 'selected' : ''; ?>>
@@ -326,7 +326,7 @@ $ui_theme = current_ui_theme();
         </section>
     </main>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.23" defer></script>
+    <script src="../js/behavior.js?v=1.6.25" defer></script>
     <script src="../js/performance_filter.js?v=1.6.22"></script>
 </body>
 

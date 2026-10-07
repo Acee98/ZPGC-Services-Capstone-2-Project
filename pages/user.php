@@ -91,8 +91,8 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.24">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.24">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.25">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.25">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | User</title>
 </head>
@@ -172,6 +172,7 @@ $ui_theme = current_ui_theme();
                 </div>
                 <?php
                 $dashboard_card_keys = ['ongoing', 'processing', 'resolved'];
+                $dash_show_category = true;
                 $dash_tickets = $active_user_tickets;
                 $status_counts = [
                     'ongoing' => 0,
@@ -419,7 +420,7 @@ $ui_theme = current_ui_theme();
     </div>
     <?php } ?>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.23" defer></script>
+    <script src="../js/behavior.js?v=1.6.25" defer></script>
 </body>
 
 </html>
