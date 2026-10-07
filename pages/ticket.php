@@ -39,7 +39,6 @@ $descriptionLimit = ticket_description_word_limit();
         <form action="../logic/ticket_mngmnt.php" class="ticket-form" method="post" id="ticket-form">
 <?php echo zpgc_csrf_field(); ?>
             <h1 class="ticket-form-title">Submit New Ticket</h1>
-            <p class="ticket-intro">Describe the issue. On submit, AI classifies the category, the system sets priority (Urgency × Impact: 1–2 Low, 3–6 Moderate, 9 Critical; 30 or more identical open reports add +40), and a technician is assigned when a Priority Queue seat is free (9 per batch). If the batch is full, the ticket waits and is assigned automatically when someone is resolved. Low tickets also get troubleshooting tips you can try first.</p>
             <?php if ($formError !== '') { ?>
             <div class="ticket-notice-error"><?php echo htmlspecialchars($formError); ?></div>
             <?php } ?>

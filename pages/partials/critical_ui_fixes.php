@@ -310,9 +310,9 @@ body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user--actions
 body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-techn-actions,
 body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin-five {
     flex: 0 1 auto !important;
-    min-height: 200px !important;
-    max-height: min(48vh, 480px) !important;
-    overflow: auto !important;
+    min-height: 160px !important;
+    max-height: min(48vh, 420px) !important;
+    overflow: hidden !important;
 }
 body[data-page="tickets"] #page-tickets .tickets-list-user--actions .tickets-list-header,
 body[data-page="tickets"] #page-tickets .tickets-list-techn-actions .tickets-list-header,
@@ -346,15 +346,16 @@ body[data-page="dashboard"] #page-dashboard.admin-dashboard-page {
 }
 body[data-page="dashboard"] #page-dashboard.admin-dashboard-page .admin-dashboard-history-list {
     flex: 0 0 auto !important;
-    min-height: 280px !important;
+    min-height: 160px !important;
+    max-height: min(48vh, 420px) !important;
     height: auto !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     margin-bottom: 24px !important;
 }
 body[data-page="dashboard"] #page-dashboard.admin-dashboard-page .admin-dashboard-history-list .tickets-list-body {
-    flex: 0 0 auto !important;
-    min-height: 80px !important;
-    overflow: visible !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
 }
 
 /* ========== Mobile: keep content above bottom tab bar ========== */
@@ -648,6 +649,12 @@ body[data-page="dashboard"] #page-dashboard.admin-dashboard-page .admin-dashboar
         max-width: none !important;
         box-sizing: border-box !important;
     }
+    .tickets-list-user--times .tickets-list-header,
+    .tickets-list-user--times .ticket-row {
+        grid-template-columns: 52px 72px minmax(110px, 1fr) minmax(120px, 1.1fr) 90px 140px 120px minmax(110px, 0.9fr) 44px !important;
+        min-width: 1180px !important;
+        width: 1180px !important;
+    }
     .tickets-list-user--actions .tickets-list-header > span,
     .tickets-list-user--actions .ticket-row > span {
         flex: unset !important;
@@ -730,6 +737,18 @@ body[data-page="dashboard"] #page-dashboard.admin-dashboard-page .admin-dashboar
         grid-template-columns: 56px 80px minmax(120px, 1.15fr) minmax(150px, 1.8fr) 100px 96px 140px !important;
         min-width: 940px !important;
         width: 940px !important;
+    }
+    .ticket-history-list--times .tickets-list-header,
+    .ticket-history-list--times .ticket-row {
+        grid-template-columns: 52px 72px minmax(100px, 1fr) minmax(110px, 1.1fr) 90px 84px 140px 120px !important;
+        min-width: 1040px !important;
+        width: 1040px !important;
+    }
+    .ticket-history-list--times.ticket-history-list--satisfaction .tickets-list-header,
+    .ticket-history-list--times.ticket-history-list--satisfaction .ticket-row {
+        grid-template-columns: 48px 70px minmax(90px, 1fr) minmax(100px, 1.05fr) 84px 80px 132px 112px 130px !important;
+        min-width: 1180px !important;
+        width: 1180px !important;
     }
     .ticket-history-list--assigned .tickets-list-header,
     .ticket-history-list--assigned .ticket-row {

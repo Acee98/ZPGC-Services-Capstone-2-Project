@@ -6,6 +6,7 @@ require_once '../logic/ticket_status.php';
 require_once '../logic/ticket_files.php';
 require_once '../logic/ticket_times.php';
 require_once '../logic/ticket_retention.php';
+require_once '../logic/performance_report.php';
 require_role('user');
 
 $current_user_id = current_user_id($conn);
@@ -68,6 +69,12 @@ if ($has_satisfaction) {
 if (ticket_has_column($conn, 'archived_at')) {
     $selectCols .= ', archived_at';
 }
+if (ticket_has_column($conn, 'created_at')) {
+    $selectCols .= ', created_at';
+}
+if (ticket_has_column($conn, 'resolved_at')) {
+    $selectCols .= ', resolved_at';
+}
 $stmt = $conn->prepare(
     "SELECT {$selectCols} FROM tickets WHERE user_id = ? ORDER BY id DESC LIMIT 200"
 );
@@ -91,8 +98,8 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.29">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.29">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.30">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.30">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | User</title>
 </head>
@@ -222,13 +229,15 @@ $ui_theme = current_ui_theme();
                 <?php if ($confirm_error !== '') { ?>
                 <div class="utilities-notice-error"><?php echo htmlspecialchars($confirm_error); ?></div>
                 <?php } ?>
-                <div class="tickets-list tickets-list-user tickets-list-user--actions">
+                <div class="tickets-list tickets-list-user tickets-list-user--actions tickets-list-user--times">
                 <div class="tickets-list-header">
                     <span class="tickets-col-id">ID</span>
                     <span class="tickets-col-category">Category</span>
                     <span class="tickets-col-subject">Subject</span>
                     <span class="tickets-col-description">Description</span>
                     <span class="tickets-col-status">Status</span>
+                    <span class="tickets-col-reg">Registration Date &amp; Time</span>
+                    <span class="tickets-col-resolution">Resolution Time</span>
                     <span class="tickets-col-confirm">Confirm</span>
                     <span class="tickets-col-delete"> </span>
                 </div>
@@ -244,6 +253,8 @@ $ui_theme = current_ui_theme();
                         $guidance = trim((string) ($ticket['ai_guidance'] ?? ''));
                         $unassigned = empty($ticket['assigned_to']);
                         $showSelfHelp = ($guidance !== '' && $st !== 'resolved');
+                        $regLabel = performance_registered_label($ticket['created_at'] ?? null);
+                        $resLabel = performance_duration_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null);
                     ?>
                     <div class="ticket-row" data-status="<?php echo htmlspecialchars($st); ?>">
                         <span class="tickets-col-id">#
@@ -291,6 +302,8 @@ $ui_theme = current_ui_theme();
                                 <?php echo htmlspecialchars(ticket_status_label($st)); ?>
                             </span>
                         </span>
+                        <span class="tickets-col-reg"><?php echo htmlspecialchars($regLabel); ?></span>
+                        <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
                         <span class="tickets-col-confirm">
                             <?php if ($needsConfirm) { ?>
                             <form class="confirm-form" action="../logic/ticket_confirm_mngmnt.php" method="post">
@@ -333,6 +346,7 @@ $ui_theme = current_ui_theme();
                 $history_title = 'Ticket History';
                 $history_subtitle = 'Resolved and archived tickets';
                 $history_show_satisfaction = $has_satisfaction;
+                $history_show_times = true;
                 $history_rating_labels = $rating_labels;
                 include __DIR__ . '/partials/ticket_history_list.php';
                 ?>

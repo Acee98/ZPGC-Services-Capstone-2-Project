@@ -30,6 +30,7 @@ body {
     --ui-surface: #fff;
     --ui-page: #ebebeb;
     --ui-pad-x: 16px;
+    --zpgc-table-max-h: min(48vh, 420px);
 }
 
 a {
@@ -731,6 +732,7 @@ body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row
     min-height: 0;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
 }
 
 .tickets-empty-state {
@@ -1208,6 +1210,19 @@ body[data-page="utilities"] .tickets-toolbar {
     grid-template-columns: 72px 90px minmax(0, 1.2fr) minmax(0, 1.6fr) 110px minmax(140px, 1fr) 48px;
     column-gap: 10px;
     align-items: center;
+}
+.tickets-list-user--times .tickets-list-header,
+.tickets-list-user--times .ticket-row {
+    grid-template-columns: 56px 80px minmax(90px, 1fr) minmax(100px, 1.15fr) 100px 140px 120px minmax(120px, 0.9fr) 44px;
+}
+.tickets-list-user--times .tickets-col-reg,
+.tickets-list-user--times .tickets-col-resolution {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
 }
 .tickets-list-user--actions .tickets-col-delete {
     display: flex;
@@ -2911,20 +2926,33 @@ body[data-page="utilities"] .showcase #page-utilities {
     flex: none;
     min-height: auto;
 }
-body[data-page="utilities"] #page-utilities .tickets-list,
+body[data-page="utilities"] #page-utilities .tickets-list {
+    flex: 0 1 auto;
+    min-height: 160px;
+    max-height: var(--zpgc-table-max-h);
+    overflow: hidden;
+}
 body[data-page="utilities"] #page-utilities .tickets-list-body {
-    flex: none;
-    min-height: auto;
-    overflow: visible;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 .audit-panel {
-    display: block;
+    display: flex;
+    flex-direction: column;
     width: calc(100% - 30px);
     margin: 8px 15px 28px;
     background: #fff;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     overflow: hidden;
+    min-height: 160px;
+    max-height: var(--zpgc-table-max-h);
+}
+.audit-panel-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 .audit-panel h2 {
     margin: 0;
@@ -3200,7 +3228,26 @@ body[data-page="utilities"] #page-utilities .tickets-list-body {
 }
 
 #page-performance .tickets-list {
-    overflow-x: auto;
+    overflow: hidden;
+    max-height: var(--zpgc-table-max-h);
+    min-height: 160px;
+}
+#page-performance .tickets-list-body {
+    overflow-y: auto;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+.admin-dashboard-history-list.tickets-list,
+.role-dash-list.tickets-list {
+    max-height: var(--zpgc-table-max-h);
+    min-height: 160px;
+    overflow: hidden;
+}
+.admin-dashboard-history-list .tickets-list-body,
+.role-dash-list .tickets-list-body {
+    overflow-y: auto;
+    min-height: 0;
+    flex: 1 1 auto;
 }
 
 #page-performance .tickets-list-header,
@@ -3368,9 +3415,9 @@ body[data-page="tickets"] .main-wrap {
 /* Active list scrolls inside its box so Ticket History stays below it */
 body[data-page="tickets"] #page-tickets .tickets-list:not(.ticket-history-list) {
     flex: 0 1 auto;
-    min-height: 200px;
-    max-height: min(48vh, 480px);
-    overflow: auto;
+    min-height: 160px;
+    max-height: var(--zpgc-table-max-h);
+    overflow: hidden;
 }
 
 body[data-page="tickets"] #page-tickets .tickets-list.ticket-history-list {
@@ -3465,12 +3512,13 @@ body[data-page="messages"] .mailbox-container {
 /* Match active .tickets-list width exactly (no double gutter). */
 .ticket-history-list.tickets-list {
     flex: 0 0 auto;
-    min-height: 180px;
-    max-height: min(48vh, 420px);
+    min-height: 160px;
+    max-height: var(--zpgc-table-max-h);
     margin-left: 0 !important;
     margin-right: 0 !important;
     width: 100% !important;
     max-width: none;
+    overflow: hidden;
 }
 
 .ticket-history-list .tickets-list-header,
@@ -3527,6 +3575,42 @@ body[data-page="messages"] .mailbox-container {
         100px
         minmax(120px, 0.95fr)
         minmax(120px, 0.95fr);
+}
+
+.ticket-history-list--times .tickets-list-header,
+.ticket-history-list--times .ticket-row {
+    grid-template-columns:
+        56px
+        80px
+        minmax(100px, 1fr)
+        minmax(110px, 1.15fr)
+        100px
+        90px
+        140px
+        120px;
+}
+
+.ticket-history-list--times.ticket-history-list--satisfaction .tickets-list-header,
+.ticket-history-list--times.ticket-history-list--satisfaction .ticket-row {
+    grid-template-columns:
+        52px
+        76px
+        minmax(90px, 1fr)
+        minmax(100px, 1.1fr)
+        90px
+        84px
+        132px
+        112px
+        130px !important;
+}
+
+.ticket-history-list--times .tickets-col-reg,
+.ticket-history-list--times .tickets-col-resolution {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
 }
 
 .ticket-history-list .tickets-list-header {
@@ -4509,10 +4593,12 @@ body[data-page="messages"] .mailbox-container {
     .tickets-list-utilities,
     .admin-dashboard-history-list {
         overflow-x: auto !important;
-        overflow-y: auto !important;
+        overflow-y: hidden !important;
         -webkit-overflow-scrolling: touch;
         width: 100% !important;
         max-width: 100% !important;
+        max-height: var(--zpgc-table-max-h) !important;
+        min-height: 160px !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
         box-sizing: border-box;
@@ -4524,8 +4610,9 @@ body[data-page="messages"] .mailbox-container {
     .role-dash-list .tickets-list-body,
     .tickets-list-utilities .tickets-list-body,
     .admin-dashboard-history-list .tickets-list-body {
-        overflow: visible !important;
-        flex: 0 0 auto !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        flex: 1 1 auto !important;
         min-height: 0;
     }
 
@@ -4544,6 +4631,22 @@ body[data-page="messages"] .mailbox-container {
         width: 940px !important;
         max-width: none !important;
         box-sizing: border-box;
+    }
+
+    .tickets-list-user--times .tickets-list-header,
+    .tickets-list-user--times .ticket-row {
+        grid-template-columns:
+            52px
+            72px
+            minmax(110px, 1fr)
+            minmax(120px, 1.1fr)
+            90px
+            140px
+            120px
+            minmax(110px, 0.9fr)
+            44px !important;
+        min-width: 1180px !important;
+        width: 1180px !important;
     }
 
     .tickets-list-user--actions .tickets-list-header > span,
@@ -4657,6 +4760,37 @@ body[data-page="messages"] .mailbox-container {
             140px !important;
         min-width: 940px !important;
         width: 940px !important;
+    }
+
+    .ticket-history-list--times .tickets-list-header,
+    .ticket-history-list--times .ticket-row {
+        grid-template-columns:
+            52px
+            72px
+            minmax(100px, 1fr)
+            minmax(110px, 1.1fr)
+            90px
+            84px
+            140px
+            120px !important;
+        min-width: 1040px !important;
+        width: 1040px !important;
+    }
+
+    .ticket-history-list--times.ticket-history-list--satisfaction .tickets-list-header,
+    .ticket-history-list--times.ticket-history-list--satisfaction .ticket-row {
+        grid-template-columns:
+            48px
+            70px
+            minmax(90px, 1fr)
+            minmax(100px, 1.05fr)
+            84px
+            80px
+            132px
+            112px
+            130px !important;
+        min-width: 1180px !important;
+        width: 1180px !important;
     }
 
     .ticket-history-list--assigned .tickets-list-header,

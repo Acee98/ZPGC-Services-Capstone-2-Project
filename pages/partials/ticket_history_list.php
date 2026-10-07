@@ -2,7 +2,7 @@
 /**
  * Read-only resolved / archived ticket history.
  * Expects $history_tickets (array). Optional: $history_title, $history_empty, $history_show_assigned,
- * $history_show_satisfaction, $history_rating_labels.
+ * $history_show_satisfaction, $history_show_times, $history_rating_labels.
  */
 $history_tickets = $history_tickets ?? [];
 $history_title = $history_title ?? 'Ticket History';
@@ -10,6 +10,7 @@ $history_subtitle = $history_subtitle ?? 'Resolved and archived tickets';
 $history_empty = $history_empty ?? 'No resolved tickets in history yet.';
 $history_show_assigned = !empty($history_show_assigned);
 $history_show_satisfaction = !empty($history_show_satisfaction);
+$history_show_times = !empty($history_show_times);
 $history_rating_labels = $history_rating_labels ?? [
     5 => 'Very satisfied',
     4 => 'Satisfied',
@@ -25,7 +26,7 @@ $history_rating_labels = $history_rating_labels ?? [
             <p class="ticket-history-subtitle"><?php echo htmlspecialchars($history_subtitle); ?></p>
         </header>
     </div>
-    <div class="tickets-list ticket-history-list<?php echo $history_show_assigned ? ' ticket-history-list--assigned' : ''; ?><?php echo $history_show_satisfaction ? ' ticket-history-list--satisfaction' : ''; ?>">
+    <div class="tickets-list ticket-history-list<?php echo $history_show_assigned ? ' ticket-history-list--assigned' : ''; ?><?php echo $history_show_satisfaction ? ' ticket-history-list--satisfaction' : ''; ?><?php echo $history_show_times ? ' ticket-history-list--times' : ''; ?>">
         <div class="tickets-list-header">
             <span class="tickets-col-id">ID</span>
             <span class="tickets-col-category">Category</span>
@@ -33,6 +34,10 @@ $history_rating_labels = $history_rating_labels ?? [
             <span class="tickets-col-description">Description</span>
             <span class="tickets-col-status">Status</span>
             <span class="tickets-col-priority">Priority</span>
+            <?php if ($history_show_times) { ?>
+            <span class="tickets-col-reg">Registration Date &amp; Time</span>
+            <span class="tickets-col-resolution">Resolution Time</span>
+            <?php } ?>
             <?php if ($history_show_assigned) { ?>
             <span class="tickets-col-assigned">Assigned To</span>
             <?php } ?>
@@ -60,6 +65,12 @@ $history_rating_labels = $history_rating_labels ?? [
                 }
                 $satScore = (int) ($ticket['satisfaction'] ?? 0);
                 $satLabel = $history_rating_labels[$satScore] ?? '';
+                $regLabel = function_exists('performance_registered_label')
+                    ? performance_registered_label($ticket['created_at'] ?? null)
+                    : '—';
+                $resLabel = function_exists('performance_duration_label')
+                    ? performance_duration_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null)
+                    : '—';
             ?>
             <div class="ticket-row ticket-history-row" data-status="<?php echo htmlspecialchars($st); ?>">
                 <span class="tickets-col-id">#<?php echo (int) $ticket['id']; ?></span>
@@ -80,6 +91,10 @@ $history_rating_labels = $history_rating_labels ?? [
                     <span class="priority-badge undefined">None</span>
                     <?php } ?>
                 </span>
+                <?php if ($history_show_times) { ?>
+                <span class="tickets-col-reg"><?php echo htmlspecialchars($regLabel); ?></span>
+                <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
+                <?php } ?>
                 <?php if ($history_show_assigned) { ?>
                 <span class="tickets-col-assigned"><?php echo htmlspecialchars($assignedLabel); ?></span>
                 <?php } ?>

@@ -66,8 +66,8 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.26">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.26">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.30">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.30">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | Technician</title>
 </head>

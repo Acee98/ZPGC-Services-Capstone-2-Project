@@ -271,9 +271,9 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.28">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.28">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.28">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.30">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.30">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.30">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -852,6 +852,7 @@ $ui_theme = current_ui_theme();
                         <span>Action</span>
                         <span>Detail</span>
                     </div>
+                    <div class="audit-panel-body">
                     <?php if (empty($audit_rows)) { ?>
                     <p class="audit-empty">No admin actions recorded yet. Edit, activate, or save a ticket to add a row.</p>
                     <?php } else { foreach ($audit_rows as $log) { ?>
@@ -862,6 +863,7 @@ $ui_theme = current_ui_theme();
                         <span data-label="Detail"><?php echo htmlspecialchars((string) $log['detail']); ?></span>
                     </div>
                     <?php } } ?>
+                    </div>
                 </div>
                 <?php } ?>
             </div>
