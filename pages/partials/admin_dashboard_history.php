@@ -20,13 +20,12 @@ $tickets = $recent_tickets ?? [];
     <div class="tickets-list-body" id="admin-dashboard-history-body">
         <?php if (empty($tickets)) { ?>
             <div class="tickets-empty-state">
-                <p>No tickets submitted yet.</p>
+                <p>No resolved tickets in history yet.</p>
             </div>
         <?php } else { ?>
             <?php foreach ($tickets as $ticket) { ?>
                 <?php
                     $tid = (int) $ticket['id'];
-                    $statusKey = preg_replace('/[^a-z_]/', '', strtolower($ticket['status']));
                     $pri = trim((string) ($ticket['priority'] ?? ''));
                     $priorityKey = $pri !== '' ? preg_replace('/[^a-z]/', '', strtolower($pri)) : '';
                     $techId = (int) ($ticket['assigned_to'] ?? 0);
@@ -51,8 +50,8 @@ $tickets = $recent_tickets ?? [];
                         <?php } ?>
                     </span>
                     <span class="tcol-status">
-                        <span class="status-badge <?php echo htmlspecialchars($statusKey); ?>">
-                            <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $ticket['status']))); ?>
+                        <span class="status-badge <?php echo htmlspecialchars(ticket_status_class($ticket['status'] ?? '')); ?>">
+                            <?php echo htmlspecialchars(ticket_status_label($ticket['status'] ?? '')); ?>
                         </span>
                     </span>
                     <span class="tcol-assigned"><?php echo htmlspecialchars($assignedLabel); ?></span>

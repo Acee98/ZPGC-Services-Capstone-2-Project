@@ -172,19 +172,15 @@
     color: #fff;
 }
 
-[data-theme="dark"] .ticket-row .priority-badge {
-    background: none;
-    background-color: transparent;
-}
-
-[data-theme="dark"] .priority-badge.critical { color: #F87171; }
-[data-theme="dark"] .priority-badge.high { color: #FB923C; }
+[data-theme="dark"] .priority-badge.critical { background-color: #DC2626; color: #fff; }
+[data-theme="dark"] .priority-badge.high { background-color: #EA580C; color: #fff; }
 [data-theme="dark"] .priority-badge.moderate,
-[data-theme="dark"] .priority-badge.medium { color: #FBBF24; }
-[data-theme="dark"] .priority-badge.low { color: #4ADE80; }
+[data-theme="dark"] .priority-badge.medium { background-color: #D97706; color: #fff; }
+[data-theme="dark"] .priority-badge.low { background-color: #15803D; color: #fff; }
 [data-theme="dark"] .priority-badge.undefined,
 [data-theme="dark"] .priority-badge.unassigned {
-    color: #9CA3AF;
+    background-color: #6B7280;
+    color: #fff;
 }
 
 [data-theme="dark"] .severity-badge.critical { background-color: #DC2626; color: #fff; }
@@ -601,8 +597,8 @@
 }
 
 [data-theme="dark"] .priority-badge.undefined {
-    background: none;
-    color: var(--theme-text-muted);
+    background-color: #6B7280;
+    color: #fff;
 }
 
 [data-theme="dark"] .severity-badge.undefined {

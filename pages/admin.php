@@ -167,18 +167,19 @@ if ($needsTickets || $needsDashboardList) {
         }
     }
 
-    if ($tab === 'tickets') {
+    if ($tab === 'tickets' || $tab === 'dashboard') {
         $historyWhere = "t.status = 'resolved'";
         if ($hasArchivedCol) {
             $historyWhere = "(t.status = 'resolved' OR t.archived_at IS NOT NULL)";
         }
+        $historyLimit = $tab === 'dashboard' ? 80 : 150;
         $historySql = "SELECT {$ticketCols}
              FROM tickets t
              INNER JOIN users u ON t.user_id = u.id
              LEFT JOIN users tech ON t.assigned_to = tech.id
              WHERE {$historyWhere}
              ORDER BY t.id DESC
-             LIMIT 150";
+             LIMIT {$historyLimit}";
         $history_result = $conn->query($historySql);
         if ($history_result) {
             while ($row = $history_result->fetch_assoc()) {
@@ -270,9 +271,9 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.25">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.25">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.25">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.26">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.26">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.26">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -398,7 +399,7 @@ $ui_theme = current_ui_theme();
         </header>
         <div class="sidebar-spacer"></div>
         <section class="showcase">
-            <div class="page-content" id="page-dashboard">
+            <div class="page-content admin-dashboard-page" id="page-dashboard">
                 <div class="head">
                     <header>
                         <h1>Dashboard</h1>

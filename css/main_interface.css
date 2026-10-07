@@ -1342,30 +1342,25 @@ body[data-page="utilities"] .tickets-toolbar {
 .status-badge.inactive-account { background-color: #6B7280; }
 
 .ticket-row .status-badge { color: #fff; }
-.ticket-row .priority-badge {
-    background: none;
-    background-color: transparent;
-}
 
 .priority-badge {
     display: inline-block;
-    padding: 0;
-    border-radius: 0;
+    padding: 3px 10px;
+    border-radius: 12px;
     font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    background: none;
-    background-color: transparent;
+    font-weight: 600;
+    color: #fff;
     white-space: nowrap;
 }
-.priority-badge.critical { color: #DC2626; }
-.priority-badge.high { color: #EA580C; }
+.priority-badge.critical { background-color: #DC2626; color: #fff; }
+.priority-badge.high { background-color: #EA580C; color: #fff; }
 .priority-badge.moderate,
-.priority-badge.medium { color: #CA8A04; }
-.priority-badge.low { color: #1D4ED8; }
+.priority-badge.medium { background-color: #D97706; color: #fff; }
+.priority-badge.low { background-color: #15803D; color: #fff; }
 .priority-badge.undefined,
 .priority-badge.unassigned {
-    color: #9CA3AF;
+    background-color: #6B7280;
+    color: #fff;
     font-weight: 600;
 }
 

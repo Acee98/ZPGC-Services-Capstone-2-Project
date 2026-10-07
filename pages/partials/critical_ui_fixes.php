@@ -143,18 +143,13 @@ html[data-theme="dark"] .priority-queue-head h2 {
     color: #f2f2f7 !important;
 }
 
-html[data-theme="dark"] .priority-badge,
-html[data-theme="dark"] .ticket-row .priority-badge {
-    background: none !important;
-    background-color: transparent !important;
-}
-html[data-theme="dark"] .priority-badge.critical { color: #F87171 !important; }
-html[data-theme="dark"] .priority-badge.high { color: #FB923C !important; }
+html[data-theme="dark"] .priority-badge.critical { background-color: #DC2626 !important; color: #fff !important; }
+html[data-theme="dark"] .priority-badge.high { background-color: #EA580C !important; color: #fff !important; }
 html[data-theme="dark"] .priority-badge.moderate,
-html[data-theme="dark"] .priority-badge.medium { color: #FBBF24 !important; }
-html[data-theme="dark"] .priority-badge.low { color: #4ADE80 !important; }
+html[data-theme="dark"] .priority-badge.medium { background-color: #D97706 !important; color: #fff !important; }
+html[data-theme="dark"] .priority-badge.low { background-color: #15803D !important; color: #fff !important; }
 html[data-theme="dark"] .priority-badge.undefined,
-html[data-theme="dark"] .priority-badge.unassigned { color: #9CA3AF !important; }
+html[data-theme="dark"] .priority-badge.unassigned { background-color: #6B7280 !important; color: #fff !important; }
 
 html[data-theme="dark"] .severity-badge.critical { background-color: #DC2626 !important; color: #fff !important; }
 html[data-theme="dark"] .severity-badge.high { background-color: #EA580C !important; color: #fff !important; }
