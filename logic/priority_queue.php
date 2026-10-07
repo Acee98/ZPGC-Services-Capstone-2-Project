@@ -81,6 +81,7 @@ if (!function_exists('priority_queue_base_slots')) {
                 'limit' => $baseLimit + $borrowed,
                 'borrowed' => $borrowed,
                 'waiting' => (int) ($active[$tierKey] ?? 0),
+                'unassigned' => (int) ($active[$tierKey . '_unassigned'] ?? 0),
                 'batch_name' => $meta['batch_name'],
                 'priority_label' => $meta['priority_label'],
                 'tier_key' => $tierKey,
@@ -121,6 +122,16 @@ if (!function_exists('priority_queue_base_slots')) {
     {
         $base = priority_queue_base_slots();
         $active = priority_queue_active_counts($conn);
+        $open = priority_queue_open_tickets($conn);
+        foreach (priority_queue_tier_keys() as $tierKey) {
+            $unassignedN = 0;
+            foreach ($open[$tierKey] as $ticket) {
+                if ((int) $ticket['assigned_to'] <= 0) {
+                    $unassignedN++;
+                }
+            }
+            $active[$tierKey . '_unassigned'] = $unassignedN;
+        }
         $bands = priority_queue_build_bands($active, $base);
         $activeTotal = $active['critical'] + $active['moderate'] + $active['low'];
         $batchTotal = 0;
@@ -138,12 +149,11 @@ if (!function_exists('priority_queue_base_slots')) {
     }
 
     /**
-     * Oldest-first ticket ids that occupy the current 9-seat batch
-     * (Table 7: 3 per tier, unused seats borrowed Critical → Moderate → Low).
+     * Unresolved tickets grouped by priority, oldest id first.
      *
-     * @return list<array{id:int,subject:string,assigned_to:int,priority:string}>
+     * @return array{critical:list<array>,moderate:list<array>,low:list<array>}
      */
-    function priority_queue_batch_tickets(mysqli $conn)
+    function priority_queue_open_tickets(mysqli $conn)
     {
         $grouped = ['critical' => [], 'moderate' => [], 'low' => []];
         $sql = "SELECT id, subject, assigned_to, priority
@@ -162,6 +172,18 @@ if (!function_exists('priority_queue_base_slots')) {
                 ];
             }
         }
+        return $grouped;
+    }
+
+    /**
+     * Oldest-first ticket ids that occupy the current 9-seat batch
+     * (Table 7: 3 per tier, unused seats borrowed Critical → Moderate → Low).
+     *
+     * @return list<array{id:int,subject:string,assigned_to:int,priority:string}>
+     */
+    function priority_queue_batch_tickets(mysqli $conn)
+    {
+        $grouped = priority_queue_open_tickets($conn);
         $counts = [
             'critical' => count($grouped['critical']),
             'moderate' => count($grouped['moderate']),
@@ -180,18 +202,67 @@ if (!function_exists('priority_queue_base_slots')) {
     }
 
     /**
-     * Assign a technician to any unassigned ticket that now holds a queue seat.
+     * Assign technicians to unassigned tickets that now fit in a free queue seat.
+     * Uses assigned-count vs Table 7 take[], not "oldest overall", so older
+     * already-assigned tickets do not block newer waiters from a newly freed seat.
      *
      * @return list<array{ticket_id:int,tech_id:int,subject:string}>
      */
     function priority_queue_assign_open_seats(mysqli $conn, $notify = false)
     {
         require_once __DIR__ . '/ticket_assign.php';
-        $promoted = [];
-        foreach (priority_queue_batch_tickets($conn) as $ticket) {
-            if ((int) $ticket['assigned_to'] > 0) {
-                continue;
+        $grouped = priority_queue_open_tickets($conn);
+        $assigned = ['critical' => [], 'moderate' => [], 'low' => []];
+        $unassigned = ['critical' => [], 'moderate' => [], 'low' => []];
+        $counts = ['critical' => 0, 'moderate' => 0, 'low' => 0];
+        foreach (priority_queue_tier_keys() as $key) {
+            foreach ($grouped[$key] as $ticket) {
+                $counts[$key]++;
+                if ((int) $ticket['assigned_to'] > 0) {
+                    $assigned[$key][] = $ticket;
+                } else {
+                    $unassigned[$key][] = $ticket;
+                }
             }
+        }
+        $alloc = priority_queue_allocate($counts);
+        $queue = [];
+        foreach (priority_queue_tier_keys() as $key) {
+            $want = (int) ($alloc['take'][$key] ?? 0);
+            // Only the 3 base seats are treated as occupied by people already
+            // assigned. Borrowed seats go to the oldest unassigned waiter so
+            // overflow from the old assign-everyone path cannot block them.
+            $occupy = min(count($assigned[$key]), 3);
+            $need = max(0, $want - $occupy);
+            foreach (array_slice($unassigned[$key], 0, $need) as $ticket) {
+                $queue[] = $ticket;
+            }
+        }
+        $assignedTotal = count($assigned['critical']) + count($assigned['moderate']) + count($assigned['low']);
+        $queuedIds = [];
+        foreach ($queue as $ticket) {
+            $queuedIds[(int) $ticket['id']] = true;
+        }
+        $free = max(0, 9 - $assignedTotal - count($queue));
+        if ($free > 0) {
+            foreach (priority_queue_tier_keys() as $key) {
+                foreach ($unassigned[$key] as $ticket) {
+                    if ($free <= 0) {
+                        break 2;
+                    }
+                    $id = (int) $ticket['id'];
+                    if (isset($queuedIds[$id])) {
+                        continue;
+                    }
+                    $queue[] = $ticket;
+                    $queuedIds[$id] = true;
+                    $free--;
+                }
+            }
+        }
+
+        $promoted = [];
+        foreach ($queue as $ticket) {
             $techId = ticket_auto_assign($conn, (int) $ticket['id'], 'ongoing');
             if (!$techId) {
                 continue;

@@ -163,7 +163,7 @@ if (!function_exists('ticket_has_column')) {
     {
         $ticket_id = (int) $ticket_id;
         if ($ticket_id <= 0) {
-            return;
+            return [];
         }
         if (ticket_has_column($conn, 'resolved_at')) {
             $stmt = $conn->prepare(
@@ -177,6 +177,7 @@ if (!function_exists('ticket_has_column')) {
             // Soft-archive so active queues stay clean.
             ticket_mark_archived($conn, $ticket_id);
         }
+        $promoted = [];
         $pq = __DIR__ . '/priority_queue.php';
         if (is_file($pq)) {
             require_once $pq;
@@ -185,9 +186,10 @@ if (!function_exists('ticket_has_column')) {
                 if (is_file($mail)) {
                     require_once $mail;
                 }
-                priority_queue_assign_open_seats($conn, true);
+                $promoted = priority_queue_assign_open_seats($conn, true);
             }
         }
+        return $promoted;
     }
 
     /**

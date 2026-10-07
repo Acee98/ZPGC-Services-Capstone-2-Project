@@ -85,9 +85,16 @@ if (isset($_POST['save_ticket'])) {
             $clear->close();
         }
     }
+    $promoted = [];
     if ($status === 'resolved') {
         // Defer soft-archive so the reporter can still submit CSAT (History / Rate visit).
-        ticket_mark_resolved($conn, $ticket_id, false);
+        $promoted = ticket_mark_resolved($conn, $ticket_id, false);
+        if (!is_array($promoted)) {
+            $promoted = [];
+        }
+    } else {
+        require_once __DIR__ . '/priority_queue.php';
+        $promoted = priority_queue_assign_open_seats($conn, true);
     }
     audit_write($conn, 'save_ticket', $ticket_id, 'Saved ticket #' . $ticket_id . ' status ' . $status . '.');
 
@@ -119,6 +126,13 @@ if (isset($_POST['save_ticket'])) {
     }
 
     $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id . ' saved.';
+    if (is_array($promoted) && $promoted !== []) {
+        $ids = array_map(static function ($job) {
+            return '#' . (int) $job['ticket_id'];
+        }, $promoted);
+        $_SESSION['ticket_flash'] .= ' Waiting ticket ' . implode(', ', $ids)
+            . ' assigned into a free Priority Queue seat.';
+    }
 }
 
 header('Location: ../pages/admin.php?tab=tickets');
