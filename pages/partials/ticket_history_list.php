@@ -78,8 +78,12 @@ $history_rating_labels = $history_rating_labels ?? [
                     ? performance_duration_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null)
                     : '—';
                 $queueLabel = function_exists('ticket_queue_timer_label')
-                    ? ticket_queue_timer_label($ticket['created_at'] ?? null, $ticket['responded_at'] ?? null, false)
-                    : '—';
+                    ? ticket_queue_timer_label(
+                        $ticket['created_at'] ?? null,
+                        $ticket['resolved_at'] ?? $ticket['responded_at'] ?? null,
+                        false
+                    )
+                    : '00:00:00';
             ?>
             <div class="ticket-row ticket-history-row" data-status="<?php echo htmlspecialchars($st); ?>">
                 <span class="tickets-col-id">#<?php echo (int) $ticket['id']; ?></span>

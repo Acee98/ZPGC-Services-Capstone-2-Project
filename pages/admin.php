@@ -281,9 +281,9 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.31">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.31">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.31">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.32">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.32">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.32">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -305,9 +305,9 @@ $ui_theme = current_ui_theme();
             body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header,
             body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row:not(.ticket-row-filtered-out) {
                 display: grid !important;
-                grid-template-columns: 52px 70px minmax(90px, 1fr) minmax(100px, 1.1fr) 110px 96px minmax(110px, 0.95fr) 132px 110px 110px 72px !important;
-                min-width: 1380px !important;
-                width: 1380px !important;
+                grid-template-columns: 52px 70px minmax(90px, 1fr) minmax(100px, 1.1fr) 110px 96px minmax(110px, 0.95fr) 158px 88px 120px 72px !important;
+                min-width: 1420px !important;
+                width: 1420px !important;
                 max-width: none !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
@@ -499,8 +499,12 @@ $ui_theme = current_ui_theme();
                                 }
                             }
                             $regLabel = performance_registered_label($ticket['created_at'] ?? null);
-                            $queueLive = ticket_queue_timer_is_live($ticket['responded_at'] ?? null) && $st !== 'resolved';
-                            $queueLabel = ticket_queue_timer_label($ticket['created_at'] ?? null, $ticket['responded_at'] ?? null, $queueLive);
+                            $queueLive = ticket_queue_timer_is_live($st);
+                            $queueLabel = ticket_queue_timer_label(
+                                $ticket['created_at'] ?? null,
+                                $queueLive ? null : ($ticket['resolved_at'] ?? $ticket['responded_at'] ?? null),
+                                $queueLive
+                            );
                             $queueStart = strtotime((string) ($ticket['created_at'] ?? '')) ?: 0;
                             $resLabel = performance_duration_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null);
                             $queueAttr = ($queueLive && $queueStart > 0) ? ' data-queue-start="' . (int) $queueStart . '"' : '';
@@ -989,7 +993,7 @@ $ui_theme = current_ui_theme();
     </script>
     <script src="../js/lazy_load.js?v=1.6.27"></script>
     <script src="../js/utilities_filter.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.26" defer></script>
+    <script src="../js/behavior.js?v=1.6.27" defer></script>
     <!-- chart.umd.js, dashboard charts, tickets/utilities filters: lazy-loaded per tab via lazy_load.js -->
 </body>
 

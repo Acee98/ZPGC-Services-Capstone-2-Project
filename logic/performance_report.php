@@ -40,25 +40,44 @@ if (!function_exists('performance_duration_label')) {
         return date('m/d/Y (H:i)', $ts);
     }
 
-    /**
-     * Time spent waiting in the queue: created → assigned (responded_at).
-     * If not assigned yet, elapsed time until now (live).
-     */
-    function ticket_queue_timer_label($createdAt, $respondedAt = null, $allowLive = true)
+    function ticket_clock_label($from, $to = null)
     {
-        $end = $respondedAt;
-        if ($end === null || trim((string) $end) === '') {
-            if (!$allowLive) {
-                return '—';
-            }
-            $end = date('Y-m-d H:i:s');
+        $start = strtotime((string) $from);
+        if ($start === false) {
+            return '00:00:00';
         }
-        return performance_duration_label($createdAt, $end);
+        if ($to === null || trim((string) $to) === '') {
+            $end = time();
+        } else {
+            $end = strtotime((string) $to);
+            if ($end === false) {
+                $end = time();
+            }
+        }
+        $seconds = max(0, $end - $start);
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+        $secs = $seconds % 60;
+        return sprintf('%02d:%02d:%02d', $hours, $minutes, $secs);
     }
 
-    function ticket_queue_timer_is_live($respondedAt)
+    /**
+     * Queue stopwatch: created → now while open, or created → freezeAt when closed.
+     */
+    function ticket_queue_timer_label($createdAt, $freezeAt = null, $allowLive = true)
     {
-        return $respondedAt === null || trim((string) $respondedAt) === '';
+        if ($allowLive && ($freezeAt === null || trim((string) $freezeAt) === '')) {
+            return ticket_clock_label($createdAt, null);
+        }
+        if ($freezeAt === null || trim((string) $freezeAt) === '') {
+            return '00:00:00';
+        }
+        return ticket_clock_label($createdAt, $freezeAt);
+    }
+
+    function ticket_queue_timer_is_live($status)
+    {
+        return strtolower(trim((string) $status)) !== 'resolved';
     }
 
     function performance_category_rows(mysqli $conn, $assignedTo = 0)

@@ -98,8 +98,8 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.31">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.31">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.32">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.32">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | User</title>
 </head>
@@ -436,7 +436,7 @@ $ui_theme = current_ui_theme();
     </div>
     <?php } ?>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.26" defer></script>
+    <script src="../js/behavior.js?v=1.6.27" defer></script>
 </body>
 
 </html>

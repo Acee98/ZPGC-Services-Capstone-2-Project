@@ -26,7 +26,7 @@ $dashExtraClass = ($showDashQueue ? ' role-dash-list--queue' : '') . ($showDashT
     </div>
     <?php } ?>
 </div>
-<div class="tickets-list role-dash-list<?php echo $showCategory ? ' role-dash-list--category' : ''; ?><?php echo $dashExtraClass; ?>">
+<div class="tickets-list role-dash-list<?php echo $showCategory ? ' role-dash-list--category' : ''; ?>">
     <div class="tickets-list-header">
         <span class="tickets-col-id">ID</span>
         <?php if ($showCategory) { ?>
@@ -61,11 +61,14 @@ $dashExtraClass = ($showDashQueue ? ' role-dash-list--queue' : '') . ($showDashT
                 ? performance_duration_label($row['created_at'] ?? null, $row['resolved_at'] ?? null)
                 : '—';
             $queueLive = function_exists('ticket_queue_timer_is_live')
-                && ticket_queue_timer_is_live($row['responded_at'] ?? null)
-                && $st !== 'resolved';
+                && ticket_queue_timer_is_live($st);
             $queueLabel = function_exists('ticket_queue_timer_label')
-                ? ticket_queue_timer_label($row['created_at'] ?? null, $row['responded_at'] ?? null, $queueLive)
-                : '—';
+                ? ticket_queue_timer_label(
+                    $row['created_at'] ?? null,
+                    $queueLive ? null : ($row['resolved_at'] ?? $row['responded_at'] ?? null),
+                    $queueLive
+                )
+                : '00:00:00';
             $queueStart = strtotime((string) ($row['created_at'] ?? '')) ?: 0;
         ?>
         <div class="ticket-row">

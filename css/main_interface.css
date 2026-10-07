@@ -658,9 +658,9 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
         110px
         96px
         minmax(110px, 0.95fr)
-        132px
-        110px
-        110px
+        158px
+        88px
+        120px
         72px;
 }
 .tickets-list-admin-five--times .tickets-col-reg,
@@ -671,7 +671,12 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 12px;
+    font-size: 13px;
+}
+.tickets-col-queue {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    letter-spacing: 0.02em;
 }
 
 .tickets-list-admin-five .tickets-list-header {
@@ -3491,16 +3496,20 @@ body[data-page="tickets"] .main-wrap {
 }
 
 /* Active list scrolls inside its box so Ticket History stays below it */
-body[data-page="tickets"] #page-tickets .tickets-list:not(.ticket-history-list) {
+body[data-page="tickets"] #page-tickets .tickets-list:not(.ticket-history-list):not(.tickets-list-admin-five) {
     flex: 0 1 auto;
     min-height: 160px;
     max-height: var(--zpgc-table-max-h);
     overflow: hidden;
 }
 
+body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin-five,
 body[data-page="tickets"] #page-tickets .tickets-list.ticket-history-list {
     flex: 0 0 auto;
-    min-height: 160px;
+    height: var(--zpgc-table-max-h);
+    min-height: var(--zpgc-table-max-h);
+    max-height: var(--zpgc-table-max-h);
+    overflow: hidden;
 }
 
 body[data-page="tickets"] #page-tickets .tickets-list-body {

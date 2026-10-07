@@ -773,20 +773,14 @@ function initTicketSelectTones() {
 }
 
 function zpgcFormatQueueDuration(seconds) {
-    if (seconds < 60) {
-        return "Under 1 minute";
+    seconds = Math.max(0, Math.floor(seconds));
+    var hours = Math.floor(seconds / 3600);
+    var minutes = Math.floor((seconds % 3600) / 60);
+    var secs = seconds % 60;
+    function pad(n) {
+        return n < 10 ? "0" + n : String(n);
     }
-    var minutes = Math.round(seconds / 60);
-    if (minutes < 60) {
-        return minutes + (minutes === 1 ? " Minute" : " Minutes");
-    }
-    var hours = Math.floor(minutes / 60);
-    var remain = minutes % 60;
-    var hourLabel = hours + (hours === 1 ? " Hour" : " Hours");
-    if (remain === 0) {
-        return hourLabel;
-    }
-    return hourLabel + " " + remain + " min";
+    return pad(hours) + ":" + pad(minutes) + ":" + pad(secs);
 }
 
 function initQueueTimers() {
@@ -805,7 +799,7 @@ function initQueueTimers() {
         });
     }
     tick();
-    setInterval(tick, 30000);
+    setInterval(tick, 1000);
 }
 
 document.addEventListener("DOMContentLoaded", function() {
