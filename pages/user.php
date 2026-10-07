@@ -243,7 +243,7 @@ $ui_theme = current_ui_theme();
                         $needsConfirm = ticket_awaiting_confirmation($st);
                         $guidance = trim((string) ($ticket['ai_guidance'] ?? ''));
                         $unassigned = empty($ticket['assigned_to']);
-                        $showSelfHelp = ($guidance !== '' && $unassigned && $st !== 'resolved');
+                        $showSelfHelp = ($guidance !== '' && $st !== 'resolved');
                     ?>
                     <div class="ticket-row" data-status="<?php echo htmlspecialchars($st); ?>">
                         <span class="tickets-col-id">#
@@ -263,6 +263,7 @@ $ui_theme = current_ui_theme();
                                         These steps worked
                                     </button>
                                 </form>
+                                <?php if ($unassigned) { ?>
                                 <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
 <?php echo zpgc_csrf_field(); ?>
                                     <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
@@ -270,6 +271,7 @@ $ui_theme = current_ui_theme();
                                         Still not fixed — Request Technician
                                     </button>
                                 </form>
+                                <?php } ?>
                             </details>
                             <?php } elseif ($unassigned && ($ticket['priority'] ?? '') === 'low' && $st !== 'resolved') { ?>
                             <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">

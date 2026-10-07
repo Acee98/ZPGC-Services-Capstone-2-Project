@@ -34,12 +34,6 @@ if (!$row) {
     exit();
 }
 
-if (!empty($row['assigned_to'])) {
-    $_SESSION['confirm_success'] = 'A technician is already assigned to this ticket.';
-    header('Location: ../pages/user.php?tab=tickets');
-    exit();
-}
-
 if (($row['status'] ?? '') === 'resolved') {
     $_SESSION['confirm_error'] = 'This ticket is already resolved.';
     header('Location: ../pages/user.php?tab=tickets');
@@ -49,15 +43,21 @@ if (($row['status'] ?? '') === 'resolved') {
 if (isset($_POST['self_help_solved'])) {
     $resolved = 'resolved';
     $upd = $conn->prepare(
-        'UPDATE tickets SET status = ? WHERE id = ? AND user_id = ? AND (assigned_to IS NULL OR assigned_to = 0)'
+        'UPDATE tickets SET status = ? WHERE id = ? AND user_id = ? AND status <> ?'
     );
-    $upd->bind_param('sii', $resolved, $ticket_id, $user_id);
+    $upd->bind_param('siis', $resolved, $ticket_id, $user_id, $resolved);
     $upd->execute();
     $upd->close();
     // Defer soft-archive until CSAT is submitted (same path as confirm Solved).
     ticket_mark_resolved($conn, $ticket_id, false);
     $_SESSION['rate_ticket_id'] = $ticket_id;
     $_SESSION['confirm_success'] = 'Ticket #' . $ticket_id . ' marked resolved from the troubleshooting steps. Please rate this visit.';
+    header('Location: ../pages/user.php?tab=tickets');
+    exit();
+}
+
+if (!empty($row['assigned_to'])) {
+    $_SESSION['confirm_success'] = 'A technician is already assigned to this ticket.';
     header('Location: ../pages/user.php?tab=tickets');
     exit();
 }

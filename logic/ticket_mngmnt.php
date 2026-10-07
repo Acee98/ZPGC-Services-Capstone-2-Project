@@ -144,81 +144,45 @@ if (isset($_POST['submit-ticket'])) {
             $scoreNote .= ', escalated';
         }
 
-        if ($priority === 'low') {
+        if ($priority === 'low' && $hasGuidance) {
             $tips = ai_troubleshoot_ticket($subject, $description, $category, 'low');
-            if ($tips['ok'] && $hasGuidance) {
+            if ($tips['ok']) {
                 $guidance = (string) $tips['guidance_text'];
-                if ($hasMethod) {
-                    $upd = $conn->prepare(
-                        'UPDATE tickets SET ai_guidance = ?, ai_method = ?, status = ? WHERE id = ?'
-                    );
-                    $pending = 'pending';
-                    $upd->bind_param('sssi', $guidance, $aiMethod, $pending, $ticket_id);
-                } else {
-                    $upd = $conn->prepare(
-                        'UPDATE tickets SET ai_guidance = ?, status = ? WHERE id = ?'
-                    );
-                    $pending = 'pending';
-                    $upd->bind_param('ssi', $guidance, $pending, $ticket_id);
-                }
+                $upd = $conn->prepare('UPDATE tickets SET ai_guidance = ? WHERE id = ?');
+                $upd->bind_param('si', $guidance, $ticket_id);
                 $upd->execute();
                 $upd->close();
-                $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id
-                    . ' submitted as Low (' . $scoreNote . '). Try the troubleshooting steps first. '
-                    . 'If they do not help, request a technician.';
-                $mailJobs[] = [
-                    $user_id,
-                    'Ticket #' . $ticket_id . ' received',
-                    "Your ticket #{$ticket_id} was submitted as Low ({$scoreNote}).\nSubject: {$subject}\nTry the troubleshooting steps in ZPGC Services first.",
-                ];
-            } else {
-                $tech = ticket_auto_assign($conn, $ticket_id, 'ongoing');
-                $_SESSION['ticket_flash'] = $tech
-                    ? ('Ticket #' . $ticket_id . ' is Low (' . $scoreNote . ') but tips were unavailable, so a technician was assigned.')
-                    : ('Ticket #' . $ticket_id . ' submitted as Low (' . $scoreNote . '). No technician is available yet.');
-                $mailJobs[] = [
-                    $user_id,
-                    'Ticket #' . $ticket_id . ' received',
-                    "Your ticket #{$ticket_id} was submitted as Low ({$scoreNote}).\nSubject: {$subject}",
-                ];
-                if ($tech) {
-                    $mailJobs[] = [
-                        (int) $tech,
-                        'Ticket #' . $ticket_id . ' assigned to you',
-                        "Ticket #{$ticket_id} was assigned to you.\nSubject: {$subject}",
-                    ];
-                }
             }
+        }
+        if ($hasMethod) {
+            $upd = $conn->prepare('UPDATE tickets SET ai_method = ? WHERE id = ?');
+            $upd->bind_param('si', $aiMethod, $ticket_id);
+            $upd->execute();
+            $upd->close();
+        }
+        $tech = ticket_auto_assign($conn, $ticket_id, 'ongoing');
+        if ($tech) {
+            $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id
+                . ' submitted. Priority set to ' . $priLabel
+                . ' (' . $scoreNote . ')'
+                . ' and a technician was assigned automatically.'
+                . ($priority === 'low' ? ' Troubleshooting tips are on the ticket if you want to try them first.' : '');
         } else {
-            $tech = ticket_auto_assign($conn, $ticket_id, 'ongoing');
-            if ($hasMethod) {
-                $upd = $conn->prepare('UPDATE tickets SET ai_method = ? WHERE id = ?');
-                $upd->bind_param('si', $aiMethod, $ticket_id);
-                $upd->execute();
-                $upd->close();
-            }
-            if ($tech) {
-                $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id
-                    . ' submitted. Priority set to ' . $priLabel
-                    . ' (' . $scoreNote . ')'
-                    . ' and a technician was assigned automatically.';
-            } else {
-                $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id
-                    . ' submitted with priority ' . $priLabel
-                    . ' (' . $scoreNote . '). No active technician is available yet.';
-            }
+            $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id
+                . ' submitted with priority ' . $priLabel
+                . ' (' . $scoreNote . '). No active technician is available yet.';
+        }
+        $mailJobs[] = [
+            $user_id,
+            'Ticket #' . $ticket_id . ' received',
+            "Your ticket #{$ticket_id} was submitted with priority {$priLabel} ({$scoreNote}).\nSubject: {$subject}",
+        ];
+        if ($tech) {
             $mailJobs[] = [
-                $user_id,
-                'Ticket #' . $ticket_id . ' received',
-                "Your ticket #{$ticket_id} was submitted with priority {$priLabel} ({$scoreNote}).\nSubject: {$subject}",
+                (int) $tech,
+                'Ticket #' . $ticket_id . ' assigned to you',
+                "Ticket #{$ticket_id} was assigned to you.\nSubject: {$subject}",
             ];
-            if ($tech) {
-                $mailJobs[] = [
-                    (int) $tech,
-                    'Ticket #' . $ticket_id . ' assigned to you',
-                    "Ticket #{$ticket_id} was assigned to you.\nSubject: {$subject}",
-                ];
-            }
         }
     } else {
         $_SESSION['ticket_form_error'] = 'Ticket was not created. Please try again.';
