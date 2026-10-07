@@ -74,8 +74,8 @@ $history_rating_labels = $history_rating_labels ?? [
                 $regLabel = function_exists('performance_registered_label')
                     ? performance_registered_label($ticket['created_at'] ?? null)
                     : '—';
-                $resLabel = function_exists('ticket_resolution_timer_label')
-                    ? ticket_resolution_timer_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null)
+                $resLabel = function_exists('ticket_resolution_clock_label')
+                    ? ticket_resolution_clock_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null)
                     : '—';
                 $queueLabel = function_exists('ticket_queue_timer_label')
                     ? ticket_queue_timer_label(

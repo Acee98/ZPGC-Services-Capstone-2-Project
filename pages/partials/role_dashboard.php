@@ -57,8 +57,8 @@ $dashExtraClass = ($showDashQueue ? ' role-dash-list--queue' : '') . ($showDashT
             $regLabel = function_exists('performance_registered_label')
                 ? performance_registered_label($row['created_at'] ?? null)
                 : '—';
-            $resLabel = function_exists('ticket_resolution_timer_label')
-                ? ticket_resolution_timer_label($row['created_at'] ?? null, $row['resolved_at'] ?? null)
+            $resLabel = function_exists('ticket_resolution_clock_label')
+                ? ticket_resolution_clock_label($row['created_at'] ?? null, $row['resolved_at'] ?? null)
                 : '—';
             $queueLive = function_exists('ticket_queue_timer_is_live')
                 && ticket_queue_timer_is_live($st);

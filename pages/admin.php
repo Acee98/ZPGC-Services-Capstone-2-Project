@@ -282,8 +282,8 @@ $ui_theme = current_ui_theme();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
     <link rel="stylesheet" href="../css/main_interface.css?v=1.6.33">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.33">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.33">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.32">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.32">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -506,7 +506,7 @@ $ui_theme = current_ui_theme();
                                 $queueLive
                             );
                             $queueStart = strtotime((string) ($ticket['created_at'] ?? '')) ?: 0;
-                            $resLabel = ticket_resolution_timer_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null);
+                            $resLabel = ticket_resolution_clock_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null);
                             $queueAttr = ($queueLive && $queueStart > 0) ? ' data-queue-start="' . (int) $queueStart . '"' : '';
                         ?>
                         <form class="ticket-row<?php echo $needsReplace ? ' ticket-needs-replace' : ''; ?>" action="../logic/ticket_admin_mngmnt.php" method="post"
