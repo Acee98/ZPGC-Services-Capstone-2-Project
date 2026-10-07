@@ -57,7 +57,7 @@ if (isset($_POST['self_help_solved'])) {
 }
 
 if (!empty($row['assigned_to'])) {
-    $_SESSION['confirm_success'] = 'A technician is already assigned to this ticket.';
+    $_SESSION['confirm_success'] = 'Still not fixed — a technician already has ticket #' . $ticket_id . ' and will follow up.';
     header('Location: ../pages/user.php?tab=tickets');
     exit();
 }

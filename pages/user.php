@@ -91,8 +91,8 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.26">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.26">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.29">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.29">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | User</title>
 </head>
@@ -256,6 +256,7 @@ $ui_theme = current_ui_theme();
                             <details class="ai-selfhelp">
                                 <summary>AI troubleshooting tips</summary>
                                 <pre class="ai-selfhelp-body"><?php echo htmlspecialchars($guidance); ?></pre>
+                                <div class="ai-selfhelp-actions">
                                 <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
 <?php echo zpgc_csrf_field(); ?>
                                     <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
@@ -263,7 +264,6 @@ $ui_theme = current_ui_theme();
                                         These steps worked
                                     </button>
                                 </form>
-                                <?php if ($unassigned) { ?>
                                 <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
 <?php echo zpgc_csrf_field(); ?>
                                     <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
@@ -271,7 +271,7 @@ $ui_theme = current_ui_theme();
                                         Still not fixed — Request Technician
                                     </button>
                                 </form>
-                                <?php } ?>
+                                </div>
                             </details>
                             <?php } elseif ($unassigned && ($ticket['priority'] ?? '') === 'low' && $st !== 'resolved') { ?>
                             <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">

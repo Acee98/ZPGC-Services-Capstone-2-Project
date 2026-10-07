@@ -698,6 +698,18 @@ html[data-theme="dark"] .tickets-list-header span {
     color: #c4c4d0 !important;
 }
 
+html[data-theme="dark"] .ai-selfhelp {
+    color: #c4c4d0;
+}
+html[data-theme="dark"] .ai-selfhelp summary {
+    color: #f2f2f7;
+}
+html[data-theme="dark"] .ai-selfhelp-body {
+    background: #2a2a32;
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #f2f2f7;
+}
+
 html[data-theme="dark"] .mailbox-search,
 html[data-theme="dark"] .mailbox-chat-input,
 html[data-theme="dark"] .showcase .head header .search-bar,

@@ -2859,8 +2859,20 @@ body[data-page="utilities"] .tickets-toolbar {
     max-height: 180px;
     overflow: auto;
 }
+.ai-selfhelp-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
 .ai-escalate-form {
-    margin-top: 6px;
+    margin-top: 0;
+    display: inline-flex;
+}
+.tickets-list-user--actions .tickets-col-subject .ai-selfhelp {
+    overflow: visible;
+    white-space: normal;
 }
 .btn-request-tech {
     border: none;
