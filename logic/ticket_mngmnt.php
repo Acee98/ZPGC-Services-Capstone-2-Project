@@ -3,6 +3,7 @@ require_once 'session_config.php';
 require_once 'config.php';
 require_once 'ai_classify.php';
 require_once 'ticket_assign.php';
+require_once 'priority_queue.php';
 require_once 'severity_matrix.php';
 require_once 'ticket_subjects.php';
 require_once 'auth_mail.php';
@@ -160,7 +161,18 @@ if (isset($_POST['submit-ticket'])) {
             $upd->execute();
             $upd->close();
         }
-        $tech = ticket_auto_assign($conn, $ticket_id, 'ongoing');
+        $promoted = priority_queue_assign_open_seats($conn, false);
+        $tech = 0;
+        foreach ($promoted as $job) {
+            if ((int) $job['ticket_id'] === $ticket_id) {
+                $tech = (int) $job['tech_id'];
+            }
+            $mailJobs[] = [
+                (int) $job['tech_id'],
+                'Ticket #' . (int) $job['ticket_id'] . ' assigned to you',
+                "Ticket #{$job['ticket_id']} was assigned to you.\nSubject: {$job['subject']}",
+            ];
+        }
         if ($tech) {
             $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id
                 . ' submitted. Priority set to ' . $priLabel
@@ -168,22 +180,28 @@ if (isset($_POST['submit-ticket'])) {
                 . ' and a technician was assigned automatically.'
                 . ($priority === 'low' ? ' Troubleshooting tips are on the ticket if you want to try them first.' : '');
         } else {
-            $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id
-                . ' submitted with priority ' . $priLabel
-                . ' (' . $scoreNote . '). No active technician is available yet.';
+            $inBatch = false;
+            foreach (priority_queue_batch_tickets($conn) as $seat) {
+                if ((int) $seat['id'] === $ticket_id) {
+                    $inBatch = true;
+                    break;
+                }
+            }
+            if ($inBatch) {
+                $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id
+                    . ' submitted with priority ' . $priLabel
+                    . ' (' . $scoreNote . '). No active technician is available yet.';
+            } else {
+                $_SESSION['ticket_flash'] = 'Ticket #' . $ticket_id
+                    . ' submitted with priority ' . $priLabel
+                    . ' (' . $scoreNote . '). The Priority Queue batch is full, so this ticket will be assigned automatically when a seat opens.';
+            }
         }
         $mailJobs[] = [
             $user_id,
             'Ticket #' . $ticket_id . ' received',
             "Your ticket #{$ticket_id} was submitted with priority {$priLabel} ({$scoreNote}).\nSubject: {$subject}",
         ];
-        if ($tech) {
-            $mailJobs[] = [
-                (int) $tech,
-                'Ticket #' . $ticket_id . ' assigned to you',
-                "Ticket #{$ticket_id} was assigned to you.\nSubject: {$subject}",
-            ];
-        }
     } else {
         $_SESSION['ticket_form_error'] = 'Ticket was not created. Please try again.';
         $_SESSION['ticket_form_old'] = [

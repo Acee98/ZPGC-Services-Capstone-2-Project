@@ -177,6 +177,17 @@ if (!function_exists('ticket_has_column')) {
             // Soft-archive so active queues stay clean.
             ticket_mark_archived($conn, $ticket_id);
         }
+        $pq = __DIR__ . '/priority_queue.php';
+        if (is_file($pq)) {
+            require_once $pq;
+            if (function_exists('priority_queue_assign_open_seats')) {
+                $mail = __DIR__ . '/auth_mail.php';
+                if (is_file($mail)) {
+                    require_once $mail;
+                }
+                priority_queue_assign_open_seats($conn, true);
+            }
+        }
     }
 
     /**

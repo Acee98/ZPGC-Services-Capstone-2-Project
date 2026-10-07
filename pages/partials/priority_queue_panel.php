@@ -21,6 +21,7 @@ $tierKeys = ['critical', 'moderate', 'low'];
                 $priorityLabel = $band['priority_label'] ?? priority_queue_tier_meta($tierKey)['priority_label'];
                 $used = (int) ($band['used'] ?? 0);
                 $limit = (int) ($band['limit'] ?? 3);
+                $overflow = max(0, (int) ($band['waiting'] ?? 0) - $used);
                 $borrowed = (int) ($band['borrowed'] ?? max(0, $used - $limit));
                 $pct = $limit > 0 ? min(100, (int) round(($used / $limit) * 100)) : 0;
                 $fullClass = $used >= $limit ? ' is-full' : '';
@@ -32,6 +33,9 @@ $tierKeys = ['critical', 'moderate', 'low'];
                     <?php echo $used; ?> / <?php echo $limit; ?>
                     <?php if ($borrowed > 0) { ?>
                         <span class="priority-queue-borrowed-tag">(+<?php echo $borrowed; ?> borrowed)</span>
+                    <?php } ?>
+                    <?php if ($overflow > 0) { ?>
+                        <span class="priority-queue-borrow-hint"><?php echo $overflow; ?> waiting</span>
                     <?php } ?>
                 </span>
                 <div class="priority-queue-bar" role="presentation">

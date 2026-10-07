@@ -136,4 +136,82 @@ if (!function_exists('priority_queue_base_slots')) {
             'borrow_l' => (int) ($bands['low']['borrowed'] ?? 0),
         ];
     }
+
+    /**
+     * Oldest-first ticket ids that occupy the current 9-seat batch
+     * (Table 7: 3 per tier, unused seats borrowed Critical → Moderate → Low).
+     *
+     * @return list<array{id:int,subject:string,assigned_to:int,priority:string}>
+     */
+    function priority_queue_batch_tickets(mysqli $conn)
+    {
+        $grouped = ['critical' => [], 'moderate' => [], 'low' => []];
+        $sql = "SELECT id, subject, assigned_to, priority
+                FROM tickets
+                WHERE status <> 'resolved'
+                ORDER BY id ASC";
+        $result = $conn->query($sql);
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $sev = priority_queue_normalize_priority($row['priority'] ?? '');
+                $grouped[$sev][] = [
+                    'id' => (int) $row['id'],
+                    'subject' => (string) ($row['subject'] ?? ''),
+                    'assigned_to' => (int) ($row['assigned_to'] ?? 0),
+                    'priority' => $sev,
+                ];
+            }
+        }
+        $counts = [
+            'critical' => count($grouped['critical']),
+            'moderate' => count($grouped['moderate']),
+            'low' => count($grouped['low']),
+        ];
+        $alloc = priority_queue_allocate($counts);
+        $batch = [];
+        foreach (priority_queue_tier_keys() as $key) {
+            $take = (int) ($alloc['take'][$key] ?? 0);
+            if ($take <= 0) {
+                continue;
+            }
+            $batch = array_merge($batch, array_slice($grouped[$key], 0, $take));
+        }
+        return $batch;
+    }
+
+    /**
+     * Assign a technician to any unassigned ticket that now holds a queue seat.
+     *
+     * @return list<array{ticket_id:int,tech_id:int,subject:string}>
+     */
+    function priority_queue_assign_open_seats(mysqli $conn, $notify = false)
+    {
+        require_once __DIR__ . '/ticket_assign.php';
+        $promoted = [];
+        foreach (priority_queue_batch_tickets($conn) as $ticket) {
+            if ((int) $ticket['assigned_to'] > 0) {
+                continue;
+            }
+            $techId = ticket_auto_assign($conn, (int) $ticket['id'], 'ongoing');
+            if (!$techId) {
+                continue;
+            }
+            $promoted[] = [
+                'ticket_id' => (int) $ticket['id'],
+                'tech_id' => (int) $techId,
+                'subject' => (string) $ticket['subject'],
+            ];
+        }
+        if ($notify && $promoted !== [] && function_exists('notify_user_email')) {
+            foreach ($promoted as $job) {
+                notify_user_email(
+                    $conn,
+                    (int) $job['tech_id'],
+                    'Ticket #' . $job['ticket_id'] . ' assigned to you',
+                    "A Priority Queue seat opened. Ticket #{$job['ticket_id']} was assigned to you.\nSubject: {$job['subject']}"
+                );
+            }
+        }
+        return $promoted;
+    }
 }
