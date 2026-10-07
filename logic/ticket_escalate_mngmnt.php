@@ -6,10 +6,17 @@ require_once 'ticket_assign.php';
 require_once 'ticket_times.php';
 require_once 'auth_mail.php';
 require_role('user');
+
+$ticketsHome = '../pages/user.php?tab=tickets';
+if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
+    header('Location: ' . $ticketsHome, true, 303);
+    exit();
+}
+
 zpgc_csrf_require();
 
 if (!isset($_POST['request_technician']) && !isset($_POST['self_help_solved'])) {
-    header('Location: ../pages/user.php?tab=tickets');
+    header('Location: ' . $ticketsHome, true, 303);
     exit();
 }
 
@@ -18,7 +25,7 @@ $user_id = current_user_id($conn);
 
 if ($ticket_id <= 0 || $user_id <= 0) {
     $_SESSION['confirm_error'] = 'Could not update that ticket. Sign in again and retry.';
-    header('Location: ../pages/user.php?tab=tickets');
+    header('Location: ' . $ticketsHome, true, 303);
     exit();
 }
 
@@ -32,13 +39,13 @@ $stmt->close();
 
 if (!$row) {
     $_SESSION['confirm_error'] = 'Ticket not found.';
-    header('Location: ../pages/user.php?tab=tickets');
+    header('Location: ' . $ticketsHome, true, 303);
     exit();
 }
 
 if (($row['status'] ?? '') === 'resolved') {
     $_SESSION['confirm_error'] = 'This ticket is already resolved.';
-    header('Location: ../pages/user.php?tab=tickets');
+    header('Location: ' . $ticketsHome, true, 303);
     exit();
 }
 
@@ -53,7 +60,7 @@ if (isset($_POST['self_help_solved'])) {
     ticket_mark_resolved($conn, $ticket_id, false);
     $_SESSION['rate_ticket_id'] = $ticket_id;
     $_SESSION['confirm_success'] = 'Ticket #' . $ticket_id . ' marked resolved from the troubleshooting steps. Please rate this visit.';
-    header('Location: ../pages/user.php?tab=tickets');
+    header('Location: ' . $ticketsHome, true, 303);
     exit();
 }
 
@@ -81,6 +88,15 @@ if (function_exists('ticket_has_column') && ticket_has_column($conn, 'ai_guidanc
 }
 
 if ($techId > 0) {
+    $_SESSION['confirm_success'] = 'Still not fixed. Ticket #' . $ticket_id
+        . ' was sent to your technician and the troubleshooting tips were closed.';
+} else {
+    $_SESSION['confirm_error'] = 'No active technician is available right now. An admin can assign one later.';
+}
+
+header('Location: ' . $ticketsHome, true, 303);
+
+if ($techId > 0) {
     $subj = (string) ($row['subject'] ?? '');
     $mailTech = $techId;
     zpgc_after_response(static function () use ($conn, $mailTech, $ticket_id, $subj) {
@@ -91,11 +107,5 @@ if ($techId > 0) {
             "The user reported that troubleshooting steps did not fix ticket #{$ticket_id}.\nSubject: {$subj}\nPlease follow up."
         );
     });
-    $_SESSION['confirm_success'] = 'Still not fixed. Ticket #' . $ticket_id
-        . ' was sent to your technician and the troubleshooting tips were closed.';
-} else {
-    $_SESSION['confirm_error'] = 'No active technician is available right now. An admin can assign one later.';
 }
-
-header('Location: ../pages/user.php?tab=tickets');
 exit();
