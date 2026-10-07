@@ -167,7 +167,6 @@ $ui_theme = current_ui_theme();
                 $dashboard_card_keys = ['ongoing', 'processing', 'resolved', 'pending'];
                 $dash_tickets = $active_tech_tickets;
                 $dash_show_category = true;
-                $dash_show_queue = true;
                 $status_counts = [
                     'pending' => 0,
                     'ongoing' => 0,
@@ -288,7 +287,6 @@ $ui_theme = current_ui_theme();
                 $history_title = 'Ticket History';
                 $history_subtitle = 'Resolved and archived tickets';
                 $history_show_times = true;
-                $history_show_queue = true;
                 include __DIR__ . '/partials/ticket_history_list.php';
                 ?>
             </div>

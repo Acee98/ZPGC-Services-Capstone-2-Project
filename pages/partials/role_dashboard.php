@@ -10,9 +10,7 @@ $labels = [
 $counts = $status_counts ?? [];
 $rows = $dash_tickets ?? [];
 $showCategory = !empty($dash_show_category);
-$showDashQueue = !empty($dash_show_queue);
 $showDashTimes = !empty($dash_show_times);
-$dashExtraClass = ($showDashQueue ? ' role-dash-list--queue' : '') . ($showDashTimes ? ' role-dash-list--times' : '');
 ?>
 <div class="status-cards role-dash-cards">
     <?php foreach ($cards as $key) {
@@ -40,11 +38,6 @@ $dashExtraClass = ($showDashQueue ? ' role-dash-list--queue' : '') . ($showDashT
         <span class="tickets-col-status">Status</span>
         <?php if ($showDashTimes) { ?>
         <span class="tickets-col-reg">Registration Date &amp; Time</span>
-        <?php } ?>
-        <?php if ($showDashQueue) { ?>
-        <span class="tickets-col-queue">Queue timer</span>
-        <?php } ?>
-        <?php if ($showDashTimes || $showDashQueue) { ?>
         <span class="tickets-col-resolution">Resolution Time</span>
         <?php } ?>
     </div>
@@ -60,16 +53,6 @@ $dashExtraClass = ($showDashQueue ? ' role-dash-list--queue' : '') . ($showDashT
             $resLabel = function_exists('ticket_resolution_clock_label')
                 ? ticket_resolution_clock_label($row['created_at'] ?? null, $row['resolved_at'] ?? null)
                 : '—';
-            $queueLive = function_exists('ticket_queue_timer_is_live')
-                && ticket_queue_timer_is_live($st);
-            $queueLabel = function_exists('ticket_queue_timer_label')
-                ? ticket_queue_timer_label(
-                    $row['created_at'] ?? null,
-                    $queueLive ? null : ($row['resolved_at'] ?? $row['responded_at'] ?? null),
-                    $queueLive
-                )
-                : '00:00:00';
-            $queueStart = strtotime((string) ($row['created_at'] ?? '')) ?: 0;
         ?>
         <div class="ticket-row">
             <span class="tickets-col-id">#<?php echo (int) $row['id']; ?></span>
@@ -96,11 +79,6 @@ $dashExtraClass = ($showDashQueue ? ' role-dash-list--queue' : '') . ($showDashT
             </span>
             <?php if ($showDashTimes) { ?>
             <span class="tickets-col-reg"><?php echo htmlspecialchars($regLabel); ?></span>
-            <?php } ?>
-            <?php if ($showDashQueue) { ?>
-            <span class="tickets-col-queue"<?php echo $queueLive && $queueStart > 0 ? ' data-queue-start="' . (int) $queueStart . '"' : ''; ?>><?php echo htmlspecialchars($queueLabel); ?></span>
-            <?php } ?>
-            <?php if ($showDashTimes || $showDashQueue) { ?>
             <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
             <?php } ?>
         </div>

@@ -574,7 +574,6 @@ $ui_theme = current_ui_theme();
                 $history_subtitle = 'Resolved and archived tickets';
                 $history_empty = 'No resolved tickets in history yet.';
                 $history_show_times = true;
-                $history_show_queue = true;
                 include __DIR__ . '/partials/ticket_history_list.php';
                 ?>
             </div>
