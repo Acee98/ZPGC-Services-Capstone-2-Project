@@ -1,8 +1,12 @@
+                <div class="dashboard-charts-toolbar">
+                    <button id="dash-range-btn" class="perf-filter-btn" type="button" data-range="week" title="Switch between This Week, This Month, and This Year">This Week</button>
+                    <button id="dash-pdf-btn" class="perf-filter-btn dash-pdf-btn" type="button" title="Download the current dashboard charts as a PDF">Download PDF</button>
+                </div>
                 <div class="dashboard-charts-grid dashboard-charts-live">
                     <div class="chart-card">
                         <div class="chart-card-header">
                             <h2>Tickets Report</h2>
-                            <button class="perf-filter-btn" type="button" disabled title="Live counts for the current week">This Week</button>
+                            <span class="chart-range-label" data-chart-range-label>This Week</span>
                         </div>
                         <div class="chart-card-body">
                             <canvas id="ticketsReportChart"></canvas>
@@ -11,6 +15,7 @@
                     <div class="chart-card">
                         <div class="chart-card-header">
                             <h2>Tickets - Categories</h2>
+                            <span class="chart-range-label" data-chart-range-label>This Week</span>
                         </div>
                         <div class="chart-card-body">
                             <canvas id="ticketsCategoriesChart"></canvas>
@@ -19,6 +24,7 @@
                     <div class="chart-card">
                         <div class="chart-card-header">
                             <h2>Customer Satisfaction</h2>
+                            <span class="chart-range-label" data-chart-range-label>This Week</span>
                         </div>
                         <div class="chart-card-body chart-card-body-split">
                             <ul class="chart-legend-list">
@@ -36,6 +42,7 @@
                     <div class="chart-card">
                         <div class="chart-card-header">
                             <h2>Severity Level</h2>
+                            <span class="chart-range-label" data-chart-range-label>This Week</span>
                         </div>
                         <div class="chart-card-body">
                             <canvas id="severityChart"></canvas>

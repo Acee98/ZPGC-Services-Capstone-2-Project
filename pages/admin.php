@@ -271,9 +271,9 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.27">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.27">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.27">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.28">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.28">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.28">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -958,8 +958,10 @@ $ui_theme = current_ui_theme();
     </main>
     <script>
         window.DASHBOARD_CHART_DATA = <?php echo json_encode($dashboard_charts, JSON_UNESCAPED_UNICODE); ?>;
+        window.DASHBOARD_CHART_RANGE = <?php echo json_encode($dashboard_charts['range'] ?? 'week'); ?>;
+        window.ZPGC_CSRF = <?php echo json_encode(zpgc_csrf_token()); ?>;
     </script>
-    <script src="../js/lazy_load.js?v=1.6.18"></script>
+    <script src="../js/lazy_load.js?v=1.6.27"></script>
     <script src="../js/utilities_filter.js?v=1.6.18"></script>
     <script src="../js/behavior.js?v=1.6.25" defer></script>
     <!-- chart.umd.js, dashboard charts, tickets/utilities filters: lazy-loaded per tab via lazy_load.js -->

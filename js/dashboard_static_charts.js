@@ -87,7 +87,16 @@
                             labels: { boxWidth: 10, font: { size: 11 } },
                         },
                     },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    scales: {
+                        x: {
+                            ticks: {
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: (data.report.labels || []).length > 12 ? 12 : 16,
+                            },
+                        },
+                        y: { beginAtZero: true, ticks: { precision: 0 } },
+                    },
                 },
             });
         }
@@ -178,13 +187,171 @@
         }, 0);
     }
 
+    var RANGES = [
+        { key: 'week', label: 'This Week' },
+        { key: 'month', label: 'This Month' },
+        { key: 'year', label: 'This Year' },
+    ];
+
+    function rangeMeta(key) {
+        for (var i = 0; i < RANGES.length; i++) {
+            if (RANGES[i].key === key) {
+                return RANGES[i];
+            }
+        }
+        return RANGES[0];
+    }
+
+    function currentRange() {
+        return window.DASHBOARD_CHART_RANGE || 'week';
+    }
+
+    function setRangeLabels(label) {
+        document.querySelectorAll('[data-chart-range-label]').forEach(function (el) {
+            el.textContent = label;
+        });
+        var btn = document.getElementById('dash-range-btn');
+        if (btn) {
+            btn.textContent = label;
+            btn.setAttribute('data-range', currentRange());
+        }
+    }
+
+    function loadRange(range) {
+        var meta = rangeMeta(range);
+        return fetch('../logic/dashboard_charts_api.php?range=' + encodeURIComponent(meta.key), {
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' },
+        })
+            .then(function (res) {
+                if (!res.ok) {
+                    throw new Error('Could not load chart data');
+                }
+                return res.json();
+            })
+            .then(function (json) {
+                if (!json || !json.ok || !json.data) {
+                    throw new Error((json && json.error) || 'Could not load chart data');
+                }
+                window.DASHBOARD_CHART_DATA = json.data;
+                window.DASHBOARD_CHART_RANGE = json.range || meta.key;
+                setRangeLabels(json.range_label || meta.label);
+                initLiveCharts();
+            });
+    }
+
+    function canvasJpeg(canvas) {
+        if (!canvas) {
+            return '';
+        }
+        var w = canvas.width || canvas.offsetWidth || 1;
+        var h = canvas.height || canvas.offsetHeight || 1;
+        var maxW = 640;
+        var scale = Math.min(1, maxW / w);
+        var off = document.createElement('canvas');
+        off.width = Math.max(1, Math.round(w * scale));
+        off.height = Math.max(1, Math.round(h * scale));
+        var ctx = off.getContext('2d');
+        if (!ctx) {
+            return '';
+        }
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, off.width, off.height);
+        ctx.drawImage(canvas, 0, 0, off.width, off.height);
+        var url = off.toDataURL('image/jpeg', 0.55);
+        var parts = url.split(',');
+        return parts[1] || '';
+    }
+
+    function downloadPdf() {
+        var btn = document.getElementById('dash-pdf-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Preparing PDF…';
+        }
+        var payload = {
+            range: currentRange(),
+            images: {
+                report: canvasJpeg(document.getElementById('ticketsReportChart')),
+                categories: canvasJpeg(document.getElementById('ticketsCategoriesChart')),
+                satisfaction: canvasJpeg(document.getElementById('satisfactionChart')),
+                severity: canvasJpeg(document.getElementById('severityChart')),
+            },
+        };
+        fetch('../logic/dashboard_report_pdf.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/pdf',
+                'X-CSRF-TOKEN': window.ZPGC_CSRF || '',
+            },
+            body: JSON.stringify(payload),
+        })
+            .then(function (res) {
+                if (!res.ok) {
+                    throw new Error('PDF download failed');
+                }
+                return res.blob();
+            })
+            .then(function (blob) {
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'zpgc-dashboard-' + currentRange() + '.pdf';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+            })
+            .catch(function () {
+                window.alert('Could not download the PDF. Try again in a moment.');
+            })
+            .finally(function () {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Download PDF';
+                }
+            });
+    }
+
+    function bindDashboardControls() {
+        var rangeBtn = document.getElementById('dash-range-btn');
+        if (rangeBtn && !rangeBtn.getAttribute('data-bound')) {
+            rangeBtn.setAttribute('data-bound', '1');
+            rangeBtn.addEventListener('click', function () {
+                var idx = 0;
+                var cur = currentRange();
+                for (var i = 0; i < RANGES.length; i++) {
+                    if (RANGES[i].key === cur) {
+                        idx = i;
+                        break;
+                    }
+                }
+                var next = RANGES[(idx + 1) % RANGES.length];
+                rangeBtn.disabled = true;
+                loadRange(next.key).finally(function () {
+                    rangeBtn.disabled = false;
+                });
+            });
+        }
+        var pdfBtn = document.getElementById('dash-pdf-btn');
+        if (pdfBtn && !pdfBtn.getAttribute('data-bound')) {
+            pdfBtn.setAttribute('data-bound', '1');
+            pdfBtn.addEventListener('click', downloadPdf);
+        }
+        setRangeLabels(rangeMeta(currentRange()).label);
+    }
+
     function bootCharts() {
+        bindDashboardControls();
         initLiveCharts();
         if (!document.body || typeof MutationObserver === 'undefined') {
             return;
         }
         var observer = new MutationObserver(function () {
             if (document.body.getAttribute('data-page') === 'dashboard') {
+                bindDashboardControls();
                 initLiveCharts();
             }
         });

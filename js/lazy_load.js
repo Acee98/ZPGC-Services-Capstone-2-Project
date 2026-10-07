@@ -93,7 +93,7 @@
 
     function initAdminLazyBundles() {
         var chartSrc = '../js/chart.umd.js';
-        var chartsSrc = '../js/dashboard_static_charts.js?v=1.6.18';
+        var chartsSrc = '../js/dashboard_static_charts.js?v=1.6.27';
         var ticketsSrc = '../js/tickets_filter.js?v=1.6.18';
 
         whenTab('dashboard', function () {
