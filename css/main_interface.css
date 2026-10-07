@@ -648,6 +648,31 @@ body[data-page="dashboard"] .showcase #page-dashboard.techn-dashboard-page {
     align-items: center;
     padding: 14px 16px;
 }
+.tickets-list-admin-five--times .tickets-list-header,
+.tickets-list-admin-five--times .ticket-row {
+    grid-template-columns:
+        56px
+        72px
+        minmax(90px, 1fr)
+        minmax(100px, 1.1fr)
+        110px
+        96px
+        minmax(110px, 0.95fr)
+        132px
+        110px
+        110px
+        72px;
+}
+.tickets-list-admin-five--times .tickets-col-reg,
+.tickets-list-admin-five--times .tickets-col-queue,
+.tickets-list-admin-five--times .tickets-col-resolution {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+}
 
 .tickets-list-admin-five .tickets-list-header {
     padding-top: 16px;
@@ -1275,6 +1300,27 @@ body[data-page="utilities"] .tickets-toolbar {
     column-gap: 12px;
     align-items: center;
     padding: 14px 16px;
+}
+.tickets-list-techn-actions--times .tickets-list-header,
+.tickets-list-techn-actions--times .ticket-row {
+    grid-template-columns:
+        56px
+        80px
+        minmax(110px, 1.15fr)
+        minmax(120px, 1.3fr)
+        120px
+        110px
+        120px
+        120px;
+}
+.tickets-list-techn-actions--times .tickets-col-queue,
+.tickets-list-techn-actions--times .tickets-col-resolution {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
 }
 
 .tickets-list-techn-actions .tickets-list-header {
@@ -3388,6 +3434,38 @@ body[data-page="dashboard"] .showcase #page-dashboard.role-dashboard-page {
 #page-dashboard.role-dashboard-page .role-dash-list.role-dash-list--category .ticket-row {
     grid-template-columns: 72px 90px minmax(0, 1.1fr) minmax(0, 1.4fr) 100px 120px;
 }
+#page-dashboard.role-dashboard-page .role-dash-list.role-dash-list--category.role-dash-list--queue .tickets-list-header,
+#page-dashboard.role-dashboard-page .role-dash-list.role-dash-list--category.role-dash-list--queue .ticket-row {
+    grid-template-columns: 56px 80px minmax(0, 1fr) minmax(0, 1.15fr) 90px 100px 110px 120px;
+}
+.role-dash-list .tickets-col-queue,
+.role-dash-list .tickets-col-resolution,
+.role-dash-list .tickets-col-reg {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+}
+.admin-dashboard-history-list .tickets-list-header,
+.admin-dashboard-history-list .ticket-row {
+    display: grid;
+    grid-template-columns: 68px 90px minmax(120px, 1.4fr) 100px 110px minmax(120px, 1fr);
+    column-gap: 12px;
+    align-items: center;
+}
+.admin-dashboard-history-list--times .tickets-list-header,
+.admin-dashboard-history-list--times .ticket-row {
+    grid-template-columns: 56px 80px minmax(110px, 1.2fr) 90px 100px minmax(110px, 0.9fr) 140px 120px;
+}
+.admin-dashboard-history-list .tcol-reg,
+.admin-dashboard-history-list .tcol-resolution {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+}
 
 #page-dashboard.role-dashboard-page .role-dash-list .tickets-col-id,
 #page-dashboard.role-dashboard-page .role-dash-list .tickets-col-category,
@@ -3602,6 +3680,43 @@ body[data-page="messages"] .mailbox-container {
         132px
         112px
         130px !important;
+}
+
+.ticket-history-list--times.ticket-history-list--queue .tickets-list-header,
+.ticket-history-list--times.ticket-history-list--queue .ticket-row {
+    grid-template-columns:
+        52px
+        72px
+        minmax(90px, 1fr)
+        minmax(100px, 1.05fr)
+        90px
+        84px
+        132px
+        110px
+        112px;
+}
+
+.ticket-history-list--times.ticket-history-list--queue.ticket-history-list--assigned .tickets-list-header,
+.ticket-history-list--times.ticket-history-list--queue.ticket-history-list--assigned .ticket-row {
+    grid-template-columns:
+        48px
+        70px
+        minmax(80px, 0.95fr)
+        minmax(90px, 1fr)
+        84px
+        80px
+        124px
+        100px
+        104px
+        minmax(110px, 0.9fr);
+}
+
+.ticket-history-list--times .tickets-col-queue {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
 }
 
 .ticket-history-list--times .tickets-col-reg,
@@ -4720,6 +4835,21 @@ body[data-page="messages"] .mailbox-container {
         box-sizing: border-box;
     }
 
+    .tickets-list-techn-actions--times .tickets-list-header,
+    .tickets-list-techn-actions--times .ticket-row {
+        grid-template-columns:
+            52px
+            72px
+            minmax(110px, 1.1fr)
+            minmax(120px, 1.2fr)
+            110px
+            110px
+            120px
+            110px !important;
+        min-width: 1040px !important;
+        width: 1040px !important;
+    }
+
     .ticket-history-section {
         width: 100% !important;
         max-width: 100%;
@@ -4859,6 +4989,21 @@ body[data-page="messages"] .mailbox-container {
         column-gap: 10px;
         align-items: center;
         box-sizing: border-box;
+    }
+
+    .admin-dashboard-history-list--times .tickets-list-header,
+    .admin-dashboard-history-list--times .ticket-row {
+        grid-template-columns:
+            52px
+            72px
+            minmax(110px, 1.2fr)
+            90px
+            96px
+            minmax(100px, 0.9fr)
+            140px
+            120px !important;
+        min-width: 980px !important;
+        width: 980px !important;
     }
 
     .admin-dashboard-history-list .tcol-id,

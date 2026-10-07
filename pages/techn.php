@@ -22,6 +22,15 @@ $tech_tickets = [];
 $hasArchived = ticket_has_column($conn, 'archived_at');
 $cols = 'id, subject, description, category, priority, status'
     . ($hasArchived ? ', archived_at' : '');
+if (ticket_has_column($conn, 'created_at')) {
+    $cols .= ', created_at';
+}
+if (ticket_has_column($conn, 'resolved_at')) {
+    $cols .= ', resolved_at';
+}
+if (ticket_has_column($conn, 'responded_at')) {
+    $cols .= ', responded_at';
+}
 $stmt = $conn->prepare(
     "SELECT {$cols} FROM tickets WHERE assigned_to = ? ORDER BY id DESC LIMIT 200"
 );
@@ -66,8 +75,8 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.30">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.30">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.31">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.31">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | Technician</title>
 </head>
@@ -158,6 +167,7 @@ $ui_theme = current_ui_theme();
                 $dashboard_card_keys = ['ongoing', 'processing', 'resolved', 'pending'];
                 $dash_tickets = $active_tech_tickets;
                 $dash_show_category = true;
+                $dash_show_queue = true;
                 $status_counts = [
                     'pending' => 0,
                     'ongoing' => 0,
@@ -192,13 +202,15 @@ $ui_theme = current_ui_theme();
                 <?php if ($ticket_flash !== '') { ?>
                 <div class="utilities-notice"><?php echo htmlspecialchars($ticket_flash); ?></div>
                 <?php } ?>
-                <div class="tickets-list tickets-list-techn-actions">
+                <div class="tickets-list tickets-list-techn-actions tickets-list-techn-actions--times">
                 <div class="tickets-list-header">
                     <span class="tickets-col-id">ID</span>
                     <span class="tickets-col-category">Category</span>
                     <span class="tickets-col-subject">Subject</span>
                     <span class="tickets-col-description">Description</span>
                     <span class="tickets-col-status">Status</span>
+                    <span class="tickets-col-queue">Queue timer</span>
+                    <span class="tickets-col-resolution">Resolution Time</span>
                     <span class="tickets-col-action">Action</span>
                 </div>
                 <div class="tickets-list-body" id="techn-tickets-body">
@@ -211,6 +223,11 @@ $ui_theme = current_ui_theme();
                         $st = $ticket['status'];
                         $tid = (int) $ticket['id'];
                         $canEditStatus = in_array($st, $techn_statuses, true);
+                        $queueLive = ticket_queue_timer_is_live($ticket['responded_at'] ?? null) && $st !== 'resolved';
+                        $queueLabel = ticket_queue_timer_label($ticket['created_at'] ?? null, $ticket['responded_at'] ?? null, $queueLive);
+                        $queueStart = strtotime((string) ($ticket['created_at'] ?? '')) ?: 0;
+                        $resLabel = performance_duration_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null);
+                        $queueAttr = ($queueLive && $queueStart > 0) ? ' data-queue-start="' . (int) $queueStart . '"' : '';
                     ?>
                     <?php if ($canEditStatus) { ?>
                     <form class="ticket-row" action="../logic/ticket_techn_mngmnt.php" method="post"
@@ -231,6 +248,8 @@ $ui_theme = current_ui_theme();
                                 <?php } ?>
                             </select>
                         </span>
+                        <span class="tickets-col-queue"<?php echo $queueAttr; ?>><?php echo htmlspecialchars($queueLabel); ?></span>
+                        <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
                         <span class="tickets-col-action">
                             <button type="submit" name="save_tech_ticket" class="btn-save-ticket">Save</button>
                             <button type="submit" class="ticket-icon-btn" formaction="../logic/ticket_replace_mngmnt.php" name="replace_me" aria-label="Replace" title="Ask admin to replace me">
@@ -249,6 +268,8 @@ $ui_theme = current_ui_theme();
                                 <?php echo htmlspecialchars(ticket_status_label($st)); ?>
                             </span>
                         </span>
+                        <span class="tickets-col-queue"<?php echo $queueAttr; ?>><?php echo htmlspecialchars($queueLabel); ?></span>
+                        <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
                         <span class="tickets-col-action">
                             <span class="techn-status-readonly">Closed by reporter</span>
                         </span>
@@ -262,6 +283,8 @@ $ui_theme = current_ui_theme();
                 $history_show_assigned = false;
                 $history_title = 'Ticket History';
                 $history_subtitle = 'Resolved and archived tickets';
+                $history_show_times = true;
+                $history_show_queue = true;
                 include __DIR__ . '/partials/ticket_history_list.php';
                 ?>
             </div>
@@ -326,7 +349,7 @@ $ui_theme = current_ui_theme();
         </section>
     </main>
     <script src="../js/lazy_load.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.25" defer></script>
+    <script src="../js/behavior.js?v=1.6.26" defer></script>
     <script src="../js/performance_filter.js?v=1.6.22"></script>
 </body>
 

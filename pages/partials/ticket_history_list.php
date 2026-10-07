@@ -11,6 +11,7 @@ $history_empty = $history_empty ?? 'No resolved tickets in history yet.';
 $history_show_assigned = !empty($history_show_assigned);
 $history_show_satisfaction = !empty($history_show_satisfaction);
 $history_show_times = !empty($history_show_times);
+$history_show_queue = !empty($history_show_queue);
 $history_rating_labels = $history_rating_labels ?? [
     5 => 'Very satisfied',
     4 => 'Satisfied',
@@ -26,7 +27,7 @@ $history_rating_labels = $history_rating_labels ?? [
             <p class="ticket-history-subtitle"><?php echo htmlspecialchars($history_subtitle); ?></p>
         </header>
     </div>
-    <div class="tickets-list ticket-history-list<?php echo $history_show_assigned ? ' ticket-history-list--assigned' : ''; ?><?php echo $history_show_satisfaction ? ' ticket-history-list--satisfaction' : ''; ?><?php echo $history_show_times ? ' ticket-history-list--times' : ''; ?>">
+    <div class="tickets-list ticket-history-list<?php echo $history_show_assigned ? ' ticket-history-list--assigned' : ''; ?><?php echo $history_show_satisfaction ? ' ticket-history-list--satisfaction' : ''; ?><?php echo $history_show_times ? ' ticket-history-list--times' : ''; ?><?php echo $history_show_queue ? ' ticket-history-list--queue' : ''; ?>">
         <div class="tickets-list-header">
             <span class="tickets-col-id">ID</span>
             <span class="tickets-col-category">Category</span>
@@ -36,6 +37,11 @@ $history_rating_labels = $history_rating_labels ?? [
             <span class="tickets-col-priority">Priority</span>
             <?php if ($history_show_times) { ?>
             <span class="tickets-col-reg">Registration Date &amp; Time</span>
+            <?php } ?>
+            <?php if ($history_show_queue) { ?>
+            <span class="tickets-col-queue">Queue timer</span>
+            <?php } ?>
+            <?php if ($history_show_times) { ?>
             <span class="tickets-col-resolution">Resolution Time</span>
             <?php } ?>
             <?php if ($history_show_assigned) { ?>
@@ -71,6 +77,9 @@ $history_rating_labels = $history_rating_labels ?? [
                 $resLabel = function_exists('performance_duration_label')
                     ? performance_duration_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null)
                     : '—';
+                $queueLabel = function_exists('ticket_queue_timer_label')
+                    ? ticket_queue_timer_label($ticket['created_at'] ?? null, $ticket['responded_at'] ?? null, false)
+                    : '—';
             ?>
             <div class="ticket-row ticket-history-row" data-status="<?php echo htmlspecialchars($st); ?>">
                 <span class="tickets-col-id">#<?php echo (int) $ticket['id']; ?></span>
@@ -93,6 +102,11 @@ $history_rating_labels = $history_rating_labels ?? [
                 </span>
                 <?php if ($history_show_times) { ?>
                 <span class="tickets-col-reg"><?php echo htmlspecialchars($regLabel); ?></span>
+                <?php } ?>
+                <?php if ($history_show_queue) { ?>
+                <span class="tickets-col-queue"><?php echo htmlspecialchars($queueLabel); ?></span>
+                <?php } ?>
+                <?php if ($history_show_times) { ?>
                 <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
                 <?php } ?>
                 <?php if ($history_show_assigned) { ?>

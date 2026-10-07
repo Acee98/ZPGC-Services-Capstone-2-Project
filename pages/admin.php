@@ -7,6 +7,7 @@ require_once '../logic/ticket_times.php';
 require_once '../logic/ticket_retention.php';
 require_once '../logic/audit_log.php';
 require_once '../logic/ticket_status.php';
+require_once '../logic/performance_report.php';
 require_once '../logic/ui_state.php';
 require_once '../logic/techn_apply.php';
 require_role('admin');
@@ -143,8 +144,17 @@ if ($needsTechnicians) {
 
 if ($needsTickets || $needsDashboardList) {
     $ticketCols = 't.id, t.subject, t.description, t.category, t.status, t.priority, t.assigned_to'
-        . ($hasArchivedCol ? ', t.archived_at' : '')
-        . ',
+        . ($hasArchivedCol ? ', t.archived_at' : '');
+    if (ticket_has_column($conn, 'created_at')) {
+        $ticketCols .= ', t.created_at';
+    }
+    if (ticket_has_column($conn, 'resolved_at')) {
+        $ticketCols .= ', t.resolved_at';
+    }
+    if (ticket_has_column($conn, 'responded_at')) {
+        $ticketCols .= ', t.responded_at';
+    }
+    $ticketCols .= ',
             u.first_name, u.last_name,
             tech.first_name AS tech_first, tech.last_name AS tech_last';
     $activeWhere = "t.status <> 'resolved'";
@@ -271,9 +281,9 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.30">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.30">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.30">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.31">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.31">
+    <link rel="stylesheet" href="../css/theme.css?v=1.6.31">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <style id="zpgc-tickets-table-mobile">
         @media (max-width: 768px) {
@@ -295,9 +305,9 @@ $ui_theme = current_ui_theme();
             body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header,
             body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row:not(.ticket-row-filtered-out) {
                 display: grid !important;
-                grid-template-columns: 56px 80px minmax(110px, 1.1fr) minmax(130px, 1.3fr) 120px 110px minmax(130px, 1fr) 72px !important;
-                min-width: 1000px !important;
-                width: 1000px !important;
+                grid-template-columns: 52px 70px minmax(90px, 1fr) minmax(100px, 1.1fr) 110px 96px minmax(110px, 0.95fr) 132px 110px 110px 72px !important;
+                min-width: 1380px !important;
+                width: 1380px !important;
                 max-width: none !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
@@ -456,7 +466,7 @@ $ui_theme = current_ui_theme();
                 <div class="utilities-notice"><?php echo htmlspecialchars($ticket_flash); ?></div>
                 <?php } ?>
                 <?php include __DIR__ . '/partials/priority_queue_panel.php'; ?>
-                <div class="tickets-list tickets-list-admin-five">
+                <div class="tickets-list tickets-list-admin-five tickets-list-admin-five--times">
                     <div class="tickets-list-header">
                         <span class="tickets-col-id">ID</span>
                         <span class="tickets-col-category">Category</span>
@@ -465,6 +475,9 @@ $ui_theme = current_ui_theme();
                         <span class="tickets-col-status">Status</span>
                         <span class="tickets-col-priority">Priority</span>
                         <span class="tickets-col-assigned">Assigned To</span>
+                        <span class="tickets-col-reg">Registration Date &amp; Time</span>
+                        <span class="tickets-col-queue">Queue timer</span>
+                        <span class="tickets-col-resolution">Resolution Time</span>
                         <span class="tickets-col-action">Action</span>
                     </div>
                     <div class="tickets-list-body" id="admin-tickets-body">
@@ -485,6 +498,12 @@ $ui_theme = current_ui_theme();
                                     break;
                                 }
                             }
+                            $regLabel = performance_registered_label($ticket['created_at'] ?? null);
+                            $queueLive = ticket_queue_timer_is_live($ticket['responded_at'] ?? null) && $st !== 'resolved';
+                            $queueLabel = ticket_queue_timer_label($ticket['created_at'] ?? null, $ticket['responded_at'] ?? null, $queueLive);
+                            $queueStart = strtotime((string) ($ticket['created_at'] ?? '')) ?: 0;
+                            $resLabel = performance_duration_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null);
+                            $queueAttr = ($queueLive && $queueStart > 0) ? ' data-queue-start="' . (int) $queueStart . '"' : '';
                         ?>
                         <form class="ticket-row<?php echo $needsReplace ? ' ticket-needs-replace' : ''; ?>" action="../logic/ticket_admin_mngmnt.php" method="post"
                             data-status="<?php echo htmlspecialchars($st); ?>"
@@ -534,6 +553,9 @@ $ui_theme = current_ui_theme();
                                     <?php } ?>
                                 </select>
                             </span>
+                            <span class="tickets-col-reg"><?php echo htmlspecialchars($regLabel); ?></span>
+                            <span class="tickets-col-queue"<?php echo $queueAttr; ?>><?php echo htmlspecialchars($queueLabel); ?></span>
+                            <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
                             <span class="tickets-col-action">
                                 <button type="submit" name="save_ticket" class="btn-save-ticket">Save</button>
                             </span>
@@ -547,6 +569,8 @@ $ui_theme = current_ui_theme();
                 $history_title = 'Ticket History';
                 $history_subtitle = 'Resolved and archived tickets';
                 $history_empty = 'No resolved tickets in history yet.';
+                $history_show_times = true;
+                $history_show_queue = true;
                 include __DIR__ . '/partials/ticket_history_list.php';
                 ?>
             </div>
@@ -965,7 +989,7 @@ $ui_theme = current_ui_theme();
     </script>
     <script src="../js/lazy_load.js?v=1.6.27"></script>
     <script src="../js/utilities_filter.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.25" defer></script>
+    <script src="../js/behavior.js?v=1.6.26" defer></script>
     <!-- chart.umd.js, dashboard charts, tickets/utilities filters: lazy-loaded per tab via lazy_load.js -->
 </body>
 

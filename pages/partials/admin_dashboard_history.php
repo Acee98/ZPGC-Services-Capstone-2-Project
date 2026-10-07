@@ -8,7 +8,7 @@ $tickets = $recent_tickets ?? [];
     </div>
 </div>
 
-<div class="tickets-list admin-dashboard-history-list">
+<div class="tickets-list admin-dashboard-history-list admin-dashboard-history-list--times">
     <div class="tickets-list-header">
         <span class="tcol-id">ID</span>
         <span class="tcol-category">Category</span>
@@ -16,6 +16,8 @@ $tickets = $recent_tickets ?? [];
         <span class="tcol-priority">Priority</span>
         <span class="tcol-status">Status</span>
         <span class="tcol-assigned">Assigned To</span>
+        <span class="tcol-reg">Registration Date &amp; Time</span>
+        <span class="tcol-resolution">Resolution Time</span>
     </div>
     <div class="tickets-list-body" id="admin-dashboard-history-body">
         <?php if (empty($tickets)) { ?>
@@ -55,6 +57,8 @@ $tickets = $recent_tickets ?? [];
                         </span>
                     </span>
                     <span class="tcol-assigned"><?php echo htmlspecialchars($assignedLabel); ?></span>
+                    <span class="tcol-reg"><?php echo htmlspecialchars(function_exists('performance_registered_label') ? performance_registered_label($ticket['created_at'] ?? null) : '—'); ?></span>
+                    <span class="tcol-resolution"><?php echo htmlspecialchars(function_exists('performance_duration_label') ? performance_duration_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null) : '—'); ?></span>
                 </div>
             <?php } ?>
         <?php } ?>

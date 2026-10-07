@@ -40,6 +40,27 @@ if (!function_exists('performance_duration_label')) {
         return date('m/d/Y (H:i)', $ts);
     }
 
+    /**
+     * Time spent waiting in the queue: created → assigned (responded_at).
+     * If not assigned yet, elapsed time until now (live).
+     */
+    function ticket_queue_timer_label($createdAt, $respondedAt = null, $allowLive = true)
+    {
+        $end = $respondedAt;
+        if ($end === null || trim((string) $end) === '') {
+            if (!$allowLive) {
+                return '—';
+            }
+            $end = date('Y-m-d H:i:s');
+        }
+        return performance_duration_label($createdAt, $end);
+    }
+
+    function ticket_queue_timer_is_live($respondedAt)
+    {
+        return $respondedAt === null || trim((string) $respondedAt) === '';
+    }
+
     function performance_category_rows(mysqli $conn, $assignedTo = 0)
     {
         $order = ['hardware', 'software', 'network', 'account', 'other'];

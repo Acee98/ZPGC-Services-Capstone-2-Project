@@ -705,6 +705,12 @@ body[data-page="dashboard"] #page-dashboard.admin-dashboard-page .admin-dashboar
         max-width: none !important;
         box-sizing: border-box !important;
     }
+    .tickets-list-techn-actions--times .tickets-list-header,
+    .tickets-list-techn-actions--times .ticket-row {
+        grid-template-columns: 52px 72px minmax(110px, 1.1fr) minmax(120px, 1.2fr) 110px 110px 120px 110px !important;
+        min-width: 1040px !important;
+        width: 1040px !important;
+    }
     .ticket-history-list .tickets-list-body,
     .tickets-list-utilities .tickets-list-body,
     .admin-dashboard-history-list .tickets-list-body {
@@ -788,6 +794,12 @@ body[data-page="dashboard"] #page-dashboard.admin-dashboard-page .admin-dashboar
         column-gap: 10px !important;
         align-items: center !important;
         box-sizing: border-box !important;
+    }
+    .admin-dashboard-history-list--times .tickets-list-header,
+    .admin-dashboard-history-list--times .ticket-row {
+        grid-template-columns: 52px 72px minmax(110px, 1.2fr) 90px 96px minmax(100px, 0.9fr) 140px 120px !important;
+        min-width: 980px !important;
+        width: 980px !important;
     }
     .admin-dashboard-history-list .tcol-id,
     .admin-dashboard-history-list .tcol-category,

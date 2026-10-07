@@ -134,17 +134,18 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
 
 #page-dashboard.admin-dashboard-page .admin-dashboard-history-list {
     flex: 0 0 auto;
-    min-height: 280px;
+    min-height: 160px;
+    max-height: min(48vh, 420px);
     height: auto;
-    overflow: visible;
+    overflow: hidden;
     margin-top: 0;
     margin-bottom: 24px;
 }
 
 #page-dashboard.admin-dashboard-page .admin-dashboard-history-list .tickets-list-body {
-    flex: 0 0 auto;
-    min-height: 80px;
-    overflow: visible;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 #page-dashboard.admin-dashboard-page .admin-history-row .tcol-assigned {
@@ -388,16 +389,19 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
     .tickets-list-admin-five form.ticket-row:not(.ticket-row-filtered-out) {
         display: grid !important;
         grid-template-columns:
-            56px
-            80px
-            minmax(110px, 1.1fr)
-            minmax(130px, 1.3fr)
-            120px
+            52px
+            70px
+            minmax(90px, 1fr)
+            minmax(100px, 1.1fr)
             110px
-            minmax(130px, 1fr)
+            96px
+            minmax(110px, 0.95fr)
+            132px
+            110px
+            110px
             72px !important;
-        min-width: 1000px !important;
-        width: 1000px !important;
+        min-width: 1380px !important;
+        width: 1380px !important;
         max-width: none !important;
         border-radius: 0 !important;
         box-shadow: none !important;
