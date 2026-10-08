@@ -6,6 +6,12 @@ backup_db/
 .env
 ai/.env
 logic/mail.env
+logic/mail.env.hostinger
+db_hostinger_creds.txt
+database/_import_live.sql
+pages/_zpgc_import.php
+tools/_dump_azure.php
+pages/_zpgc_diag.php
 API Key/
 **/api_key.txt
 *SMTP*Pass*
@@ -45,6 +51,11 @@ logs/*
 ai/data/*.csv
 ai/data/_bm_*
 ai/data/_smoke_*
+ai/data/viability_*.json
+ai/_tmp_types.php
+ai/viability_accuracy.php
+ai/campus_gold.php
+backup_db.zip
 
 # Local-only scripts
 tools/_git_*.sh

@@ -294,16 +294,57 @@ if (!function_exists('techn_apply_specialties')) {
     function techn_apply_clear_role_tokens(mysqli $conn, $userId)
     {
         $userId = (int) $userId;
-        $purpose = 'techn_role_change';
+        $purposes = ['techn_role_change', 'techn_role_accept', 'techn_role_deny'];
         $stmt = $conn->prepare(
             'UPDATE auth_tokens SET used_at = NOW()
              WHERE user_id = ? AND purpose = ? AND used_at IS NULL'
         );
-        if ($stmt) {
+        if (!$stmt) {
+            return;
+        }
+        foreach ($purposes as $purpose) {
             $stmt->bind_param('is', $userId, $purpose);
             $stmt->execute();
-            $stmt->close();
         }
+        $stmt->close();
+    }
+
+    function techn_apply_remove_inactive_technician(mysqli $conn, $userId)
+    {
+        $userId = (int) $userId;
+        if ($userId <= 0) {
+            return ['ok' => false, 'deleted_user' => false];
+        }
+        $app = techn_apply_get_for_user($conn, $userId);
+        if ($app) {
+            techn_apply_delete_row($conn, $app);
+        } else {
+            techn_apply_clear_role_tokens($conn, $userId);
+        }
+        $stmt = $conn->prepare(
+            "SELECT role, status FROM users WHERE id = ? LIMIT 1"
+        );
+        if ($stmt === false) {
+            return ['ok' => true, 'deleted_user' => false];
+        }
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $user = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        $role = strtolower((string) ($user['role'] ?? ''));
+        $status = strtolower((string) ($user['status'] ?? ''));
+        if ($role !== 'techn' || $status === 'active') {
+            return ['ok' => true, 'deleted_user' => false];
+        }
+        $del = $conn->prepare('DELETE FROM users WHERE id = ? AND role = \'techn\' AND status <> \'active\'');
+        if ($del === false) {
+            return ['ok' => true, 'deleted_user' => false];
+        }
+        $del->bind_param('i', $userId);
+        $del->execute();
+        $gone = $del->affected_rows > 0;
+        $del->close();
+        return ['ok' => true, 'deleted_user' => $gone];
     }
 
     function techn_apply_delete_row(mysqli $conn, array $app)
@@ -339,14 +380,20 @@ if (!function_exists('techn_apply_specialties')) {
         $n = 0;
         while ($row = $result->fetch_assoc()) {
             $userId = (int) ($row['user_id'] ?? 0);
-            if (techn_apply_delete_row($conn, $row)) {
+            $email = '';
+            if ($notify && $userId > 0) {
+                $u = $conn->query('SELECT email FROM users WHERE id = ' . $userId);
+                $email = $u && ($ur = $u->fetch_assoc()) ? (string) ($ur['email'] ?? '') : '';
+            }
+            $removed = techn_apply_remove_inactive_technician($conn, $userId);
+            if (!empty($removed['ok'])) {
                 $n++;
-                if ($notify && $userId > 0) {
-                    notify_user_email(
-                        $conn,
-                        $userId,
-                        'ZPGC technician application expired',
-                        'You did not confirm the proposed specialty change within 24 hours. Your technician application was removed. You can submit a new application after signing in.'
+                if ($notify && $email !== '') {
+                    mail_send(
+                        $email,
+                        'ZPGC technician offer expired',
+                        'You did not respond to the role-change offer within 24 hours. Your technician application and account were removed. You may create a new account if you wish to apply again.',
+                        '<p>You did not respond to the role-change offer within 24 hours. Your technician application and account were removed. You may create a new account if you wish to apply again.</p>'
                     );
                 }
             }
@@ -369,24 +416,52 @@ if (!function_exists('techn_apply_specialties')) {
 
     function techn_apply_send_role_change(mysqli $conn, array $user, $proposed)
     {
-        $userId = (int) ($user['id'] ?? $user['user_id'] ?? 0);
+        // Application rows use id = application id; the technician is user_id.
+        $userId = (int) ($user['user_id'] ?? 0);
+        if ($userId <= 0) {
+            $userId = (int) ($user['id'] ?? 0);
+        }
         $email = (string) ($user['email'] ?? '');
-        $first = (string) ($user['first_name'] ?? '');
+        $first = trim((string) ($user['first_name'] ?? ''));
+        $last = trim((string) ($user['last_name'] ?? ''));
+        $full = trim($first . ' ' . $last);
+        $requested = (string) ($user['specialty'] ?? '');
         if ($userId <= 0 || $email === '') {
             return ['ok' => false, 'error' => 'missing user'];
         }
         auth_mail_ready($conn);
-        $token = auth_mail_create_token($conn, $userId, 'techn_role_change', 24);
-        $link = mail_app_url('pages/techn_role_confirm.php?token=' . rawurlencode($token));
-        [$plain, $html] = auth_mail_link_bodies(
-            $first,
-            'An administrator proposed changing your technician specialty to '
-            . $proposed . '. Confirm with this button or URL (valid 24 hours). '
-            . 'If you do not respond, your application is removed automatically.',
-            $link,
-            24
-        );
-        return mail_send($email, 'Confirm your ZPGC technician specialty change', $plain, $html);
+        techn_apply_clear_role_tokens($conn, $userId);
+        $offerTok = auth_mail_create_token($conn, $userId, 'techn_role_change', 24);
+        $acceptLink = mail_app_url('pages/techn_role_confirm.php?token=' . rawurlencode($offerTok) . '&decision=accept');
+        $denyLink = mail_app_url('pages/techn_role_confirm.php?token=' . rawurlencode($offerTok) . '&decision=deny');
+        $name = $full !== '' ? $full : $first;
+        $plain = "ZPGC Services — Office of the Administrator\n\n"
+            . "Dear " . ($name !== '' ? $name : 'Applicant') . ",\n\n"
+            . "This letter confirms that your technician application has been reviewed.\n\n"
+            . "You applied for the {$requested} role. The administrator offers you the {$proposed} role instead.\n\n"
+            . "ACCEPT this assignment (activates your technician account):\n<{$acceptLink}>\n\n"
+            . "DECLINE this assignment (withdraws the application and removes your account):\n<{$denyLink}>\n\n"
+            . "This offer expires in 24 hours. If you do not respond, the application and account will be removed.\n\n"
+            . "Respectfully,\nZPGC Services Administration";
+        $html = '<div style="font-family:Georgia,serif;color:#1a1a1a;line-height:1.55;max-width:640px">'
+            . '<p style="letter-spacing:0.12em;text-transform:uppercase;font-size:12px;color:#610107;font-weight:700;font-family:Arial,sans-serif">ZPGC Services</p>'
+            . '<p><strong>Office of the Administrator</strong></p>'
+            . '<p>Dear ' . htmlspecialchars($name !== '' ? $name : 'Applicant', ENT_QUOTES, 'UTF-8') . ',</p>'
+            . '<p>This letter confirms that your technician application has been reviewed.</p>'
+            . '<p>You applied for the <strong>' . htmlspecialchars($requested, ENT_QUOTES, 'UTF-8')
+            . '</strong> role. The administrator offers you the <strong>'
+            . htmlspecialchars((string) $proposed, ENT_QUOTES, 'UTF-8')
+            . '</strong> role instead.</p>'
+            . '<p>To <strong>accept</strong> this assignment and activate your technician account, use the button below. '
+            . 'To <strong>decline</strong>, use the second button. Declining withdraws your application and removes your account from ZPGC Services.</p>'
+            . '<p><a href="' . htmlspecialchars($acceptLink, ENT_QUOTES, 'UTF-8')
+            . '" style="display:inline-block;background:#610107;color:#fff;padding:10px 18px;text-decoration:none;border-radius:6px;font-family:Arial,sans-serif">Accept role offer</a></p>'
+            . '<p><a href="' . htmlspecialchars($denyLink, ENT_QUOTES, 'UTF-8')
+            . '" style="display:inline-block;background:#fff;color:#610107;padding:10px 18px;text-decoration:none;border-radius:6px;border:1px solid #c9a3a6;font-family:Arial,sans-serif">Decline role offer</a></p>'
+            . '<p>This offer expires in 24 hours. If you do not respond, the application and account will be removed.</p>'
+            . '<p>Respectfully,<br>ZPGC Services Administration</p>'
+            . '</div>';
+        return mail_send($email, 'ZPGC Services — Technician role assignment', $plain, $html);
     }
 
     function techn_apply_accept_role_change(mysqli $conn, $userId)
@@ -414,15 +489,54 @@ if (!function_exists('techn_apply_specialties')) {
         if (!$ok) {
             return ['ok' => false, 'error' => 'Could not save the specialty change.'];
         }
-        techn_apply_clear_role_tokens($conn, (int) $userId);
+        $activated = techn_apply_approve_account($conn, (int) $userId);
+        if (empty($activated['ok'])) {
+            return ['ok' => false, 'error' => $activated['error'] ?? 'Could not activate the account.'];
+        }
         $name = trim((string) ($app['first_name'] ?? '') . ' ' . (string) ($app['last_name'] ?? ''));
+        if ($name === '') {
+            $u = $conn->query('SELECT first_name, last_name FROM users WHERE id = ' . (int) $userId);
+            if ($u && ($ur = $u->fetch_assoc())) {
+                $name = trim((string) ($ur['first_name'] ?? '') . ' ' . (string) ($ur['last_name'] ?? ''));
+            }
+        }
         techn_apply_notify_admins(
             $conn,
-            'Technician accepted specialty change',
-            ($name !== '' ? $name : 'A technician') . ' accepted the specialty change to ' . $proposed
-            . '. Review the pending application in Utilities.'
+            'Technician accepted role offer',
+            ($name !== '' ? $name : 'A technician') . ' accepted the ' . $proposed
+            . ' role. The account is now active.'
         );
-        return ['ok' => true, 'specialty' => $proposed];
+        return ['ok' => true, 'specialty' => $proposed, 'activated' => true];
+    }
+
+    function techn_apply_decline_role_change(mysqli $conn, $userId)
+    {
+        $userId = (int) $userId;
+        $app = techn_apply_get_for_user($conn, $userId);
+        if (!$app) {
+            return ['ok' => false, 'error' => 'Application not found.'];
+        }
+        if (($app['status'] ?? '') !== 'awaiting_role_change') {
+            return ['ok' => false, 'error' => 'There is no specialty offer waiting for you.'];
+        }
+        $email = '';
+        $u = $conn->query('SELECT email, first_name FROM users WHERE id = ' . $userId);
+        if ($u && ($ur = $u->fetch_assoc())) {
+            $email = (string) ($ur['email'] ?? '');
+        }
+        $removed = techn_apply_remove_inactive_technician($conn, $userId);
+        if (empty($removed['ok'])) {
+            return ['ok' => false, 'error' => 'Could not withdraw the application.'];
+        }
+        if ($email !== '') {
+            mail_send(
+                $email,
+                'ZPGC technician application withdrawn',
+                'You declined the role assignment. Your technician application and account have been removed from ZPGC Services.',
+                '<p>You declined the role assignment. Your technician application and account have been removed from ZPGC Services.</p>'
+            );
+        }
+        return ['ok' => true, 'deleted_user' => !empty($removed['deleted_user'])];
     }
 
     function techn_apply_approve_account(mysqli $conn, $userId)
@@ -458,5 +572,45 @@ if (!function_exists('techn_apply_specialties')) {
             'An administrator approved your application. You can log in and use the technician dashboard.'
         );
         return ['ok' => true];
+    }
+
+    function techn_apply_admin_set_specialty(mysqli $conn, $userId, $specialty)
+    {
+        techn_apply_ready($conn);
+        $userId = (int) $userId;
+        $specialty = techn_apply_normalize_specialty($specialty);
+        if ($userId <= 0) {
+            return ['ok' => false, 'error' => 'Missing technician account.'];
+        }
+        if ($specialty === '') {
+            return ['ok' => false, 'error' => 'Choose a technical role: Hardware, Software, Network, Account, or Other.'];
+        }
+        $app = techn_apply_get_for_user($conn, $userId);
+        if ($app) {
+            $id = (int) $app['id'];
+            $stmt = $conn->prepare(
+                "UPDATE technician_applications
+                 SET specialty = ?, proposed_specialty = NULL, status = 'approved',
+                     role_change_expires_at = NULL
+                 WHERE id = ?"
+            );
+            $stmt->bind_param('si', $specialty, $id);
+            $ok = $stmt->execute();
+            $stmt->close();
+            return $ok ? ['ok' => true, 'specialty' => $specialty] : ['ok' => false, 'error' => 'Could not save the technical role.'];
+        }
+        $stored = 'admin_provisioned';
+        $orig = 'Admin created — no resume';
+        $mime = 'application/octet-stream';
+        $status = 'approved';
+        $stmt = $conn->prepare(
+            'INSERT INTO technician_applications
+             (user_id, specialty, resume_stored_name, resume_original_name, resume_mime, status)
+             VALUES (?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->bind_param('isssss', $userId, $specialty, $stored, $orig, $mime, $status);
+        $ok = $stmt->execute();
+        $stmt->close();
+        return $ok ? ['ok' => true, 'specialty' => $specialty] : ['ok' => false, 'error' => 'Could not save the technical role.'];
     }
 }

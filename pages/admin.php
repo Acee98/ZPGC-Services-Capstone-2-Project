@@ -47,6 +47,7 @@ $role_labels = [
 $all_users = [];
 $techn_applications = [];
 $techn_specialties = [];
+$techn_spec_by_user = [];
 $technicians = [];
 $active_tickets = [];
 $history_tickets = [];
@@ -111,6 +112,15 @@ if ($tab === 'utilities') {
     techn_apply_expire_stale($conn, false);
     $techn_applications = techn_apply_list_open($conn);
     $techn_specialties = techn_apply_specialties();
+    $specMap = $conn->query(
+        'SELECT user_id, specialty, proposed_specialty, status FROM technician_applications'
+    );
+    $techn_spec_by_user = [];
+    if ($specMap) {
+        while ($specRow = $specMap->fetch_assoc()) {
+            $techn_spec_by_user[(int) $specRow['user_id']] = $specRow;
+        }
+    }
 }
 
 if ($tab === 'utilities') {
@@ -131,9 +141,11 @@ if ($tab === 'utilities') {
 
 if ($needsTechnicians) {
     $tech_result = $conn->query(
-        "SELECT id, first_name, last_name
-         FROM users WHERE role = 'techn' AND status = 'active'
-         ORDER BY last_name, first_name"
+        "SELECT u.id, u.first_name, u.last_name, a.specialty
+         FROM users u
+         LEFT JOIN technician_applications a ON a.user_id = u.id
+         WHERE u.role = 'techn' AND u.status = 'active'
+         ORDER BY u.last_name, u.first_name"
     );
     if ($tech_result) {
         while ($row = $tech_result->fetch_assoc()) {
@@ -258,13 +270,25 @@ if ($tab === 'dashboard') {
 }
 $utilities_action = $_GET['action'] ?? '';
 $edit_id = (int) ($_GET['edit_id'] ?? 0);
+$review_app_id = (int) ($_GET['review_app'] ?? 0);
 $editing_user = null;
+$reviewing_app = null;
+$apps_by_user = [];
+foreach ($techn_applications as $appRow) {
+    $apps_by_user[(int) $appRow['user_id']] = $appRow;
+}
 if ($edit_id > 0 && $tab === 'utilities') {
     foreach ($all_users as $u) {
         if ((int) $u['id'] === $edit_id) {
             $editing_user = $u;
             break;
         }
+    }
+}
+if ($review_app_id > 0 && $tab === 'utilities') {
+    $reviewing_app = techn_apply_get($conn, $review_app_id);
+    if ($reviewing_app && !in_array($reviewing_app['status'] ?? '', ['pending', 'awaiting_role_change'], true)) {
+        $reviewing_app = null;
     }
 }
 $utilities_success = $_SESSION['utilities_success'] ?? '';
@@ -281,7 +305,8 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.34">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.39">
+    <link rel="stylesheet" href="../css/apply.css?v=1.6.3">
     <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.32">
     <link rel="stylesheet" href="../css/theme.css?v=1.6.32">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
@@ -552,7 +577,11 @@ $ui_theme = current_ui_theme();
                                     <?php foreach ($technicians as $tech) { ?>
                                     <option value="<?php echo (int) $tech['id']; ?>"
                                         <?php echo ((int) ($ticket['assigned_to'] ?? 0) === (int) $tech['id']) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($tech['first_name'] . ' ' . $tech['last_name']); ?>
+                                        <?php
+                                        $techName = trim((string) $tech['first_name'] . ' ' . (string) $tech['last_name']);
+                                        $techSpec = trim((string) ($tech['specialty'] ?? ''));
+                                        echo htmlspecialchars($techSpec !== '' ? $techName . ' · ' . $techSpec : $techName);
+                                        ?>
                                     </option>
                                     <?php } ?>
                                 </select>
@@ -604,13 +633,226 @@ $ui_theme = current_ui_theme();
                 <div class="utilities-notice-error"><?php echo htmlspecialchars($utilities_error); ?></div>
                 <?php } ?>
 
+                <?php if ($reviewing_app) {
+                    $revName = trim((string) ($reviewing_app['first_name'] ?? '') . ' ' . (string) ($reviewing_app['last_name'] ?? ''));
+                    $revAwaiting = ($reviewing_app['status'] ?? '') === 'awaiting_role_change';
+                    $revInitials = strtoupper(substr((string) ($reviewing_app['first_name'] ?? 'T'), 0, 1) . substr((string) ($reviewing_app['last_name'] ?? ''), 0, 1));
+                    ?>
+                <article class="apply-shell apply-shell-admin">
+                    <header class="apply-shell-head">
+                        <p class="apply-kicker">Technician hiring</p>
+                        <h2>Review application</h2>
+                        <p>Keep the requested role and Approve to activate immediately. Choose a different role to send a formal Outlook offer instead.</p>
+                    </header>
+                    <div class="apply-review-person">
+                        <span class="apply-avatar" aria-hidden="true"><?php echo htmlspecialchars($revInitials !== '' ? $revInitials : 'T'); ?></span>
+                        <div>
+                            <strong><?php echo htmlspecialchars($revName !== '' ? $revName : 'Technician'); ?></strong>
+                            <span><?php echo htmlspecialchars((string) ($reviewing_app['email'] ?? '')); ?></span>
+                        </div>
+                        <span class="apply-status-chip"><?php echo htmlspecialchars(techn_apply_status_label($reviewing_app['status'] ?? '')); ?></span>
+                    </div>
+                    <div class="apply-review-facts">
+                        <div class="apply-fact">
+                            <span class="apply-fact-label">Requested role</span>
+                            <span class="apply-role-pill"><?php echo htmlspecialchars((string) $reviewing_app['specialty']); ?></span>
+                            <?php if ($revAwaiting) { ?>
+                            <span class="apply-fact-note">Proposed: <?php echo htmlspecialchars((string) $reviewing_app['proposed_specialty']); ?></span>
+                            <?php } ?>
+                        </div>
+                        <div class="apply-fact">
+                            <span class="apply-fact-label">Resume</span>
+                            <a class="apply-resume-link" href="../logic/resume_file.php?id=<?php echo (int) $reviewing_app['id']; ?>">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm0 2.5L19.5 10H14z"/></svg>
+                                <?php echo htmlspecialchars((string) ($reviewing_app['resume_original_name'] ?? 'Download resume')); ?>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="apply-review-actions">
+                        <form action="../logic/techn_apply_admin_mngmnt.php" method="post" class="apply-modify-form" id="apply-review-form">
+                            <?php echo zpgc_csrf_field(); ?>
+                            <input type="hidden" name="app_id" value="<?php echo (int) $reviewing_app['id']; ?>">
+                            <label class="apply-modify-label">Assigned role
+                                <select name="assigned_specialty" id="apply-review-role" required>
+                                    <?php
+                                    $selectedRole = $revAwaiting && ($reviewing_app['proposed_specialty'] ?? '') !== ''
+                                        ? (string) $reviewing_app['proposed_specialty']
+                                        : (string) $reviewing_app['specialty'];
+                                    foreach ($techn_specialties as $spec) { ?>
+                                    <option value="<?php echo htmlspecialchars($spec); ?>"
+                                        <?php echo strcasecmp($spec, $selectedRole) === 0 ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($spec); ?>
+                                    </option>
+                                    <?php } ?>
+                                </select>
+                            </label>
+                            <button type="submit" name="apply_decision" class="apply-btn apply-btn-primary" id="apply-review-submit">Approve</button>
+                        </form>
+                        <form action="../logic/techn_apply_admin_mngmnt.php" method="post"
+                            onsubmit="return confirm('Reject this application and permanently delete the technician account?');">
+                            <?php echo zpgc_csrf_field(); ?>
+                            <input type="hidden" name="app_id" value="<?php echo (int) $reviewing_app['id']; ?>">
+                            <button type="submit" name="apply_reject" class="apply-btn apply-btn-danger">Reject / delete</button>
+                        </form>
+                        <a href="?tab=utilities" class="apply-btn apply-btn-ghost">Back</a>
+                    </div>
+                    <script>
+                    (function () {
+                        var sel = document.getElementById('apply-review-role');
+                        var btn = document.getElementById('apply-review-submit');
+                        var requested = <?php echo json_encode((string) $reviewing_app['specialty']); ?>;
+                        if (!sel || !btn) {
+                            return;
+                        }
+                        function sync() {
+                            var chosen = sel.value;
+                            if (chosen !== requested) {
+                                btn.textContent = 'Send ' + chosen + ' offer';
+                                btn.classList.remove('apply-btn-primary');
+                                btn.classList.add('apply-btn-secondary');
+                            } else {
+                                btn.textContent = 'Approve ' + requested;
+                                btn.classList.add('apply-btn-primary');
+                                btn.classList.remove('apply-btn-secondary');
+                            }
+                        }
+                        sel.addEventListener('change', sync);
+                        sync();
+                    })();
+                    </script>
+                </article>
+                <?php } ?>
+
+                <?php if (!$reviewing_app) { ?>
+                <?php if ($utilities_action === 'add') { ?>
+                <article class="apply-shell apply-shell-admin user-form-card">
+                    <header class="apply-shell-head">
+                        <p class="apply-kicker">Account utilities</p>
+                        <h2>New user</h2>
+                        <p>Create an account that is active immediately. A technical role is asked only when the account is a technician.</p>
+                    </header>
+                    <form class="user-form apply-user-form" action="../logic/user_admin_mngmnt.php" method="post">
+<?php echo zpgc_csrf_field(); ?>
+                        <div class="user-form-row">
+                            <div class="user-form-field">
+                                <label for="add_first_name">First name</label>
+                                <input type="text" id="add_first_name" name="first_name" required>
+                            </div>
+                            <div class="user-form-field">
+                                <label for="add_last_name">Last name</label>
+                                <input type="text" id="add_last_name" name="last_name" required>
+                            </div>
+                        </div>
+                        <div class="user-form-field">
+                            <label for="add_email">Email address</label>
+                            <input type="email" id="add_email" name="email" required>
+                        </div>
+                        <div class="user-form-row">
+                            <div class="user-form-field">
+                                <label for="add_role">Account role</label>
+                                <select id="add_role" name="role" required data-specialty-toggle="add-specialty-wrap">
+                                    <option value="" disabled selected>Select a role</option>
+                                    <option value="user">User</option>
+                                    <option value="techn">Technician</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                            </div>
+                            <div class="user-form-field">
+                                <label for="add_password">Temporary password</label>
+                                <input type="password" id="add_password" name="password" minlength="8" required>
+                                <small>At least 8 characters.</small>
+                            </div>
+                        </div>
+                        <div class="user-form-field is-techn-only" id="add-specialty-wrap">
+                            <label for="add_specialty">Technical role</label>
+                            <select id="add_specialty" name="specialty">
+                                <option value="" disabled selected>Select Hardware, Software, Network, Account, or Other</option>
+                                <?php foreach ($techn_specialties as $spec) { ?>
+                                <option value="<?php echo htmlspecialchars($spec); ?>"><?php echo htmlspecialchars($spec); ?></option>
+                                <?php } ?>
+                            </select>
+                            <small>Tickets in this category are routed to this technician.</small>
+                        </div>
+                        <div class="user-form-actions">
+                            <a href="?tab=utilities" class="apply-btn apply-btn-ghost">Cancel</a>
+                            <button type="submit" name="add_user" class="apply-btn apply-btn-primary">Create account</button>
+                        </div>
+                    </form>
+                </article>
+
+                <?php } elseif ($editing_user) { ?>
+                <article class="apply-shell apply-shell-admin user-form-card">
+                    <header class="apply-shell-head">
+                        <p class="apply-kicker">Account utilities</p>
+                        <h2>Edit user</h2>
+                        <p>Update this account’s name, email, or role. Technical role appears only for technicians.</p>
+                    </header>
+                    <form class="user-form apply-user-form" action="../logic/user_admin_mngmnt.php" method="post">
+<?php echo zpgc_csrf_field(); ?>
+                        <input type="hidden" name="id" value="<?php echo (int) $editing_user['id']; ?>">
+                        <div class="user-form-row">
+                            <div class="user-form-field">
+                                <label for="edit_first_name">First Name</label>
+                                <input type="text" id="edit_first_name" name="first_name"
+                                    value="<?php echo htmlspecialchars($editing_user['first_name']); ?>" required>
+                            </div>
+                            <div class="user-form-field">
+                                <label for="edit_last_name">Last Name</label>
+                                <input type="text" id="edit_last_name" name="last_name"
+                                    value="<?php echo htmlspecialchars($editing_user['last_name']); ?>" required>
+                            </div>
+                        </div>
+                        <div class="user-form-field">
+                            <label for="edit_email">Email Address</label>
+                            <input type="email" id="edit_email" name="email"
+                                value="<?php echo htmlspecialchars($editing_user['email']); ?>" required>
+                        </div>
+                        <div class="user-form-field">
+                            <label for="edit_role">Role</label>
+                            <select id="edit_role" name="role" required data-specialty-toggle="edit-specialty-wrap">
+                                <?php foreach ($role_labels as $val => $label) { ?>
+                                <option value="<?php echo htmlspecialchars($val); ?>"
+                                    <?php echo $editing_user['role'] === $val ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($label); ?>
+                                </option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                        <?php
+                        $editSpec = '';
+                        if (($editing_user['role'] ?? '') === 'techn') {
+                            $editSpec = (string) (($techn_spec_by_user[(int) $editing_user['id']]['specialty'] ?? ''));
+                        }
+                        ?>
+                        <div class="user-form-field is-techn-only<?php echo ($editing_user['role'] ?? '') === 'techn' ? ' is-open' : ''; ?>" id="edit-specialty-wrap">
+                            <label for="edit_specialty">Technical role</label>
+                            <select id="edit_specialty" name="specialty" <?php echo ($editing_user['role'] ?? '') === 'techn' ? 'required' : ''; ?>>
+                                <option value="" disabled <?php echo $editSpec === '' ? 'selected' : ''; ?>>Select Hardware, Software, Network, Account, or Other</option>
+                                <?php foreach ($techn_specialties as $spec) { ?>
+                                <option value="<?php echo htmlspecialchars($spec); ?>"
+                                    <?php echo strcasecmp($editSpec, $spec) === 0 ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($spec); ?>
+                                </option>
+                                <?php } ?>
+                            </select>
+                            <small>Tickets in this category are routed to this technician.</small>
+                        </div>
+                        <div class="user-form-actions">
+                            <a href="?tab=utilities" class="apply-btn apply-btn-ghost">Cancel</a>
+                            <button type="submit" name="edit_user" class="apply-btn apply-btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </article>
+
+                <?php } else { ?>
                 <div class="ticket-retention-card techn-apply-card">
                     <div class="ticket-retention-copy">
                         <h2>Technician applications</h2>
                         <p class="form-subtitle">
                             After Outlook verification, technicians submit a specialty and resume.
-                            Approve activates the account. Modify emails a 24-hour confirmation link.
-                            Reject (or no response in 24 hours after a modify) removes the application.
+                            Open <strong>Review</strong> first. Approve the requested role, or pick a
+                            different role to send an Outlook offer. The technician can accept (activates)
+                            or decline (removes the account).
                         </p>
                     </div>
                     <?php if (empty($techn_applications)) { ?>
@@ -619,45 +861,17 @@ $ui_theme = current_ui_theme();
                     <div class="techn-apply-list">
                         <?php foreach ($techn_applications as $appRow) {
                             $appName = trim((string) $appRow['first_name'] . ' ' . (string) $appRow['last_name']);
-                            $awaiting = ($appRow['status'] ?? '') === 'awaiting_role_change';
                             ?>
                         <div class="techn-apply-row">
                             <div class="techn-apply-meta">
                                 <strong><?php echo htmlspecialchars($appName); ?></strong>
                                 <span><?php echo htmlspecialchars((string) $appRow['email']); ?></span>
-                                <span>Role: <?php echo htmlspecialchars((string) $appRow['specialty']); ?>
+                                <span>Applied: <?php echo htmlspecialchars((string) $appRow['specialty']); ?>
                                     · <?php echo htmlspecialchars(techn_apply_status_label($appRow['status'] ?? '')); ?>
-                                    <?php if ($awaiting) { ?>
-                                    · proposed <?php echo htmlspecialchars((string) $appRow['proposed_specialty']); ?>
-                                    <?php } ?>
                                 </span>
-                                <a href="../logic/resume_file.php?id=<?php echo (int) $appRow['id']; ?>">Download resume</a>
                             </div>
                             <div class="techn-apply-actions">
-                                <form action="../logic/techn_apply_admin_mngmnt.php" method="post">
-                                    <?php echo zpgc_csrf_field(); ?>
-                                    <input type="hidden" name="app_id" value="<?php echo (int) $appRow['id']; ?>">
-                                    <button type="submit" name="apply_approve" class="btn-update-status">Approve</button>
-                                </form>
-                                <form action="../logic/techn_apply_admin_mngmnt.php" method="post" class="techn-apply-modify">
-                                    <?php echo zpgc_csrf_field(); ?>
-                                    <input type="hidden" name="app_id" value="<?php echo (int) $appRow['id']; ?>">
-                                    <select name="proposed_specialty" aria-label="Propose specialty" required>
-                                        <?php foreach ($techn_specialties as $spec) { ?>
-                                        <option value="<?php echo htmlspecialchars($spec); ?>"
-                                            <?php echo strcasecmp($spec, (string) $appRow['specialty']) === 0 ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($spec); ?>
-                                        </option>
-                                        <?php } ?>
-                                    </select>
-                                    <button type="submit" name="apply_modify" class="btn-assign">Modify</button>
-                                </form>
-                                <form action="../logic/techn_apply_admin_mngmnt.php" method="post"
-                                    onsubmit="return confirm('Reject and remove this application?');">
-                                    <?php echo zpgc_csrf_field(); ?>
-                                    <input type="hidden" name="app_id" value="<?php echo (int) $appRow['id']; ?>">
-                                    <button type="submit" name="apply_reject" class="btn-delete">Reject</button>
-                                </form>
+                                <a href="?tab=utilities&review_app=<?php echo (int) $appRow['id']; ?>" class="btn-update-status">Review</a>
                             </div>
                         </div>
                         <?php } ?>
@@ -695,92 +909,6 @@ $ui_theme = current_ui_theme();
                     </div>
                 </div>
 
-                <?php if ($utilities_action === 'add') { ?>
-                <div class="user-form-card">
-                    <h2>Add User</h2>
-                    <p class="form-subtitle">Create a new account directly — it is active immediately.</p>
-                    <form class="user-form" action="../logic/user_admin_mngmnt.php" method="post">
-<?php echo zpgc_csrf_field(); ?>
-                        <div class="user-form-row">
-                            <div class="user-form-field">
-                                <label for="add_first_name">First Name</label>
-                                <input type="text" id="add_first_name" name="first_name" required>
-                            </div>
-                            <div class="user-form-field">
-                                <label for="add_last_name">Last Name</label>
-                                <input type="text" id="add_last_name" name="last_name" required>
-                            </div>
-                        </div>
-                        <div class="user-form-field">
-                            <label for="add_email">Email Address</label>
-                            <input type="email" id="add_email" name="email" required>
-                        </div>
-                        <div class="user-form-row">
-                            <div class="user-form-field">
-                                <label for="add_role">Role</label>
-                                <select id="add_role" name="role" required>
-                                    <option value="" disabled selected>Select a role</option>
-                                    <option value="user">User</option>
-                                    <option value="techn">Technician</option>
-                                    <option value="admin">Administrator</option>
-                                </select>
-                            </div>
-                            <div class="user-form-field">
-                                <label for="add_password">Temporary Password</label>
-                                <input type="password" id="add_password" name="password" minlength="8" required>
-                                <small>At least 8 characters.</small>
-                            </div>
-                        </div>
-                        <div class="user-form-actions">
-                            <a href="?tab=utilities" class="btn-cancel-user">Cancel</a>
-                            <button type="submit" name="add_user" class="btn-new-ticket">Create Account</button>
-                        </div>
-                    </form>
-                </div>
-
-                <?php } elseif ($editing_user) { ?>
-                <div class="user-form-card">
-                    <h2>Edit User</h2>
-                    <p class="form-subtitle">Update this account's name, email, or role.</p>
-                    <form class="user-form" action="../logic/user_admin_mngmnt.php" method="post">
-<?php echo zpgc_csrf_field(); ?>
-                        <input type="hidden" name="id" value="<?php echo (int) $editing_user['id']; ?>">
-                        <div class="user-form-row">
-                            <div class="user-form-field">
-                                <label for="edit_first_name">First Name</label>
-                                <input type="text" id="edit_first_name" name="first_name"
-                                    value="<?php echo htmlspecialchars($editing_user['first_name']); ?>" required>
-                            </div>
-                            <div class="user-form-field">
-                                <label for="edit_last_name">Last Name</label>
-                                <input type="text" id="edit_last_name" name="last_name"
-                                    value="<?php echo htmlspecialchars($editing_user['last_name']); ?>" required>
-                            </div>
-                        </div>
-                        <div class="user-form-field">
-                            <label for="edit_email">Email Address</label>
-                            <input type="email" id="edit_email" name="email"
-                                value="<?php echo htmlspecialchars($editing_user['email']); ?>" required>
-                        </div>
-                        <div class="user-form-field">
-                            <label for="edit_role">Role</label>
-                            <select id="edit_role" name="role" required>
-                                <?php foreach ($role_labels as $val => $label) { ?>
-                                <option value="<?php echo htmlspecialchars($val); ?>"
-                                    <?php echo $editing_user['role'] === $val ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($label); ?>
-                                </option>
-                                <?php } ?>
-                            </select>
-                        </div>
-                        <div class="user-form-actions">
-                            <a href="?tab=utilities" class="btn-cancel-user">Cancel</a>
-                            <button type="submit" name="edit_user" class="btn-new-ticket">Save Changes</button>
-                        </div>
-                    </form>
-                </div>
-
-                <?php } else { ?>
                 <div class="tickets-toolbar">
                     <div class="tickets-filter-tabs" id="utilities-filter-tabs">
                         <button type="button" class="filter-tab active-tab" data-filter="all">All</button>
@@ -803,7 +931,7 @@ $ui_theme = current_ui_theme();
                         <span class="ucol-id">ID</span>
                         <span class="ucol-name">Name</span>
                         <span class="ucol-email">Email</span>
-                        <span class="ucol-role">Role</span>
+                        <span class="ucol-role">Role / specialty</span>
                         <span class="ucol-status">Status</span>
                         <span class="ucol-action">Actions</span>
                     </div>
@@ -819,6 +947,19 @@ $ui_theme = current_ui_theme();
                                 $roleLabel = $role_labels[$u['role']];
                             } else {
                                 $roleLabel = ucfirst($u['role']);
+                            }
+                            $specInfo = $techn_spec_by_user[(int) $u['id']] ?? null;
+                            $specLabel = '';
+                            if (($u['role'] ?? '') === 'techn') {
+                                if ($specInfo) {
+                                    $specLabel = (string) ($specInfo['specialty'] ?? '');
+                                    if (($specInfo['status'] ?? '') === 'awaiting_role_change'
+                                        && ($specInfo['proposed_specialty'] ?? '') !== '') {
+                                        $specLabel .= ' → ' . (string) $specInfo['proposed_specialty'];
+                                    }
+                                } else {
+                                    $specLabel = 'Unspecified';
+                                }
                             }
                             $deleteConfirmName = htmlspecialchars(
                                 json_encode($u['first_name'] . ' ' . $u['last_name']),
@@ -836,8 +977,13 @@ $ui_theme = current_ui_theme();
                                 <?php echo htmlspecialchars($u['email']); ?>
                             </span>
                             <span class="ucol-role">
-                                <span class="profile-role-badge role-<?php echo htmlspecialchars($u['role']); ?>">
-                                    <?php echo htmlspecialchars($roleLabel); ?>
+                                <span class="ucol-role-stack">
+                                    <span class="profile-role-badge role-<?php echo htmlspecialchars($u['role']); ?>">
+                                        <?php echo htmlspecialchars($roleLabel); ?>
+                                    </span>
+                                    <?php if ($specLabel !== '') { ?>
+                                    <span class="ucol-spec"><?php echo htmlspecialchars($specLabel); ?></span>
+                                    <?php } ?>
                                 </span>
                             </span>
                             <span class="ucol-status">
@@ -846,6 +992,13 @@ $ui_theme = current_ui_theme();
                                 </span>
                             </span>
                             <span class="ucol-action">
+                                <?php
+                                $pendingApp = (!$isActive && ($u['role'] ?? '') === 'techn')
+                                    ? ($apps_by_user[(int) $u['id']] ?? null)
+                                    : null;
+                                if ($pendingApp) { ?>
+                                <a href="?tab=utilities&review_app=<?php echo (int) $pendingApp['id']; ?>" class="btn-update-status">Review</a>
+                                <?php } else { ?>
                                 <a href="?tab=utilities&edit_id=<?php echo (int) $u['id']; ?>" class="btn-assign">Edit</a>
                                 <form action="../logic/user_admin_mngmnt.php" method="post" class="ucol-action-form">
 <?php echo zpgc_csrf_field(); ?>
@@ -865,12 +1018,14 @@ $ui_theme = current_ui_theme();
                                 <?php } else { ?>
                                 <span class="ucol-action-spacer" aria-hidden="true"></span>
                                 <?php } ?>
+                                <?php } ?>
                             </span>
                         </div>
                         <?php } ?>
                         <?php } ?>
                     </div>
                 </div>
+
                 <div class="audit-panel">
                     <h2>Audit security check</h2>
                     <div class="audit-row audit-head">
@@ -892,6 +1047,7 @@ $ui_theme = current_ui_theme();
                     <?php } } ?>
                     </div>
                 </div>
+                <?php } ?>
                 <?php } ?>
             </div>
             <div class="page-content" id="page-messages">
@@ -989,6 +1145,36 @@ $ui_theme = current_ui_theme();
         window.DASHBOARD_CHART_DATA = <?php echo json_encode($dashboard_charts, JSON_UNESCAPED_UNICODE); ?>;
         window.DASHBOARD_CHART_RANGE = <?php echo json_encode($dashboard_charts['range'] ?? 'week'); ?>;
         window.ZPGC_CSRF = <?php echo json_encode(zpgc_csrf_token()); ?>;
+        (function () {
+            function bindSpecialty(roleId) {
+                var role = document.getElementById(roleId);
+                if (!role) {
+                    return;
+                }
+                var wrapId = role.getAttribute('data-specialty-toggle');
+                var wrap = wrapId ? document.getElementById(wrapId) : null;
+                if (!wrap) {
+                    return;
+                }
+                var spec = wrap.querySelector('select');
+                function sync() {
+                    var on = role.value === 'techn';
+                    wrap.classList.toggle('is-open', on);
+                    wrap.hidden = !on;
+                    if (spec) {
+                        spec.required = on;
+                        spec.disabled = !on;
+                        if (!on) {
+                            spec.selectedIndex = 0;
+                        }
+                    }
+                }
+                role.addEventListener('change', sync);
+                sync();
+            }
+            bindSpecialty('add_role');
+            bindSpecialty('edit_role');
+        })();
     </script>
     <script src="../js/lazy_load.js?v=1.6.27"></script>
     <script src="../js/utilities_filter.js?v=1.6.18"></script>

@@ -135,9 +135,9 @@ if (isset($_POST['signup'])) {
         exit();
     }
 
-    // Rate-limit signup bursts (testers inventing emails).
-    if (!zpgc_rate_limit('signup', 5, 3600)) {
-        $_SESSION['signup_error'] = 'Too many signup attempts from this browser. Wait a bit, then use your real TSU Outlook email.';
+    // Rate-limit signup bursts. Window is per IP (rate_limits table), so a new cookie does not reset it.
+    if (!zpgc_rate_limit('signup', 20, 1800)) {
+        $_SESSION['signup_error'] = 'Too many signup attempts from this browser. Wait about 30 minutes, then use your real TSU Outlook email.';
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }

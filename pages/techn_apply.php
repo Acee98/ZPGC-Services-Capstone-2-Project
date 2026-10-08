@@ -48,15 +48,28 @@ $awaiting = $app && ($app['status'] ?? '') === 'awaiting_role_change';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/ticket.css?v=1.6.19">
+    <link rel="stylesheet" href="../css/ticket.css?v=1.6.22">
+    <link rel="stylesheet" href="../css/apply.css?v=1.6.2">
     <title>ZPGC Services | Technician application</title>
 </head>
-<body>
-<div class="ticket-container">
-    <form class="ticket-form" action="../logic/techn_apply_mngmnt.php" method="post" enctype="multipart/form-data">
+<body class="apply-page">
+<?php
+$roleCopy = [
+    'Hardware' => 'Campus devices, monitors, and lab equipment',
+    'Software' => 'Apps, operating systems, and installs',
+    'Network' => 'Wi-Fi, LAN, and connectivity',
+    'Account' => 'Logins, passwords, and access',
+    'Other' => 'Anything that does not fit the roles above',
+];
+?>
+<div class="apply-page-wrap">
+    <form class="apply-shell ticket-form" action="../logic/techn_apply_mngmnt.php" method="post" enctype="multipart/form-data">
         <?php echo zpgc_csrf_field(); ?>
-        <h1 class="ticket-form-title">Technician application</h1>
-        <p class="ticket-hint">Your email is verified. Choose a specialty and upload your resume. The administrator reviews this with Pending status. You can review or delete it here — you cannot activate your own account.</p>
+        <header class="apply-shell-head">
+            <p class="apply-kicker">ZPGC Services</p>
+            <h1>Technician application</h1>
+            <p>Choose your technical role and attach a resume. An administrator reviews this before your account is activated.</p>
+        </header>
         <?php if ($error !== '') { ?>
         <div class="ticket-notice-error"><?php echo htmlspecialchars($error); ?></div>
         <?php } ?>
@@ -65,67 +78,83 @@ $awaiting = $app && ($app['status'] ?? '') === 'awaiting_role_change';
         <?php } ?>
 
         <?php if ($app) { ?>
-        <div class="ticket-field">
-            <label>Status</label>
-            <p class="ticket-hint" style="margin:0;"><?php echo htmlspecialchars(techn_apply_status_label($app['status'] ?? '')); ?></p>
+        <div class="apply-current">
+            <span class="apply-status-chip"><?php echo htmlspecialchars(techn_apply_status_label($app['status'] ?? '')); ?></span>
             <?php if ($awaiting) { ?>
-            <p class="ticket-hint">Administrator proposed <strong><?php echo htmlspecialchars((string) $app['proposed_specialty']); ?></strong>
-                (current: <?php echo htmlspecialchars((string) $app['specialty']); ?>). Confirm within 24 hours or this application is removed.</p>
+            <p>Administrator offered <strong><?php echo htmlspecialchars((string) $app['proposed_specialty']); ?></strong>
+                instead of <strong><?php echo htmlspecialchars((string) $app['specialty']); ?></strong>.
+                Accept within 24 hours to activate your account, or decline to remove the application and account.</p>
+            <?php } else { ?>
+            <p>Your application is waiting for administrator review. You can update the role or resume below.</p>
             <?php } ?>
-        </div>
-        <div class="ticket-field">
-            <label>Resume on file</label>
-            <p class="ticket-hint" style="margin:0;">
-                <a href="../logic/resume_file.php?id=<?php echo (int) $app['id']; ?>">
-                    <?php echo htmlspecialchars((string) $app['resume_original_name']); ?>
-                </a>
-            </p>
+            <a class="apply-resume-link" href="../logic/resume_file.php?id=<?php echo (int) $app['id']; ?>">
+                Resume on file: <?php echo htmlspecialchars((string) $app['resume_original_name']); ?>
+            </a>
         </div>
         <?php } ?>
 
-        <div class="ticket-field">
-            <label for="specialty">Technical role</label>
-            <select id="specialty" name="specialty" required>
-                <option value="" disabled <?php echo empty($app) ? 'selected' : ''; ?>>Select a role</option>
+        <fieldset class="apply-fieldset">
+            <legend>Technical role</legend>
+            <div class="apply-roles">
                 <?php foreach ($specialties as $opt) {
-                    $sel = $app && strcasecmp((string) $app['specialty'], $opt) === 0 ? 'selected' : '';
+                    $checked = $app && strcasecmp((string) $app['specialty'], $opt) === 0;
                     ?>
-                <option value="<?php echo htmlspecialchars($opt); ?>" <?php echo $sel; ?>><?php echo htmlspecialchars($opt); ?></option>
+                <label class="apply-role-card">
+                    <input type="radio" name="specialty" value="<?php echo htmlspecialchars($opt); ?>" <?php echo $checked ? 'checked' : ''; ?> required>
+                    <span class="apply-role-name"><?php echo htmlspecialchars($opt); ?></span>
+                    <span class="apply-role-copy"><?php echo htmlspecialchars($roleCopy[$opt] ?? ''); ?></span>
+                </label>
                 <?php } ?>
-            </select>
-        </div>
-        <div class="ticket-field">
-            <label for="resume"><?php echo $app ? 'Replace resume (optional)' : 'Resume (PDF, DOC, or DOCX, max 5 MB)'; ?></label>
-            <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx,application/pdf" <?php echo $app ? '' : 'required'; ?>>
-        </div>
+            </div>
+        </fieldset>
 
-        <div class="ticket-actions">
+        <fieldset class="apply-fieldset">
+            <legend><?php echo $app ? 'Replace resume (optional)' : 'Resume'; ?></legend>
+            <label class="apply-drop" for="resume">
+                <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx,application/pdf" <?php echo $app ? '' : 'required'; ?>>
+                <span class="apply-drop-title" data-empty="Drop or choose a PDF, DOC, or DOCX (max 5 MB)" data-picked="">Drop or choose a PDF, DOC, or DOCX (max 5 MB)</span>
+                <span class="apply-drop-hint">Administrators download this during review.</span>
+            </label>
+        </fieldset>
+
+        <div class="apply-actions">
             <?php if (!$app) { ?>
-            <button type="submit" name="submit_application" class="btn-submit-ticket">Submit application</button>
+            <button type="submit" name="submit_application" class="apply-btn apply-btn-primary">Submit application</button>
             <?php } else { ?>
-            <button type="submit" name="update_application" class="btn-submit-ticket">Save changes</button>
+            <button type="submit" name="update_application" class="apply-btn apply-btn-primary">Save changes</button>
             <?php if ($awaiting) { ?>
-            <button type="submit" name="accept_role_change" class="btn-submit-ticket">Approve specialty change</button>
+            <button type="submit" name="accept_role_change" class="apply-btn apply-btn-secondary">Accept role and activate</button>
+            <button type="submit" name="decline_role_change" class="apply-btn apply-btn-danger"
+                onclick="return confirm('Decline this offer? Your application and account will be removed.');">Decline offer</button>
             <?php } ?>
-            <button type="submit" name="delete_application" class="btn-cancel-ticket"
-                onclick="return confirm('Delete this application? You can submit a new one later.');">Delete application</button>
+            <button type="submit" name="delete_application" class="apply-btn apply-btn-danger"
+                onclick="return confirm('Withdraw this application? Your technician account will be deleted.');">Withdraw application</button>
             <?php } ?>
+            <a class="apply-btn apply-btn-ghost" href="../logic/logout.php">Sign out</a>
         </div>
-        <p class="ticket-hint"><a href="../logic/logout.php">Sign out</a></p>
     </form>
 </div>
 <script>
 (function () {
     var form = document.querySelector('.ticket-form');
     var input = document.getElementById('resume');
+    var dropTitle = document.querySelector('.apply-drop-title');
     if (!form || !input) {
         return;
     }
+    input.addEventListener('change', function () {
+        if (!dropTitle) {
+            return;
+        }
+        dropTitle.textContent = (input.files && input.files[0])
+            ? input.files[0].name
+            : (dropTitle.getAttribute('data-empty') || dropTitle.textContent);
+    });
     var MAX = 5 * 1024 * 1024;
-    var CHUNK = 400 * 1024;
+    var CHUNK = 256 * 1024;
     form.addEventListener('submit', function (e) {
         var action = (e.submitter && e.submitter.getAttribute('name')) || '';
-        if (action === 'delete_application' || action === 'accept_role_change') {
+        if (action === 'delete_application' || action === 'accept_role_change' || action === 'decline_role_change') {
             return;
         }
         var file = input.files && input.files[0];
@@ -135,9 +164,6 @@ $awaiting = $app && ($app['status'] ?? '') === 'awaiting_role_change';
         if (file.size > MAX) {
             e.preventDefault();
             alert('Resume must be 5 MB or smaller.');
-            return;
-        }
-        if (file.size <= CHUNK) {
             return;
         }
         e.preventDefault();
@@ -177,8 +203,28 @@ $awaiting = $app && ($app['status'] ?? '') === 'awaiting_role_change';
             data.append('total', String(total));
             data.append('orig_name', file.name);
             data.append('chunk', blob, 'part.bin');
-            fetch('../logic/techn_apply_mngmnt.php', { method: 'POST', body: data, credentials: 'same-origin' })
-                .then(function (res) { return res.json().then(function (j) { return { ok: res.ok, j: j }; }); })
+            fetch('../logic/techn_apply_mngmnt.php', {
+                method: 'POST',
+                body: data,
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(function (res) {
+                    if (res.status === 413) {
+                        return { ok: false, j: { ok: false, error: 'Server rejected the resume as too large (HTTP 413). Use a PDF under 5 MB.' } };
+                    }
+                    var ct = (res.headers.get('content-type') || '').toLowerCase();
+                    if (ct.indexOf('json') === -1) {
+                        return res.text().then(function (t) {
+                            var msg = 'Resume upload failed.';
+                            if (/413|request entity too large/i.test(t)) {
+                                msg = 'Server rejected the resume as too large (HTTP 413). Use a PDF under 5 MB.';
+                            }
+                            return { ok: false, j: { ok: false, error: msg } };
+                        });
+                    }
+                    return res.json().then(function (j) { return { ok: res.ok, j: j }; });
+                })
                 .then(function (out) {
                     if (!out.j || !out.j.ok) {
                         fail(out.j && out.j.error);

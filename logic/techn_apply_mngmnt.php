@@ -107,10 +107,12 @@ if (isset($_POST['delete_application'])) {
     if (!$app || ($app['status'] ?? '') === 'approved') {
         apply_fail('There is no application to delete.');
     }
-    if (!techn_apply_delete_row($conn, $app)) {
+    $removed = techn_apply_remove_inactive_technician($conn, $userId);
+    if (empty($removed['ok'])) {
         apply_fail('Could not delete the application.');
     }
-    apply_ok('Application deleted. You can submit a new one when you are ready.');
+    header('Location: ../logic/logout.php');
+    exit();
 }
 
 if (isset($_POST['accept_role_change'])) {
@@ -118,7 +120,19 @@ if (isset($_POST['accept_role_change'])) {
     if (empty($r['ok'])) {
         apply_fail($r['error'] ?? 'Could not confirm the specialty change.');
     }
-    apply_ok('Specialty updated to ' . $r['specialty'] . '. Your application is Pending for the administrator.');
+    unset($_SESSION['techn_applicant']);
+    $_SESSION['login_success'] = 'You accepted the ' . $r['specialty'] . ' role. Your technician account is active.';
+    header('Location: ../pages/techn.php');
+    exit();
+}
+
+if (isset($_POST['decline_role_change'])) {
+    $r = techn_apply_decline_role_change($conn, $userId);
+    if (empty($r['ok'])) {
+        apply_fail($r['error'] ?? 'Could not decline the offer.');
+    }
+    header('Location: ../logic/logout.php');
+    exit();
 }
 
 if (isset($_POST['submit_application']) || isset($_POST['update_application'])) {

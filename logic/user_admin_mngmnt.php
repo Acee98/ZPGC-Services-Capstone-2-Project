@@ -2,6 +2,7 @@
 require_once 'session_config.php';
 require_once 'config.php';
 require_once 'audit_log.php';
+require_once 'techn_apply.php';
 require_role('admin');
 zpgc_csrf_require();
 
@@ -75,6 +76,23 @@ if (isset($_POST['add_user'])) {
     }
     $newId = (int) $conn->insert_id;
     $insert->close();
+    if ($role === 'techn') {
+        $spec = techn_apply_admin_set_specialty($conn, $newId, $_POST['specialty'] ?? '');
+        if (empty($spec['ok'])) {
+            $del = $conn->prepare('DELETE FROM users WHERE id = ?');
+            $del->bind_param('i', $newId);
+            $del->execute();
+            $del->close();
+            utilities_fail($spec['error'] ?? 'Choose a technical role for the technician.', 'tab=utilities&action=add');
+        }
+        utilities_audit(
+            $conn,
+            'add_user',
+            $newId,
+            'Created technician ' . $email . ' as ' . $spec['specialty'] . '.'
+        );
+        utilities_ok("Technician account for $first_name $last_name created (" . $spec['specialty'] . ') and active.');
+    }
     utilities_audit($conn, 'add_user', $newId, 'Created account ' . $email . ' as ' . $role . '.');
     utilities_ok("Account for $first_name $last_name created and active.");
 }
@@ -124,6 +142,14 @@ if (isset($_POST['edit_user'])) {
         utilities_fail('Could not update that account.', 'tab=utilities&edit_id=' . $id);
     }
     $update->close();
+    if ($role === 'techn') {
+        $spec = techn_apply_admin_set_specialty($conn, $id, $_POST['specialty'] ?? '');
+        if (empty($spec['ok'])) {
+            utilities_fail($spec['error'] ?? 'Choose a technical role for the technician.', 'tab=utilities&edit_id=' . $id);
+        }
+        utilities_audit($conn, 'edit_user', $id, 'Updated technician ' . $email . ' to ' . $spec['specialty'] . '.');
+        utilities_ok('Account updated (' . $spec['specialty'] . ').');
+    }
     utilities_audit($conn, 'edit_user', $id, 'Updated account ' . $email . ' to role ' . $role . '.');
     utilities_ok('Account updated.');
 }

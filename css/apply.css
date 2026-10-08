@@ -1,0 +1,402 @@
+.apply-page {
+    background:
+        radial-gradient(1200px 400px at 10% -10%, rgba(126, 3, 11, 0.12), transparent 55%),
+        #ebebeb;
+}
+
+.apply-page-wrap {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.apply-shell {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(26, 26, 26, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.apply-shell.ticket-form {
+    padding: 0;
+    gap: 0;
+    max-width: none;
+}
+
+.apply-shell-head {
+    background: linear-gradient(135deg, #610107 0%, #9a1820 100%);
+    color: #fff;
+    padding: 28px 28px 24px;
+}
+
+.apply-kicker {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.apply-shell-head h1,
+.apply-shell-head h2 {
+    margin: 0 0 8px;
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.apply-shell-head p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.apply-shell .ticket-notice-error,
+.apply-shell .ticket-notice-ok {
+    margin: 16px 28px 0;
+    width: auto;
+}
+
+.apply-current,
+.apply-fieldset,
+.apply-actions,
+.apply-review-person,
+.apply-review-facts,
+.apply-review-actions {
+    padding: 20px 28px;
+}
+
+.apply-current {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.apply-current p {
+    margin: 0;
+    font-size: 13px;
+    color: #5a5a5a;
+    line-height: 1.45;
+}
+
+.apply-status-chip {
+    align-self: flex-start;
+    background: #f7f0f1;
+    color: #610107;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+.apply-fieldset {
+    border: none;
+    margin: 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.apply-fieldset legend {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1a1a1a;
+    padding: 0 0 12px;
+}
+
+.apply-roles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.apply-role-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 14px 12px;
+    border: 1.5px solid #e6e6e6;
+    border-radius: 12px;
+    background: #fafafa;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.apply-role-card:hover {
+    border-color: #c9a3a6;
+}
+
+.apply-role-card:has(input:checked) {
+    border-color: #7e030b;
+    background: #f7f0f1;
+    box-shadow: 0 0 0 3px rgba(126, 3, 11, 0.12);
+}
+
+.apply-role-card input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.apply-role-name {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1a1a1a;
+}
+
+.apply-role-copy {
+    font-size: 12px;
+    color: #6b6b6b;
+    line-height: 1.4;
+}
+
+.apply-drop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 120px;
+    padding: 20px;
+    border: 1.5px dashed #c9a3a6;
+    border-radius: 12px;
+    background: #fdf8f8;
+    cursor: pointer;
+    text-align: center;
+}
+
+.apply-drop input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.apply-drop-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #610107;
+}
+
+.apply-drop-hint {
+    font-size: 12px;
+    color: #787777;
+}
+
+.apply-actions,
+.apply-review-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.apply-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: Inter, sans-serif;
+}
+
+.apply-btn-primary {
+    background: #610107;
+    color: #fff;
+}
+
+.apply-btn-primary:hover {
+    background: #7e030b;
+}
+
+.apply-btn-secondary {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.apply-btn-danger {
+    background: #fff;
+    color: #7e030b;
+    border: 1px solid #e3b4b8;
+}
+
+.apply-btn-ghost {
+    background: transparent;
+    color: #5a5a5a;
+    border: 1px solid #d9d9d9;
+}
+
+.apply-resume-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #610107;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    word-break: break-word;
+}
+
+.apply-resume-link:hover {
+    text-decoration: underline;
+}
+
+.apply-shell-admin {
+    margin: 0 var(--ui-pad-x, 24px) 24px;
+}
+
+.apply-review-person {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.apply-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #610107;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.apply-review-person strong {
+    display: block;
+    font-size: 18px;
+    color: #1a1a1a;
+}
+
+.apply-review-person span {
+    font-size: 13px;
+    color: #5a5a5a;
+}
+
+.apply-review-person .apply-status-chip {
+    margin-left: auto;
+}
+
+.apply-review-facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.apply-fact-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #787777;
+    margin-bottom: 8px;
+}
+
+.apply-role-pill {
+    display: inline-block;
+    background: #1a1a1a;
+    color: #fff;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.apply-fact-note {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #5a5a5a;
+}
+
+.apply-modify-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.apply-modify-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #5a5a5a;
+}
+
+.apply-modify-label select {
+    min-width: 140px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #d9d9d9;
+    font-size: 14px;
+}
+
+.apply-current .ticket-notice-ok,
+.apply-current .ticket-notice-error {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.apply-current .ticket-notice-ok {
+    background: #eef7ee;
+    color: #1b5e20;
+}
+
+.apply-current .ticket-notice-error {
+    background: #fdecea;
+    color: #7e030b;
+}
+
+html[data-theme="dark"] .apply-shell {
+    background: #1c1c1f;
+    box-shadow: none;
+}
+
+html[data-theme="dark"] .apply-fieldset legend,
+html[data-theme="dark"] .apply-role-name,
+html[data-theme="dark"] .apply-review-person strong {
+    color: #f4f4f5;
+}
+
+html[data-theme="dark"] .apply-role-card {
+    background: #141416;
+    border-color: #3a3a40;
+}
+
+html[data-theme="dark"] .apply-role-card:has(input:checked) {
+    background: #2a1518;
+}
+
+@media (max-width: 640px) {
+    .apply-roles,
+    .apply-review-facts {
+        grid-template-columns: 1fr;
+    }
+
+    .apply-review-person {
+        flex-wrap: wrap;
+    }
+
+    .apply-review-person .apply-status-chip {
+        margin-left: 62px;
+    }
+}

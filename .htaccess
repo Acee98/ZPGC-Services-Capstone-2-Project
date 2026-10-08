@@ -1,6 +1,17 @@
 # Hostinger / Apache (XAMPP). Azure Linux uses nginx + startup.sh instead.
 DirectoryIndex index.php pages/login_signup.php
 
+# Resume / ticket uploads (5 MB form cap). Stops HTTP 413 before PHP on LiteSpeed.
+<IfModule mod_php.c>
+    php_value upload_max_filesize 16M
+    php_value post_max_size 20M
+</IfModule>
+<IfModule lsapi_module>
+    php_value upload_max_filesize 16M
+    php_value post_max_size 20M
+</IfModule>
+LimitRequestBody 20971520
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
 

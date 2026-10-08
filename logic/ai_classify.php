@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/severity_matrix.php';
+require_once __DIR__ . '/ai_fewshot.php';
 
 if (!function_exists('ai_classifier_base')) {
     /**
@@ -371,10 +372,10 @@ if (!function_exists('ai_classifier_base')) {
         $blob = strtolower(trim((string) $subject . ' ' . (string) $description));
         $category = 'other';
         $rules = [
-            ['/\b(password|login|otp|2fa|account|username|lock(ed)?|reset|sign\s*in|profile picture)\b/i', 'account'],
-            ['/\b(wifi|wi-?fi|internet|network|lan|vpn|router|dns|offline|disconnect|website)\b/i', 'network'],
-            ['/\b(blue\s*screen|bsod|overheat|fan|battery|charger|keyboard|mouse|monitor|printer|hardware|ram|ssd|hdd|computer will not|turn on)\b/i', 'hardware'],
-            ['/\b(install|update|crash|freeze|slow|software|app|excel|word|chrome|outlook|license|activation|program)\b/i', 'software'],
+            ['/\b(password|otp|2fa|username|account locked|lock(ed)? account|sign\s*in|log ?in failed|reset (my )?password|profile picture)\b/i', 'account'],
+            ['/\b(wi-?fi|wireless|vpn|ethernet|dns|router|no internet|cannot connect to (the )?internet)\b/i', 'network'],
+            ['/\b(blue\s*screen|bsod|overheat|battery|charger|keyboard|mouse|monitor|printer|projector|ram|ssd|hdd|won\'t turn on|will not turn on|computer will not)\b/i', 'hardware'],
+            ['/\b(excel|microsoft word|\bms word\b|google chrome|outlook|license key|activation|install (the )?(app|application|program|software)|software update)\b/i', 'software'],
         ];
         foreach ($rules as $rule) {
             if (preg_match($rule[0], $blob)) {
@@ -421,10 +422,12 @@ if (!function_exists('ai_classifier_base')) {
             . 'impact 1=one person, 2=group/class/lab, 3=department or whole campus. '
             . 'urgency and impact must be integers 1, 2, or 3.';
         $user = "Subject: {$subject}\nDescription: {$description}";
-        $chat = ai_openai_chat([
-            ['role' => 'system', 'content' => $system],
-            ['role' => 'user', 'content' => $user],
-        ], 200, 0.2);
+        $messages = array_merge(
+            [['role' => 'system', 'content' => $system]],
+            ai_fewshot_classify_messages(),
+            [['role' => 'user', 'content' => $user]]
+        );
+        $chat = ai_openai_chat($messages, 200, 0.2);
 
         if (!$chat['ok']) {
             return [

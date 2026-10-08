@@ -12,6 +12,10 @@ if (!function_exists('auth_mail_ready')) {
             $_SESSION['_zpgc_auth_mail_ready'] = 1;
             return;
         }
+        $usersTbl = $conn->query("SHOW TABLES LIKE 'users'");
+        if (!$usersTbl || $usersTbl->num_rows === 0) {
+            return;
+        }
         $col = $conn->query("SHOW COLUMNS FROM users LIKE 'email_verified'");
         if (!$col || $col->num_rows === 0) {
             $conn->query(

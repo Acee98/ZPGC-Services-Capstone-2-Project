@@ -1047,8 +1047,8 @@ body[data-page="messages"] .showcase #page-messages {
     grid-template-columns:
         56px
         minmax(110px, 1fr)
-        minmax(170px, 1.35fr)
-        118px
+        minmax(150px, 1.2fr)
+        150px
         96px
         280px;
     column-gap: 12px;
@@ -1087,6 +1087,22 @@ body[data-page="messages"] .showcase #page-messages {
     align-items: center;
     text-align: center;
     width: 100%;
+}
+
+.ucol-role-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.ucol-spec {
+    font-size: 11px;
+    font-weight: 700;
+    color: #610107;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
 .tickets-list-utilities .tickets-list-header .ucol-action {
@@ -1663,12 +1679,30 @@ body[data-page="utilities"] .tickets-toolbar {
 
 .user-form-card {
     background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10);
-    padding: 28px;
-    margin: 12px auto 28px;
-    max-width: 640px;
-    width: calc(100% - 30px);
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(26, 26, 26, 0.08);
+    padding: 0;
+    margin: 12px var(--ui-pad-x, 24px) 28px;
+    max-width: none;
+    width: calc(100% - (var(--ui-pad-x, 24px) * 2));
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.user-form-card.apply-shell {
+    padding: 0;
+}
+.apply-user-form {
+    padding: 24px 28px 28px;
+}
+.user-form-field.is-techn-only {
+    display: none !important;
+}
+.user-form-field.is-techn-only.is-open {
+    display: flex !important;
+    padding: 14px;
+    border: 1.5px solid #e3b4b8;
+    border-radius: 12px;
+    background: #fdf8f8;
 }
 .user-form {
     display: flex;
@@ -3185,8 +3219,9 @@ body[data-page="utilities"] #page-utilities .tickets-list-body {
 }
 
 .user-form-card {
-    margin: var(--ui-space-2) auto var(--ui-space-3);
+    margin: var(--ui-space-2) var(--ui-pad-x) var(--ui-space-3);
     width: calc(100% - (var(--ui-pad-x) * 2));
+    max-width: none;
 }
 
 .audit-panel {
@@ -3911,6 +3946,29 @@ body[data-page="messages"] .mailbox-container {
     padding: 6px 8px;
     border-radius: 6px;
     border: 1px solid #d9d9d9;
+}
+
+.techn-apply-review-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 24px;
+    margin: 0 0 20px;
+}
+
+.techn-apply-review-actions {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.techn-apply-review-actions form {
+    margin: 0;
+}
+
+@media (max-width: 720px) {
+    .techn-apply-review-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 

@@ -90,8 +90,17 @@ $n = techn_apply_expire_stale($conn);
 ok('stale role-change removed', $n === 1, (string) $n);
 $gone = techn_apply_get_for_user($conn, $userId);
 ok('app deleted after timeout', $gone === null);
-$still = $conn->query('SELECT status FROM users WHERE id = ' . $userId)->fetch_assoc();
-ok('user remains inactive', ($still['status'] ?? '') === 'inactive');
+$still = $conn->query('SELECT id FROM users WHERE id = ' . $userId)->fetch_assoc();
+ok('inactive technician removed from accounts', $still === null);
+
+$stmt = $conn->prepare(
+    'INSERT INTO users (first_name, last_name, email, password, role, status, email_verified)
+     VALUES (?, ?, ?, ?, ?, ?, ?)'
+);
+$stmt->bind_param('ssssssi', $fn, $ln, $email, $hash, $role, $status, $v);
+ok('recreate technician after expiry', $stmt->execute());
+$userId = (int) $conn->insert_id;
+$stmt->close();
 
 $ins = $conn->prepare(
     'INSERT INTO technician_applications
@@ -100,6 +109,68 @@ $ins = $conn->prepare(
 );
 $ins->bind_param('isssss', $userId, $spec, $stored, $orig, $mime, $appStatus);
 ok('re-apply after delete', $ins->execute());
+$ins->close();
+
+$app = techn_apply_get_for_user($conn, $userId);
+$id = (int) ($app['id'] ?? 0);
+$up = $conn->prepare(
+    "UPDATE technician_applications
+     SET proposed_specialty = ?, status = 'awaiting_role_change',
+         role_change_expires_at = DATE_ADD(NOW(), INTERVAL 24 HOUR)
+     WHERE id = ?"
+);
+$up->bind_param('si', $prop, $id);
+$up->execute();
+$up->close();
+$accepted = techn_apply_accept_role_change($conn, $userId);
+ok('accept offer activates', !empty($accepted['ok']) && ($accepted['specialty'] ?? '') === 'Network');
+$stOffer = $conn->query('SELECT status FROM users WHERE id = ' . $userId)->fetch_assoc();
+ok('user active after accepting offer', ($stOffer['status'] ?? '') === 'active');
+$appOffer = techn_apply_get_for_user($conn, $userId);
+ok('app approved after offer accept', ($appOffer['status'] ?? '') === 'approved');
+
+$conn->query('DELETE FROM technician_applications WHERE user_id = ' . $userId);
+$conn->query('DELETE FROM auth_tokens WHERE user_id = ' . $userId);
+$conn->query("UPDATE users SET status = 'inactive' WHERE id = " . $userId);
+$ins = $conn->prepare(
+    'INSERT INTO technician_applications
+     (user_id, specialty, resume_stored_name, resume_original_name, resume_mime, status)
+     VALUES (?, ?, ?, ?, ?, ?)'
+);
+$ins->bind_param('isssss', $userId, $spec, $stored, $orig, $mime, $appStatus);
+ok('setup decline case', $ins->execute());
+$ins->close();
+$app = techn_apply_get_for_user($conn, $userId);
+$id = (int) ($app['id'] ?? 0);
+$up = $conn->prepare(
+    "UPDATE technician_applications
+     SET proposed_specialty = ?, status = 'awaiting_role_change',
+         role_change_expires_at = DATE_ADD(NOW(), INTERVAL 24 HOUR)
+     WHERE id = ?"
+);
+$up->bind_param('si', $prop, $id);
+$up->execute();
+$up->close();
+$declined = techn_apply_decline_role_change($conn, $userId);
+ok('decline removes account', !empty($declined['ok']) && !empty($declined['deleted_user']));
+ok('user gone after decline', $conn->query('SELECT id FROM users WHERE id = ' . $userId)->fetch_assoc() === null);
+
+$stmt = $conn->prepare(
+    'INSERT INTO users (first_name, last_name, email, password, role, status, email_verified)
+     VALUES (?, ?, ?, ?, ?, ?, ?)'
+);
+$stmt->bind_param('ssssssi', $fn, $ln, $email, $hash, $role, $status, $v);
+ok('recreate technician for approve', $stmt->execute());
+$userId = (int) $conn->insert_id;
+$stmt->close();
+
+$ins = $conn->prepare(
+    'INSERT INTO technician_applications
+     (user_id, specialty, resume_stored_name, resume_original_name, resume_mime, status)
+     VALUES (?, ?, ?, ?, ?, ?)'
+);
+$ins->bind_param('isssss', $userId, $spec, $stored, $orig, $mime, $appStatus);
+ok('pending app for approve', $ins->execute());
 $ins->close();
 
 $r = techn_apply_approve_account($conn, $userId);
