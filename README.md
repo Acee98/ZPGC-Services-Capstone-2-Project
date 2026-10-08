@@ -8,16 +8,16 @@ Web-based IT helpdesk for Zamboanga Peninsula Green Haven College. End users sub
 - MySQL 8 (or compatible)
 - Optional: OpenAI API key for classification; SMTP for verification and password reset mail
 
-## Clone for teammates (Cursor + XAMPP)
+## Local setup (XAMPP)
 
 GitHub: [Acee98/ZPGC-Services-Capstone-2-Project](https://github.com/Acee98/ZPGC-Services-Capstone-2-Project)
 
-1. In Cursor: **File → Open Folder**, or clone first:
+1. Clone the project:
    ```bash
    cd C:/xampp/htdocs
    git clone https://github.com/Acee98/ZPGC-Services-Capstone-2-Project.git CP2_V1.6
    ```
-2. In Cursor, open `C:\xampp\htdocs\CP2_V1.6`.
+2. Open `C:\xampp\htdocs\CP2_V1.6`.
 3. Create MySQL database `zpgc_services_db` and import the team dump, then patches in [`database/README.md`](database/README.md).
 4. Copy env templates (do **not** commit the filled copies):
    - `logic/mail.env.example` → `logic/mail.env`

@@ -51,11 +51,22 @@ logs/*
 ai/data/*.csv
 ai/data/_bm_*
 ai/data/_smoke_*
+ai/data/benchmark_*
 ai/data/viability_*.json
 ai/_tmp_types.php
 ai/viability_accuracy.php
 ai/campus_gold.php
+ai/smoke_*.php
+ai/probe_*.php
+ai/benchmark_kaggle.php
+ai/eval_paper_sklearn.py
+ai/metrics_paper.php
+ai/rebuild_paper_metrics.php
+ai/run_strong_model_benchmarks.bat
+ai/charts.py
 backup_db.zip
+tools/_tus_once.json
+tools/azure_apply_upload_limit.py
 
 # Local-only scripts
 tools/_git_*.sh
