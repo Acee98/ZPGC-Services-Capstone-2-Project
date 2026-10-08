@@ -26,7 +26,7 @@ KEYWORD_RULES: list[tuple[str, str]] = [
     (r"\b(password|login|otp|2fa|account|username|lock(ed)?|reset|sign\s*in)\b", "account"),
     (r"\b(wifi|wi-?fi|internet|network|lan|vpn|router|dns|offline|disconnect|website)\b", "network"),
     (r"\b(blue\s*screen|bsod|overheat|fan|battery|charger|keyboard|mouse|monitor|printer|hardware|ram|ssd|hdd|turn on)\b", "hardware"),
-    (r"\b(install|update|crash|freeze|slow|software|app|excel|word|chrome|outlook|license|activation|program)\b", "software"),
+    (r"\b(windows\s*update|software\s*update|pending\s*updates?|install|update|crash|freeze|slow|software|app|excel|word|chrome|outlook|license|activation|program|windows\s*(10|11)|office\s*365)\b", "software"),
 ]
 
 
@@ -182,9 +182,11 @@ def _openai_suggest(title: str, description: str, category: str, priority: str) 
 
     system = (
         "You are a campus IT helpdesk assistant. Give short, safe, step-by-step "
-        "troubleshooting tips for LOW-priority tickets. No passwords, no "
-        "destructive commands. Reply with ONLY valid JSON: "
-        '{"summary":"one sentence","steps":["step1","step2","step3"],'
+        "tips that match THIS ticket only. If the user asked how to do something, "
+        "give those how-to clicks — do not tell them to restart, check cables, or "
+        "toggle Wi-Fi unless that is actually the problem. No passwords, no "
+        "destructive commands. Do not invent school portal URLs. Reply with ONLY "
+        'valid JSON: {"summary":"one sentence","steps":["step1","step2","step3","step4"],'
         '"ask_technician_if":"when to escalate"}'
     )
     user = (
@@ -228,11 +230,94 @@ def _openai_suggest(title: str, description: str, category: str, priority: str) 
 
 def _keyword_suggest(title: str, description: str, category: str) -> dict[str, Any]:
     cat = _normalize_category(category)
+    blob = f"{title} {description}".lower()
+    playbooks = [
+        (
+            r"profile\s*pic|change (my )?(photo|picture|avatar)|display\s*picture",
+            "How to change a campus profile picture.",
+            [
+                "Windows sign-in photo: Settings → Accounts → Your info → Change your photo.",
+                "Outlook/webmail: click your initials at the top right, then Change photo.",
+                "Sign out and sign back in so lab PCs show the new picture.",
+            ],
+            "The photo still does not show after a full sign-out.",
+        ),
+        (
+            r"forgot (my )?password|reset (my )?password|password (expired|not working|incorrect)",
+            "Reset a campus password safely.",
+            [
+                "Check Caps Lock and the campus username.",
+                "Use only the official Forgot password link — never a third-party site.",
+                "Wait about two minutes after a reset, then sign in on one device.",
+            ],
+            "Reset succeeds but you still cannot sign in.",
+        ),
+        (
+            r"wi-?fi|wireless|ssid",
+            "Reconnect to campus Wi-Fi.",
+            [
+                "Toggle Wi-Fi off and on, then join the official campus network.",
+                "Forget the network and join again with the current password.",
+                "Turn off airplane mode and VPN, then retry.",
+            ],
+            "Nearby devices connect but yours does not.",
+        ),
+        (
+            r"printer|print job|won'?t print|cannot print",
+            "Get a campus printer working again.",
+            [
+                "Confirm the printer is on and shows Ready (paper, toner, no jam).",
+                "Set it as the default printer and print a one-page test.",
+                "Clear the print queue, power-cycle the printer, then retry.",
+            ],
+            "The printer stays Offline after a power cycle.",
+        ),
+        (
+            r"projector|hdmi",
+            "Fix a classroom projector or HDMI display.",
+            [
+                "Power the projector on and select the matching HDMI input.",
+                "Reseat the HDMI cable at both ends.",
+                "Press Win + P and choose Duplicate.",
+            ],
+            "Another laptop also shows No signal.",
+        ),
+        (
+            r"\boutlook\b",
+            "Fix Outlook mail on campus.",
+            [
+                "Sign in to Outlook on the web with the school account first.",
+                "In the Outlook app, File → Office Account and use the same school account.",
+                "Turn off Work Offline if mail will not send.",
+            ],
+            "Webmail works but the desktop app does not.",
+        ),
+        (
+            r"google chrome|\bchrome\b",
+            "Fix Google Chrome.",
+            [
+                "Close Chrome fully (Task Manager if frozen) and reopen it.",
+                "Try Incognito; if that works, clear cached images for the site.",
+                "Disable extra extensions and retry.",
+            ],
+            "Chrome will not start at all.",
+        ),
+    ]
+    for pattern, summary, steps, ask in playbooks:
+        if blob.strip() and re.search(pattern, blob, re.I):
+            return {
+                "summary": summary,
+                "steps": steps,
+                "ask_technician_if": ask,
+                "method": "keyword",
+                "model": None,
+            }
+
     templates = {
         "account": [
             "Confirm you are using the correct campus username.",
-            "Try resetting your password via the official portal (if available).",
-            "Wait a few minutes after a reset, then sign in again.",
+            "Reset the password only through the official portal.",
+            "Try a private/incognito window, then sign in again.",
         ],
         "network": [
             "Toggle Wi-Fi off and on, then reconnect to the campus network.",
@@ -251,12 +336,12 @@ def _keyword_suggest(title: str, description: str, category: str) -> dict[str, A
         ],
         "other": [
             "Note the exact error message and when it started.",
-            "Restart the device and retry once.",
+            "Retry the same steps once after restarting the app.",
             "If it still fails, request a technician with the error details.",
         ],
     }
     return {
-        "summary": "Quick self-help steps before a technician is assigned.",
+        "summary": "Self-help steps for this category before a technician is assigned.",
         "steps": templates.get(cat, templates["other"]),
         "ask_technician_if": "If these steps do not fix the issue, request a technician.",
         "method": "keyword",

@@ -91,6 +91,19 @@ if (isset($_POST['submit-ticket'])) {
     }
     $user_id = (int) $found['id'];
 
+    $quota = ticket_account_quota($conn, $user_id);
+    if (!$quota['ok']) {
+        $_SESSION['ticket_form_error'] = 'This account already created '
+            . (int) $quota['limit']
+            . ' tickets in the last 24 hours. Wait before submitting another, or contact IT if this is an emergency.';
+        $_SESSION['ticket_form_old'] = [
+            'subject' => $subject,
+            'description' => $description,
+        ];
+        header('Location: ../pages/ticket.php');
+        exit();
+    }
+
     $hasScore = tickets_has_column($conn, 'severity_score')
         && tickets_has_column($conn, 'urgency')
         && tickets_has_column($conn, 'impact_level');

@@ -23,6 +23,11 @@ $categoryLabels = [
 ];
 $subjectLimit = ticket_subject_word_limit();
 $descriptionLimit = ticket_description_word_limit();
+$quota = ticket_account_quota($conn, current_user_id($conn));
+$quotaLimit = (int) $quota['limit'];
+$quotaUsed = (int) $quota['used'];
+$quotaRemaining = (int) $quota['remaining'];
+$quotaBlocked = !$quota['ok'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -31,7 +36,7 @@ $descriptionLimit = ticket_description_word_limit();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(zpgc_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/ticket.css?v=1.6.21">
+    <link rel="stylesheet" href="../css/ticket.css?v=1.6.22">
     <title>ZPGC Services | Ticket Creation</title>
 </head>
 <body>
@@ -41,7 +46,10 @@ $descriptionLimit = ticket_description_word_limit();
             <h1 class="ticket-form-title">Submit New Ticket</h1>
             <?php if ($formError !== '') { ?>
             <div class="ticket-notice-error"><?php echo htmlspecialchars($formError); ?></div>
+            <?php } elseif ($quotaBlocked) { ?>
+            <div class="ticket-notice-error">This account already created <?php echo $quotaLimit; ?> tickets in the last 24 hours. You can submit again after some of those tickets fall outside that window.</div>
             <?php } ?>
+            <p class="ticket-hint">Each account can create up to <?php echo $quotaLimit; ?> tickets per 24 hours (<?php echo $quotaUsed; ?> used, <?php echo $quotaRemaining; ?> left).</p>
 
             <div class="ticket-field">
                 <label for="subject">Subject:</label>
@@ -69,7 +77,7 @@ $descriptionLimit = ticket_description_word_limit();
 
             <div class="ticket-actions">
                 <a href="../pages/user.php" class="btn-cancel-ticket">Cancel</a>
-                <button type="submit" name="submit-ticket" class="btn-submit-ticket">Submit Ticket</button>
+                <button type="submit" name="submit-ticket" class="btn-submit-ticket"<?php echo $quotaBlocked ? ' disabled' : ''; ?>>Submit Ticket</button>
             </div>
         </form>
     </div>

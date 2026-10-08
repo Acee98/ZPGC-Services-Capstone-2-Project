@@ -308,8 +308,9 @@ body[data-page="tickets"] #page-tickets {
 body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user,
 body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user--actions,
 body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-techn-actions {
-    flex: 0 1 auto !important;
-    min-height: 160px !important;
+    flex: 0 0 auto !important;
+    height: min(48vh, 420px) !important;
+    min-height: min(48vh, 420px) !important;
     max-height: min(48vh, 420px) !important;
     overflow: hidden !important;
 }

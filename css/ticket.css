@@ -228,6 +228,17 @@ body {
     color: #610107;
 }
 
+.btn-submit-ticket:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-submit-ticket:disabled:hover {
+    background-color: #610107;
+    color: #f5f5f5;
+}
+
 .btn-cancel-ticket {
     display: inline-flex;
     align-items: center;

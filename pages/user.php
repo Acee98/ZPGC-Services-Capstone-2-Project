@@ -98,7 +98,7 @@ $ui_theme = current_ui_theme();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.34">
+    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.40">
     <link rel="stylesheet" href="../css/theme.css?v=1.6.32">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
     <title>ZPGC Services | User</title>
@@ -263,36 +263,6 @@ $ui_theme = current_ui_theme();
                         <span class="tickets-col-category"><?php echo htmlspecialchars(ticket_category_label($ticket['category'] ?? '')); ?></span>
                         <span class="tickets-col-subject">
                             <?php echo htmlspecialchars($ticket['subject']); ?>
-                            <?php if ($showSelfHelp) { ?>
-                            <details class="ai-selfhelp">
-                                <summary>AI troubleshooting tips</summary>
-                                <pre class="ai-selfhelp-body"><?php echo htmlspecialchars($guidance); ?></pre>
-                                <div class="ai-selfhelp-actions">
-                                <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
-<?php echo zpgc_csrf_field(); ?>
-                                    <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
-                                    <button type="submit" name="self_help_solved" value="1" class="btn-confirm-solved">
-                                        These steps worked
-                                    </button>
-                                </form>
-                                <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
-<?php echo zpgc_csrf_field(); ?>
-                                    <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
-                                    <button type="submit" name="request_technician" value="1" class="btn-request-tech">
-                                        Still not fixed — Request Technician
-                                    </button>
-                                </form>
-                                </div>
-                            </details>
-                            <?php } elseif ($unassigned && ($ticket['priority'] ?? '') === 'low' && $st !== 'resolved') { ?>
-                            <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
-<?php echo zpgc_csrf_field(); ?>
-                                <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
-                                <button type="submit" name="request_technician" value="1" class="btn-request-tech">
-                                    Request Technician
-                                </button>
-                            </form>
-                            <?php } ?>
                         </span>
                         <span class="tickets-col-description">
                             <?php echo htmlspecialchars($ticket['description']); ?>
@@ -336,6 +306,36 @@ $ui_theme = current_ui_theme();
                                 </button>
                             </form>
                         </span>
+                        <?php if ($showSelfHelp) { ?>
+                        <details class="ai-selfhelp">
+                            <summary>AI troubleshooting tips</summary>
+                            <pre class="ai-selfhelp-body"><?php echo htmlspecialchars($guidance); ?></pre>
+                            <div class="ai-selfhelp-actions">
+                            <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
+<?php echo zpgc_csrf_field(); ?>
+                                <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
+                                <button type="submit" name="self_help_solved" value="1" class="btn-confirm-solved">
+                                    These steps worked
+                                </button>
+                            </form>
+                            <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
+<?php echo zpgc_csrf_field(); ?>
+                                <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
+                                <button type="submit" name="request_technician" value="1" class="btn-request-tech">
+                                    Still not fixed — Request Technician
+                                </button>
+                            </form>
+                            </div>
+                        </details>
+                        <?php } elseif ($unassigned && ($ticket['priority'] ?? '') === 'low' && $st !== 'resolved') { ?>
+                        <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
+<?php echo zpgc_csrf_field(); ?>
+                            <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
+                            <button type="submit" name="request_technician" value="1" class="btn-request-tech">
+                                Request Technician
+                            </button>
+                        </form>
+                        <?php } ?>
                     </div>
                     <?php } ?>
                     <?php } ?>

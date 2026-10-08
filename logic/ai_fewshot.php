@@ -32,6 +32,11 @@ if (!function_exists('ai_fewshot_classify_messages')) {
                 'Description: I need the schedule and the request form for the IT office this week.',
                 '{"category":"other","urgency":1,"impact":1,"confidence":0.88,"rationale":"Process question, not a broken device"}',
             ],
+            [
+                'Subject: I need equipment checked',
+                'Description: The room 414 PC has a Windows Update.',
+                '{"category":"software","urgency":1,"impact":1,"confidence":0.9,"rationale":"Windows Update is software even if the subject says equipment"}',
+            ],
         ];
         $msgs = [];
         foreach ($pairs as $row) {

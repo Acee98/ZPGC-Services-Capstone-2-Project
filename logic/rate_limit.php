@@ -121,3 +121,41 @@ if (!function_exists('zpgc_client_ip')) {
         }
     }
 }
+
+if (!function_exists('ticket_account_daily_limit')) {
+    /** Max tickets one user account may create in a rolling 24-hour window. */
+    function ticket_account_daily_limit()
+    {
+        return 10;
+    }
+
+    function ticket_account_quota(mysqli $conn, $userId)
+    {
+        $limit = ticket_account_daily_limit();
+        $out = [
+            'ok' => true,
+            'used' => 0,
+            'limit' => $limit,
+            'remaining' => $limit,
+        ];
+        $userId = (int) $userId;
+        if ($userId < 1) {
+            return $out;
+        }
+        $stmt = $conn->prepare(
+            'SELECT COUNT(*) AS c FROM tickets WHERE user_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)'
+        );
+        if (!$stmt) {
+            return $out;
+        }
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        $used = (int) ($row['c'] ?? 0);
+        $out['used'] = $used;
+        $out['remaining'] = max(0, $limit - $used);
+        $out['ok'] = $used < $limit;
+        return $out;
+    }
+}
