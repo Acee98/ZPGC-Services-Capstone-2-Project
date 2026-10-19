@@ -926,21 +926,6 @@ $ui_theme = $ui_theme_pref !== '' ? $ui_theme_pref : 'light';
                     <?php } ?>
                 </div>
 
-                <?php
-                $non_tsu_n = 0;
-                foreach ($all_users as $uCount) {
-                    if (!auth_mail_is_tsu_email((string) ($uCount['email'] ?? ''))) {
-                        $non_tsu_n++;
-                    }
-                }
-                if ($non_tsu_n > 0) {
-                    ?>
-                <p class="utilities-notice">
-                    <?php echo (int) $non_tsu_n; ?> account<?php echo $non_tsu_n === 1 ? '' : 's'; ?>
-                    not on TSU Outlook. Use <strong>Not TSU</strong>, then Delete when you are ready.
-                    Nothing is removed automatically.
-                </p>
-                <?php } ?>
                 <div class="tickets-toolbar">
                     <div class="tickets-filter-tabs" id="utilities-filter-tabs">
                         <button type="button" class="filter-tab active-tab" data-filter="all">All</button>
