@@ -133,8 +133,8 @@ if (!function_exists('iso20000_minutes_label')) {
             ],
             [
                 'clause' => 'Compatibility',
-                'how' => 'PHP web app in current browsers; Gmail SMTP for verify, reset, and ticket mail.',
-                'evidence' => 'Campus and Gmail addresses · SMTP from the configured mailbox',
+                'how' => 'PHP web app in current browsers; SMTP for verify, reset, and ticket mail to TSU Outlook inboxes.',
+                'evidence' => 'TSU Outlook (@student.tsu.edu.ph / @tsu.edu.ph) · SMTP from the configured mailbox',
             ],
             [
                 'clause' => 'Interaction capability',

@@ -58,9 +58,10 @@ require_once '../logic/version.php';
                             the university.
                         </li>
                         <li>
-                            <strong>Authentication.</strong> Users must register and sign in with a real,
-                            reachable email address. New accounts require email verification and
-                            administrator activation before full access is granted.
+                            <strong>Authentication.</strong> Users must register with a TSU Outlook
+                            address (@student.tsu.edu.ph or @tsu.edu.ph). New accounts require email
+                            verification. Students and staff activate after the code; technicians complete
+                            an application for administrator approval.
                         </li>
                         <li>
                             <strong>Account responsibility.</strong> You must keep your password

@@ -774,8 +774,10 @@ $ui_theme = $ui_theme_pref !== '' ? $ui_theme_pref : 'light';
                             </div>
                         </div>
                         <div class="user-form-field">
-                            <label for="add_email">Email address</label>
-                            <input type="email" id="add_email" name="email" required>
+                            <label for="add_email">TSU Outlook email</label>
+                            <input type="email" id="add_email" name="email" required
+                                placeholder="you@student.tsu.edu.ph"
+                                title="Use @student.tsu.edu.ph or @tsu.edu.ph">
                         </div>
                         <div class="user-form-row">
                             <div class="user-form-field">

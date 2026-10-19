@@ -1,6 +1,7 @@
 <?php
 require_once 'session_config.php';
 require_once 'config.php';
+require_once 'auth_mail.php';
 require_once 'audit_log.php';
 require_once 'techn_apply.php';
 require_once 'ticket_status.php';
@@ -50,6 +51,11 @@ if (isset($_POST['add_user'])) {
             'Please fill in every field with a valid role and an 8+ character password.',
             'tab=utilities&action=add'
         );
+    }
+    $email = strtolower($email);
+    $emailErr = auth_mail_signup_email_error($email);
+    if ($emailErr !== '') {
+        utilities_fail($emailErr, 'tab=utilities&action=add');
     }
 
     $checkEmail = $conn->prepare('SELECT id FROM users WHERE email = ?');
@@ -131,6 +137,14 @@ if (isset($_POST['edit_user'])) {
             "You can't remove your own admin role while logged in as this account.",
             'tab=utilities&edit_id=' . $id
         );
+    }
+    $email = strtolower($email);
+    $current_email = strtolower(trim((string) $current_email));
+    if ($email !== $current_email) {
+        $emailErr = auth_mail_signup_email_error($email);
+        if ($emailErr !== '') {
+            utilities_fail($emailErr, 'tab=utilities&edit_id=' . $id);
+        }
     }
 
     $checkEmail = $conn->prepare('SELECT id FROM users WHERE email = ? AND id != ?');

@@ -48,7 +48,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
                 <?php echo showError($login_error); ?>
                 <?php echo showSuccess($login_success); ?>
                 <h5>Enter your credentials to access, create, or track your tickets</h5>
-                <input type="email" name="email" placeholder="TSU or Gmail address" autocomplete="email" required title="Use your TSU Outlook or Gmail address">
+                <input type="email" name="email" placeholder="TSU Outlook address" autocomplete="email" required title="Use your TSU Outlook email (@student.tsu.edu.ph or @tsu.edu.ph)">
                 <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
                 <button type="submit" name="login">Login</button>
                 <p><a href="forgot_password.php">Forgot Password?</a></p>
@@ -61,11 +61,11 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
 <?php echo zpgc_csrf_field(); ?>
                 <h1>SIGNUP</h1>
                 <?php echo showError($signup_error); ?>
-                <h5>Use TSU Outlook (@student.tsu.edu.ph or @tsu.edu.ph) or Gmail. Students and staff auto-activate after the 6-digit code; technicians then submit a specialty and resume for admin approval.</h5>
+                <h5>Use TSU Outlook only (@student.tsu.edu.ph or @tsu.edu.ph). Students and staff auto-activate after the 6-digit code; technicians then submit a specialty and resume for admin approval. Gmail is not accepted.</h5>
                 <input type="text" name="first_name" placeholder="First Name" required>
                 <input type="text" name="last_name" placeholder="Last Name" required>
-                <input type="email" name="email" placeholder="you@student.tsu.edu.ph or you@gmail.com" required
-                    title="Use your TSU Outlook or Gmail address">
+                <input type="email" name="email" placeholder="you@student.tsu.edu.ph" required
+                    title="Use your TSU Outlook email (@student.tsu.edu.ph or @tsu.edu.ph)">
                 <input type="password" name="password" id="signup-password" placeholder="Password (8+ characters)" minlength="8" autocomplete="new-password" required>
                 <input type="password" name="confirm_password" id="signup-confirm-password" placeholder="Confirm password" minlength="8" autocomplete="new-password" required>
                 <select name="role" required>

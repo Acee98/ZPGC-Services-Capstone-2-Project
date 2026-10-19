@@ -18,9 +18,9 @@ Campus users reach the service without an account, then create or recover one.
 
 **Figure 5.1 (S01).** Landing page of ZPGC Services, with welcome copy, **Signup now!**, and **Login**.
 
-**Figure 5.2 (S02).** Login: TSU or Gmail address, password, **Forgot Password?**, and a link to signup.
+**Figure 5.2 (S02).** Login: TSU Outlook address, password, **Forgot Password?**, and a link to signup.
 
-**Figure 5.3 (S03).** Signup: name, campus or Gmail address, password, **I am a…** (Student / Staff / Technician), Terms checkbox, and **Signup**.
+**Figure 5.3 (S03).** Signup: name, TSU Outlook address (@student.tsu.edu.ph or @tsu.edu.ph), password, **I am a…** (Student / Staff / Technician), Terms checkbox, and **Signup**. Gmail is not accepted.
 
 **Figure 5.4 (S04).** Terms of Service (opening sections): who may use the system and required acceptance.
 

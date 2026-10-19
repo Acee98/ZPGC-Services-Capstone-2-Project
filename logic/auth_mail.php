@@ -42,7 +42,7 @@ if (!function_exists('auth_mail_ready')) {
     }
 
     /**
-     * Signup / password reset: TSU Outlook, plus Gmail for students who cannot use campus mail.
+     * Personal Gmail is not accepted for new accounts. Existing Gmail logins still work.
      */
     function auth_mail_is_gmail($email)
     {
@@ -108,15 +108,15 @@ if (!function_exists('auth_mail_ready')) {
         return true;
     }
 
-    /** @deprecated Use auth_mail_is_tsu_email */
+    /** Campus Outlook only (@student.tsu.edu.ph or @tsu.edu.ph). */
     function auth_mail_is_deliverable_email($email)
     {
-        return auth_mail_is_tsu_email($email) || auth_mail_is_gmail($email);
+        return auth_mail_is_tsu_email($email);
     }
 
     function auth_mail_tsu_email_hint()
     {
-        return 'Use your TSU Outlook email (someone@student.tsu.edu.ph or someone@tsu.edu.ph) or a Gmail address you can open.';
+        return 'Use your TSU Outlook email (someone@student.tsu.edu.ph or someone@tsu.edu.ph). Gmail is not accepted.';
     }
 
     function auth_mail_signup_email_error($email)
@@ -126,7 +126,7 @@ if (!function_exists('auth_mail_ready')) {
             return 'Enter a valid email address.';
         }
         if (auth_mail_is_gmail($email)) {
-            return '';
+            return auth_mail_tsu_email_hint();
         }
         if (!auth_mail_is_tsu_email($email)) {
             return auth_mail_tsu_email_hint();
