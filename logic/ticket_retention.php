@@ -15,9 +15,9 @@ if (!defined('ZPGC_TICKET_PURGE_UNRATED_DAYS')) {
     // Unrated archived resolved tickets need a longer grace period.
     define('ZPGC_TICKET_PURGE_UNRATED_DAYS', 60);
 }
-if (!defined('ZPGC_TICKET_PURGE_AUTO_HOURS')) {
-    // Auto purge on admin pages at most once per this many hours.
-    define('ZPGC_TICKET_PURGE_AUTO_HOURS', 6);
+if (!defined('ZPGC_TICKET_PURGE_AUTO_SECONDS')) {
+    // Auto-dispose eligible archived tickets at most once per this interval.
+    define('ZPGC_TICKET_PURGE_AUTO_SECONDS', 900);
 }
 
 if (!function_exists('ticket_retention_backfill_archives')) {
@@ -195,20 +195,28 @@ if (!function_exists('ticket_retention_backfill_archives')) {
 
     function ticket_retention_maybe_auto_purge(mysqli $conn)
     {
-        $hours = max(1, (int) ZPGC_TICKET_PURGE_AUTO_HOURS);
+        $seconds = max(60, (int) ZPGC_TICKET_PURGE_AUTO_SECONDS);
         $last = (int) ($_SESSION['_ticket_purge_at'] ?? 0);
-        if ($last > 0 && (time() - $last) < ($hours * 3600)) {
+        if ($last > 0 && (time() - $last) < $seconds) {
             return null;
         }
         $_SESSION['_ticket_purge_at'] = time();
         $result = ticket_retention_purge_batch($conn);
         ticket_retention_clear_eligible_cache();
-        if ($result['deleted'] > 0 && function_exists('audit_write')) {
-            $detail = 'Auto-disposed ' . $result['deleted'] . ' archived resolved ticket(s)';
-            if (!empty($result['ids'])) {
-                $detail .= ': #' . implode(', #', array_slice($result['ids'], 0, 12));
+        if ($result['deleted'] > 0) {
+            if (!function_exists('audit_write')) {
+                $auditFile = __DIR__ . '/audit_log.php';
+                if (is_file($auditFile)) {
+                    require_once $auditFile;
+                }
             }
-            audit_write($conn, 'ticket_disposal_auto', 0, substr($detail, 0, 255));
+            if (function_exists('audit_write')) {
+                $detail = 'Auto-disposed ' . $result['deleted'] . ' archived resolved ticket(s)';
+                if (!empty($result['ids'])) {
+                    $detail .= ': #' . implode(', #', array_slice($result['ids'], 0, 12));
+                }
+                audit_write($conn, 'ticket_disposal_auto', 0, substr($detail, 0, 255));
+            }
         }
         return $result;
     }
@@ -219,7 +227,7 @@ if (!function_exists('ticket_retention_backfill_archives')) {
             'batch' => (int) ZPGC_TICKET_PURGE_BATCH,
             'rated_days' => (int) ZPGC_TICKET_PURGE_RATED_DAYS,
             'unrated_days' => (int) ZPGC_TICKET_PURGE_UNRATED_DAYS,
-            'auto_hours' => (int) ZPGC_TICKET_PURGE_AUTO_HOURS,
+            'auto_seconds' => (int) ZPGC_TICKET_PURGE_AUTO_SECONDS,
         ];
     }
 }

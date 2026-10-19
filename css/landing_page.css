@@ -78,6 +78,16 @@ body {
     font-size: 55px;
 }
 
+.app-version--hero {
+    margin: 8px 0 0;
+    color: #f5f5f5;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-align: center;
+}
+
 #subhead {
     font-family: "Inter";
     color: #f5f5f5;

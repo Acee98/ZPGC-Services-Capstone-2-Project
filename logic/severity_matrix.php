@@ -58,6 +58,21 @@ if (!function_exists('severity_estimate_axes')) {
         if ($key === '') {
             return 0;
         }
+        $hashCol = $conn->query("SHOW COLUMNS FROM tickets LIKE 'subject_hash'");
+        if ($hashCol && $hashCol->num_rows > 0) {
+            $hash = hash('sha256', $key);
+            $stmt = $conn->prepare(
+                "SELECT COUNT(*) AS cnt FROM tickets
+                 WHERE subject_hash = ? AND status <> 'resolved'"
+            );
+            if ($stmt) {
+                $stmt->bind_param('s', $hash);
+                $stmt->execute();
+                $row = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                return (int) ($row['cnt'] ?? 0);
+            }
+        }
         $stmt = $conn->prepare(
             "SELECT COUNT(*) AS cnt FROM tickets
              WHERE LOWER(TRIM(subject)) = ? AND status <> 'resolved'"

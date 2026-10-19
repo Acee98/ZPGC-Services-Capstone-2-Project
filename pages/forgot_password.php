@@ -42,8 +42,8 @@ if (isset($_POST['forgot_password'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.18">
-    <title>ZPGC Services | Forgot Password</title>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/login_signup.css')); ?>">
+    <title><?php echo htmlspecialchars(zpgc_page_title('Forgot Password')); ?></title>
 </head>
 <body>
     <div class="container">
@@ -67,5 +67,6 @@ if (isset($_POST['forgot_password'])) {
             </form>
         </div>
     </div>
+    <?php $zpgc_version_class = 'app-version app-version--auth'; include __DIR__ . '/partials/app_version.php'; ?>
 </body>
 </html>

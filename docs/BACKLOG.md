@@ -2,13 +2,14 @@
 
 Living log. Diary dates start **27 June 2026**. Official “Completed” on Stages 1–5 is the **product line**. This folder does not yet contain all of that.
 
-**Active folder (4 Oct 2026):** `C:\xampp\htdocs\CP2_V1.6` (adviser follow-up from frozen `CP2_V1.5`). Session cookie path **auto-detects** the install folder (A-104); default detect for this tree is `/CP2_V1.6/`.
+**Paper / product label:** **ZPGC Services V1.6** (freeze 16 October 2026). Stages 8–9 do not become v1.7.  
+**Active folder (16 Oct 2026):** `C:\xampp\htdocs\CP2_V1.6` (adviser follow-up from frozen `CP2_V1.5`). Session cookie path **auto-detects** the install folder (A-104); default detect for this tree is `/CP2_V1.6/`. Live site `https://zpgc-services.online`.
 
 | Category | IDs |
 |----------|-----|
-| **Activity** | A-001 … A-115 (continuous; A-101 removed — auth-blocked note retired) |
-| **Issue** | B-001 … B-073 (continuous; no skipped IDs) |
-| **Queued** | Q-001 … Q-012 (later stages; not claimed in this folder) |
+| **Activity** | A-001 … A-124 (continuous; A-101 removed — auth-blocked note retired) |
+| **Issue** | B-001 … B-073 (continuous in the early run); later follow-ups through **B-098** |
+| **Queued** | Q-001 … Q-013 |
 
 ### How snippets are recorded (standard)
 
@@ -122,11 +123,11 @@ Browser captures from this rebuild live in `docs/screenshots/`. Each image is na
 | **3 – v1.1.2** | Administration and ticket interface | Admin user management, account approval, ticket form UI | Completed | **This folder.** `tickets` INSERT (A-022). Admin panels (A-024). User list + polish (A-025–A-027). Activate (A-028). **Stage 3 v1.1.2 complete here.** | A-017–A-028, B-017–B-025, Q-011 |
 | **4 – v1.2** | Minimum Viable Product | Ticket persistence, workflow, technician functions, live chat | Completed | **Done** (A-029–A-036). Mailbox polls every 3 seconds. | A-029–A-036, B-026–B-033, Q-005, Q-006 |
 | **5 – v1.3** | Queue and analytics | Manual priority, 9-slot queue, Chart.js samples, theme | Completed | **Done** (A-037–A-045). Queue fixed at 9 slots. | Q-007, B-034–B-044 |
-| **6 – v1.4** | Confirmation workflow | User confirmation; Solved / Not Solved Yet | Completed | **Done** (A-049–A-051). Status `awaiting_confirmation`. | Q-012, B-045–B-048 |
-| **7 – v1.5** | AI Integration | Keyword AI, then Luna, auto-assign, low-priority tips, live charts | Extended in V1.6 | Built in `CP2_V1.5` (A-052–A-066). Live Luna needs API credits; otherwise `kw-quota`. | Q-008 |
-| **7b – v1.6** | Paper matrix, performance, profile | Submit scores the ticket; Tables 4–7; category performance; My Profile | **Current build** | **This folder** `CP2_V1.6` (A-067–A-076). | B-058–B-075 |
-| **8** | Testing and Evaluation | Functional, load, AI accuracy, user testing | **In progress** | Functional paths tested. Load test and accuracy study not run. | Q-009 |
-| **9** | Finalization | Documentation, deployment preparation, defense | **Planned** | Living docs, including `docs/VERSION_PROGRESS.md`. | Q-010 |
+| **6 – v1.4** | Confirmation workflow | User confirmation; Solved / Not Solved Yet | Completed | **Done** (A-049–A-051). Status `awaiting_confirmation`. Official PNG still says In Progress — product closed 14–15 Sep 2026. | Q-012, B-045–B-048 |
+| **7 – v1.5** | AI Integration | Keyword AI, then Luna, auto-assign, low-priority tips, live charts | Completed (extended in V1.6) | Built in `CP2_V1.5` (A-052–A-066). Live Luna needs API credits; otherwise `kw-quota`. Official PNG still says Planned. | Q-008 |
+| **7b – v1.6** | Paper matrix, performance, profile | Submit scores the ticket; Tables 4–7; category performance; My Profile | **Current build** | **This folder** `CP2_V1.6` (A-067–A-123). Paper-gap screens (ISO, KPIs, CSAT, student/staff, encryption, concurrent check) shipped Oct 2026. | B-058–B-098 |
+| **8** | Testing and Evaluation | Functional, load, AI accuracy, user testing | **In progress** | Functional paths + browser concurrent check 10×3 (A-118). Keyword Kaggle baseline A-106. Luna accuracy study and formal user testing not run. Official PNG still says Planned. | Q-009 |
+| **9** | Finalization | Documentation, deployment preparation, defense | **In progress** | Hostinger live `zpgc-services.online`; Chapter 5 screenshot chapter (`docs/CHAPTER_5_SYSTEM_PRESENTATION.docx`, A-123). Defense write-up still open. Official PNG still says Planned. | Q-010 |
 
 ```mermaid
 flowchart TD
@@ -138,7 +139,7 @@ flowchart TD
   S6[Stage 6 v1.4 confirmation]
   S7[Stage 7 v1.5 AI built]
   S8[Stage 8 testing in progress]
-  S9[Stage 9 finalization Planned]
+  S9[Stage 9 finalization in progress]
   S1 --> S2 --> S3 --> S4 --> S5 --> S6
   S6 --> S7 --> S8 --> S9
 ```
@@ -164,7 +165,11 @@ Team source (screenshots):
 | **2 - 15 Sep 2026** | Stage 6 **done** | Confirmation workflow (Q-012, A-049-A-051) |
 | **16 - 20 Sep 2026** | Stage 7 **built** | AI in `CP2_V1.5` (Q-008). Live Luna needs API credits. |
 | **25 Sep - 1 Oct 2026** | V1.6 **current** | Tables 4-7, performance, My Profile (A-067-A-076). See `docs/VERSION_PROGRESS.md`. |
-| Later | Stages 8-9 | Functional tests in progress. Load, accuracy, and defense still open. |
+| **2 – 15 Oct 2026** | Stages 8–9 start | Azure smoke (A-110–A-115), Hostinger live, desktop table freeze (B-092 / A-116–A-117). |
+| **16 Oct 2026** | Stage 9 docs + paper-gap UI | CSAT user-only, OS classify, Confirm buttons, profile-menu after AJAX, Utilities Student/Staff filters, Chapter 5 `.docx` (A-118–A-123). |
+| Later | Stages 8–9 remainder | Luna accuracy study, dummy-email bounce (B-090), oral-defense script. |
+
+**Timeline check (16 Oct 2026):** Stages **1–5** match the official screenshots (Completed). The printed Stage 6–9 slide is **behind the product**: Stage 6 is done (not In Progress), Stage 7 is built (not Planned), Stage 8 is functional + concurrent check (accuracy study still open), Stage 9 is live hosting + Chapter 5 (defense package still open). Diary dates stay inside June–October 2026.
 
 ---
 
@@ -3607,6 +3612,20 @@ ALTER TABLE `users` ADD COLUMN `email_notify` TINYINT(1) NOT NULL DEFAULT 1 AFTE
 - **Retest:** Login after reset showed **Password updated. You can log in now.**
 - **Objective:** Password reset security path must complete.
 
+### B-092 — Ticket History columns overlap (status/priority sit on the dates)
+
+- **When:** 15 October 2026
+- **Official stage:** 9 – finalization (V1.6 UI freeze)
+- **Status:** fixed
+- **What I saw:** On desktop Ticket History, STATUS / PRIORITY / REGISTRATION DATE / RESOLUTION TIME / SATISFACTION do not line up. Low and Resolved sit on top of the date (`Resolved05/2026`). Resolution times and satisfaction labels sit under the wrong headings.
+- **Causing snippet:** A mobile wrapper `.ticket-row-badges` grouped Priority + Status. Desktop grid still expected those as two separate columns, but `.ticket-history-list .ticket-row > span { width: 100% }` overrode `display: contents`, so both badges occupied the Status track and every later column shifted left.
+- **In plain language:** The table headings and the cells no longer shared the same columns, so badges covered the dates.
+- **Solution executed:** On viewports 769px and wider, `.ticket-row-badges` is `display: contents` so Priority and Status are two grid cells again. Status/priority tracks are wide enough for the pills. Ticket tables keep a 1280px minimum width and scroll sideways in one shared scroller so header and rows stay lined up. Phone cards are unchanged.
+- **Where:** `pages/partials/critical_ui_fixes.php` (`#zpgc-desktop-table-tracks`), `pages/partials/ticket_history_list.php`
+- **Objective:** Ticket lists usable for documentation screenshots and defense.
+
+![Ticket History columns overlapping](screenshots/b092-history-columns-overlap.png)
+
 ### A-091 — Fix reset-token expiry and Forgot/Reset button styles
 
 - **When:** 3 October 2026
@@ -3866,6 +3885,149 @@ MAIL_APP_URL=https://<default-domain>.azurewebsites.net
 - **Fix snippet:** Use Overview → Default domain (copy) + `/pages/login_signup.php`; keep `MAIL_APP_URL` matching that HTTPS host.
 - **In plain language:** The helpdesk is reachable on the public internet for a short Azure test; the first “can’t reach this page” error was only a wrong web address, not a broken deploy.
 
+### A-116 — Desktop ticket-table columns aligned for documentation freeze
+
+- **When:** 15 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** done
+- **What we did:** Closed **B-092**. Ticket History, user/technician/admin ticket lists, dashboard history, and Performance detail tables use matching header/row tracks on desktop, with sideways scroll when the row is wider than the window. Live Hostinger cache `main_interface.css?v=1.6.75`. Mailbox for user/technician already matches the admin full-screen chat shell (13–14 October 2026).
+- **Where:** `pages/partials/critical_ui_fixes.php`, `pages/admin.php`, `pages/user.php`, `pages/techn.php`
+- **Fix snippet:** `#zpgc-desktop-table-tracks` `@media (min-width: 769px)` — `.ticket-row-badges { display: contents !important; }` plus wider Status / Priority / Registration tracks and `min-width: 1280px` on header + row.
+- **In plain language:** On a computer screen, each heading now sits above its own cell, and if the table is wide you scroll the table sideways instead of the badges covering the dates.
+
+### B-093 — Desktop tables still cramped, Status/Priority swapped, View missing on most lists
+
+- **When:** 15 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** fixed
+- **What I saw:** Forced 1280px table width added extra scrollbars. Ticket History showed Low under STATUS and Resolved under PRIORITY. Request Technician sat under ID. Eye/Save/View were clipped. Dashboard tickets had no View.
+- **Causing snippet:** `#zpgc-desktop-table-tracks` `min-width: 1280px`; history badge wrapper listed Priority before Status; escalate form was an extra grid child; technician history used `$history_show_preview = false`.
+- **In plain language:** Tables were too wide, two columns were labelled backwards, and most tickets could not open a full description.
+- **Solution executed:** Fit columns to the window; Status then Priority; Request Technician stays in Actions; View (eye) on active tickets, history, dashboard, admin, and technician lists. Cache `1.6.76`.
+- **Where:** `pages/partials/critical_ui_fixes.php`, `ticket_history_list.php`, `role_dashboard.php`, `admin_dashboard_history.php`, `pages/user.php`, `pages/techn.php`, `pages/admin.php`
+
+### A-117 — View on every ticket + desktop table fit for freeze
+
+- **When:** 15 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** done
+- **What we did:** Closed **B-093**. Every ticket row can open Ticket Preview for the full description. Desktop tables no longer force a 1280px minimum. Hostinger cache `1.6.76`.
+- **Fix snippet:** `ticket_quick_view_button()` on dashboard, admin Save row, technician Action, and history (`$history_show_preview = true`).
+- **In plain language:** Click the eye on any ticket, open or closed, to read the whole write-up. Tables should sit in the page without a stray bottom scrollbar.
+
+### B-094 — Rate visit shown on admin and technician history
+
+- **When:** 16 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** fixed (A-118)
+- **What I saw:** Ticket History on admin and technician still offered **Rate visit**. Only the requester should rate.
+- **Causing snippet:** Shared `pages/partials/ticket_history_list.php` always rendered the rate link when `satisfaction` was empty.
+- **In plain language:** Staff were looking at a button that belongs only to the student or staff who opened the ticket.
+- **Solution executed:** `$history_allow_rate` is true only on `user.php`. Admin/technician history shows **—** until a rating exists.
+
+### A-118 — CSAT user-only; ISO, KPIs, student/staff, encryption, concurrent check
+
+- **When:** 16 October 2026 (product work through early October; freeze confirmed this date)
+- **Official stage:** 8–9 (paper-gap screens + evaluation helper)
+- **Status:** done
+- **What we did:** User-only CSAT after Solved. Office KPI cards and ISO/IEC 20000-1:2018 judgment table on Performance. `users.account_kind` Student | Staff. Ticket text AES-256-GCM at rest (`Z1:`). Browser concurrent check 10×3 on Performance. Phone/SMS fields removed from profile.
+- **Where:** `pages/partials/ticket_history_list.php`, `pages/partials/kpi_iso_panel.php`, `logic/account_kind.php`, `logic/ticket_crypto.php`, `js/capacity_check.js`
+- **In plain language:** The paper’s leftover product items are on the live site. ISO is a judgment table, not a certificate. The concurrent check is 30 browser hits, not a lab load study.
+
+### B-095 — OS-update tickets classified Other
+
+- **When:** 16 October 2026
+- **Official stage:** 7b – v1.6
+- **Status:** fixed (A-119)
+- **What I saw:** Subject *Couldn’t update my Computer’s OS* landed in **Other** and showed a generic Other playbook.
+- **Causing snippet:** Keyword rules and the Windows Update troubleshoot regex missed “update my OS”. The subject typeahead row **Others** is not the AI category Other.
+- **In plain language:** An OS-update ticket looked like a catch-all instead of Software.
+- **Solution executed:** Software rules + OS/Windows update playbook in `logic/ai_classify.php`; subject list includes *Could not update Windows or the OS*.
+
+### A-119 — OS / Windows Update classifies as Software
+
+- **When:** 16 October 2026
+- **Official stage:** 7b – v1.6
+- **Status:** done (pushed live)
+- **What we did:** Closed **B-095**. Low OS-update tickets get Windows Update steps. Confirmed on live Hostinger after File Manager upload when MCP TUS timed out.
+- **Where:** `logic/ai_classify.php`, `logic/ticket_subjects.php`
+- **In plain language:** “I can’t update my OS” is Software with update steps, not Other.
+
+### B-096 — Solved / Not Solved Yet wrapping in Confirm
+
+- **When:** 16 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** fixed (A-120)
+- **What I saw:** **Solved** was a short green pill; **Not Solved Yet** wrapped onto two lines.
+- **Causing snippet:** Confirm column `minmax(110px, 0.95fr)` with `flex-wrap`; two separate forms, not a stacked equal-width pair.
+- **In plain language:** The two confirmation buttons did not line up for the Chapter 5 figure.
+- **Solution executed:** `.confirm-actions` column, equal-width nowrap buttons, Confirm track 150px.
+
+### A-120 — Confirm buttons stacked for documentation
+
+- **When:** 16 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** done
+- **What we did:** Closed **B-096**. Recapture is Figure 5.12 (#1089 Confirming).
+- **Where:** `pages/user.php`, `css/main_interface.css`, `pages/partials/critical_ui_fixes.php`
+- **In plain language:** Solved sits above Not Solved Yet, same width, one line each.
+
+### B-097 — Profile circle dead after View or AJAX refresh
+
+- **When:** 16 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** fixed (A-121)
+- **What I saw:** After View or a ticket update, **AC** did nothing until the user changed tabs. Solved also skipped the CSAT overlay.
+- **Causing snippet:** `initProfileMenu()` bound only on first load; `softRefresh` replaces the tab header (new button, no listener). `handleSuccess` called `closeOverlays()` which deleted `.survey-overlay`; refresh swapped `#page-tickets` only.
+- **In plain language:** The initials menu broke after ordinary clicks, and Solved never opened How was this visit?
+- **Solution executed:** Document-level profile-menu clicks; hide ticket-qv with `pointer-events: none`; after Solved, import `.survey-overlay` from the refreshed HTML.
+
+### A-121 — Solved opens CSAT; profile menu survives refresh
+
+- **When:** 16 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** done
+- **What we did:** Closed **B-097**. Cache `ajax_forms.js` / `behavior.js` / `ticket_quick_view.js` `?v=1.6.87`.
+- **Where:** `js/ajax_forms.js`, `js/behavior.js`, `js/ticket_quick_view.js`
+- **In plain language:** Click Solved and the rating card opens. Close View and the initials circle still opens Profile / Settings / Logout.
+
+### B-098 — Utilities Requesters tab; Student/Staff showed an empty list
+
+- **When:** 16 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** fixed (A-122)
+- **What I saw:** Utilities had a **Requesters** filter. Student and Staff tabs hid every row (pagination compared `data-role` to `student` / `staff`, but role is `user` and kind is `account_kind`).
+- **Causing snippet:** `table_controls.js` `matchesFilters` treated student/staff like a ticket status; `admin.php` still rendered `data-filter="user"`.
+- **In plain language:** Those two tabs looked broken, and Requesters duplicated Student + Staff.
+- **Solution executed:** Remove Requesters. Filter Student/Staff on `data-kind`. Empty list shows **No accounts match this filter.**
+
+### A-122 — Utilities filters: Student, Staff, empty state
+
+- **When:** 16 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** done
+- **What we did:** Closed **B-098**. Tabs: All, Student, Staff, Technician, Administrator, Pending Approval. Recapture is Figure 5.37.
+- **Where:** `pages/admin.php`, `js/utilities_filter.js`, `js/table_controls.js`
+- **Fix snippet:** `wantSt === 'student' || wantSt === 'staff'` → `role === 'user' && kind === wantSt`; empty node `.utilities-filter-empty`.
+- **In plain language:** Student lists students, Staff lists staff, and a kind with no accounts says so instead of a blank table.
+
+### A-123 — Chapter 5 system-presentation document
+
+- **When:** 16 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** done (captions + Utilities figure; other screenshots to paste)
+- **What we did:** Required-screenshot chapter (no optionals). Markdown plus Word. Figure 5.37 embeds the updated Utilities shot (ZA, no Requesters). Figure 5.12 is Confirming #1089.
+- **Where:** `docs/CHAPTER_5_SYSTEM_PRESENTATION.md`, `docs/CHAPTER_5_SYSTEM_PRESENTATION.docx`
+- **In plain language:** Chapter 5 is a Word file the team can drop screenshots into; Utilities is already in the file.
+
+### A-124 — Paper label ZPGC Services V1.6 on UI and Chapter 5
+
+- **When:** 16 October 2026
+- **Official stage:** 9 – finalization
+- **Status:** done
+- **What we did:** Single source `logic/version.php` (`ZPGC_PRODUCT_LABEL` = ZPGC Services V1.6, freeze 16 October 2026). Browser titles, sidebar, landing, login/verify/reset, Terms, ticket form, and Chapter 5 Word file use that string. Stages 8–9 stay V1.6 (not v1.7). Asset query `1.6.90` is cache-bust only.
+- **Where:** `logic/version.php`, role/public pages, `docs/CHAPTER_5_SYSTEM_PRESENTATION.docx`, README, VERSION_PROGRESS, PRE_DEFENSE, DEPLOY
+- **In plain language:** The paper and the live screens say the same name: ZPGC Services V1.6.
 
 ## Queued log
 
@@ -3945,13 +4107,13 @@ Later official stages. Do **not** claim these until the files exist in this fold
 ### Q-009 — Testing and evaluation — Stage 8
 
 - **Official stage:** 8
-- **Status:** **in progress** — core tests pass; keyword Kaggle baseline **A-106**; retest after Luna key + auto-assign paths
+- **Status:** **in progress** — core tests pass; keyword Kaggle baseline **A-106**; browser concurrent check 10×3 on Performance (**A-118**). Luna side-by-side accuracy and a formal user-testing write-up are still open.
 - **Maps to:** functional, load, AI accuracy, user testing.
 
 ### Q-010 — Finalization — Stage 9
 
 - **Official stage:** 9
-- **Status:** **in progress** — Azure free/student live smoke test done (**A-110–A-115**); Hostinger longer hosting still pending; defense package still open
+- **Status:** **in progress** — Azure smoke (**A-110–A-115**); Hostinger `zpgc-services.online`; desktop table freeze (**B-092** / **A-116–A-117**); Chapter 5 Word file (**A-123**). Oral-defense script still open.
 - **Maps to:** documentation, deployment preparation, defense.
 
 ---
@@ -3962,10 +4124,11 @@ Active folder: `C:\xampp\htdocs\CP2_V1.6`. Progress by version: `docs/VERSION_PR
 
 Still short of the revised paper:
 
-1. Live Luna classification (API credits are exhausted, so submit records `kw-quota`). Paste the $5 key when ready. Keyword-only Kaggle baseline is logged as **A-106**; re-run with Luna for the side-by-side.
-2. Email SMTP works from zpgc111@gmail.com (A-084). Signup verify + admin activate retested for User and Technician (A-092). Update remaining dummy account emails so notices do not bounce (B-090). SMS stays preference-only.
-3. **Q-013 / A-093** — Official Terms of Service published on a centered Terms page. Signup checkbox unchanged.
-4. Ticket soft-archive + history + disposal retention shipped (**A-107–A-109**). Ticket text encryption and a privacy write-up are still open. Accuracy study (Luna vs keyword), load test, and ISO checklist are still open.
-5. Stage 9 started: local DB → `zpgc_services_db`, Azure MySQL + Free F1 App Service + GitHub deploy + live smoke test (**A-110–A-115**). Tear down `zpgc-test-rg` when done; Hostinger production deploy still open.
+1. Live Luna classification (API credits are exhausted, so submit records `kw-quota`). Paste the $5 key when ready. Keyword-only Kaggle baseline is **A-106**; re-run with Luna for the side-by-side.
+2. Dummy account emails still bounce (**B-090**). SMTP itself works (A-084). SMS stays preference-only (phone fields removed).
+3. Formal **accuracy study** (Luna vs keyword) and a written **user-testing** pack. Concurrent check 10×3 is on Performance; it is not a lab load study.
+4. Oral-defense script / speaker notes beyond `docs/PRE_DEFENSE.md` and Chapter 5.
 
-**Docs last synced:** 4 October 2026 (`BACKLOG.md` A-110–A-115 Azure free live smoke test; A-104–A-109 archive/history/disposal).
+Closed on the product in October 2026 (were “still open” on 1 Oct): student vs staff accounts, ISO judgment screen, office KPIs, ticket-text encryption + `docs/PRIVACY.md`, CSAT (user-only), Hostinger live, Chapter 5 `.docx`.
+
+**Docs last synced:** 16 October 2026 (`BACKLOG.md` A-118–A-123 / B-094–B-098).

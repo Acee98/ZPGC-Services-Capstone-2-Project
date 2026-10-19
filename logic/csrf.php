@@ -56,4 +56,33 @@ if (!function_exists('zpgc_csrf_token')) {
             exit();
         }
     }
+
+    function zpgc_wants_json()
+    {
+        $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+        $xhr = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+        return str_contains($accept, 'application/json') || $xhr === 'xmlhttprequest';
+    }
+
+    function zpgc_json_send($ok, array $payload = [])
+    {
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=UTF-8');
+            header('Cache-Control: no-store');
+        }
+        echo json_encode(array_merge(['ok' => (bool) $ok], $payload), JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    function zpgc_finish($redirect, $ok = true, array $payload = [])
+    {
+        if (zpgc_wants_json()) {
+            if (!isset($payload['redirect'])) {
+                $payload['redirect'] = $redirect;
+            }
+            zpgc_json_send($ok, $payload);
+        }
+        header('Location: ' . $redirect);
+        exit();
+    }
 }

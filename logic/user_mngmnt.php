@@ -17,9 +17,15 @@ if (isset($_POST['login'])) {
     }
 
     $stmt = $conn->prepare(
-        'SELECT id, first_name, last_name, email, password, role, status, email_verified
+        'SELECT id, first_name, last_name, email, password, role, status, email_verified, preferred_language
         FROM users WHERE LOWER(email) = ? LIMIT 1'
     );
+    if ($stmt === false) {
+        $stmt = $conn->prepare(
+            'SELECT id, first_name, last_name, email, password, role, status, email_verified
+            FROM users WHERE LOWER(email) = ? LIMIT 1'
+        );
+    }
     $stmt->bind_param('s', $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -111,6 +117,15 @@ if (isset($_POST['signup'])) {
     $confirmPassword = (string) ($_POST['confirm_password'] ?? '');
     $role = $_POST['role'] ?? '';
     $acceptedTerms = isset($_POST['accept_terms']);
+    $accountKind = 'student';
+    $postedRole = strtolower(trim((string) $role));
+    if ($postedRole === 'staff') {
+        $role = 'user';
+        $accountKind = 'staff';
+    } elseif ($postedRole === 'student' || $postedRole === 'user') {
+        $role = 'user';
+        $accountKind = 'student';
+    }
 
     $allowed = ['user', 'techn'];
     if (!$acceptedTerms) {
@@ -130,7 +145,7 @@ if (isset($_POST['signup'])) {
     }
     $role = auth_mail_normalize_role($role);
     if (!in_array($role, $allowed, true)) {
-        $_SESSION['signup_error'] = 'Choose User or Technician.';
+        $_SESSION['signup_error'] = 'Choose Student, Staff, or Technician.';
         header('Location: ../pages/login_signup.php?form=signup');
         exit();
     }
@@ -211,6 +226,15 @@ if (isset($_POST['signup'])) {
     }
     $userId = (int) $conn->insert_id;
     $stmt->close();
+    $kindFile = __DIR__ . '/account_kind.php';
+    if (is_file($kindFile)) {
+        require_once $kindFile;
+        if ($role === 'user') {
+            account_kind_set($conn, $userId, $accountKind, 'user');
+        } else {
+            account_kind_set($conn, $userId, '', 'techn');
+        }
+    }
 
     $sent = auth_mail_send_verify($conn, $userId, $email, $first_name);
     if (!$sent['ok']) {

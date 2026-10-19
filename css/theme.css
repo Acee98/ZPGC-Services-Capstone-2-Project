@@ -77,6 +77,10 @@
     color: var(--theme-text);
 }
 
+[data-theme="dark"] .app-version {
+    color: #d7c4c6;
+}
+
 [data-theme="dark"] .status-card,
 [data-theme="dark"] .chart-card,
 [data-theme="dark"] .tickets-list,
@@ -308,6 +312,12 @@
     color: #f2f2f7 !important;
 }
 
+[data-theme="dark"] .profile-spec-badge {
+    background: rgba(139, 74, 82, 0.28) !important;
+    color: #f5d0d4 !important;
+    border-color: rgba(245, 208, 212, 0.28) !important;
+}
+
 [data-theme="dark"] .profile-hero-role,
 [data-theme="dark"] .profile-card-subtitle,
 [data-theme="dark"] .settings-card-header p,
@@ -401,6 +411,12 @@
 [data-theme="dark"] .user-form-field select:focus {
     border-color: #8b4a52;
     background-color: var(--theme-surface-3);
+}
+
+html[data-theme="dark"] .user-form-field.is-techn-only.is-open {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
 }
 
 [data-theme="dark"] .profile-form-field input:disabled,
@@ -777,4 +793,50 @@ html[data-theme="dark"] .mobile-tab-btn {
 html[data-theme="dark"] .mobile-tab-btn.selected {
     color: #f5d0d4 !important;
     background: rgba(139, 74, 82, 0.28) !important;
+}
+
+html[data-theme="dark"] .table-pager {
+    background: #2a2a32 !important;
+    border-top-color: rgba(255, 255, 255, 0.08) !important;
+    color: #c4c4d0 !important;
+}
+
+html[data-theme="dark"] .table-pager-pages button,
+html[data-theme="dark"] .table-pager-size select,
+html[data-theme="dark"] .tickets-priority-select,
+html[data-theme="dark"] .dash-range-picker input[type="date"],
+html[data-theme="dark"] .ticket-qv-close {
+    background: #222228 !important;
+    color: #f2f2f7 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html[data-theme="dark"] .table-pager-pages button.is-current {
+    background: #610107 !important;
+    color: #fff !important;
+    border-color: #610107 !important;
+}
+
+html[data-theme="dark"] .ticket-qv-card {
+    background: #222228 !important;
+    color: #f2f2f7 !important;
+}
+
+html[data-theme="dark"] .ticket-qv-head h2 {
+    color: #fff !important;
+}
+
+html[data-theme="dark"] .ticket-qv-fact-value {
+    color: #f2f2f7 !important;
+}
+
+html[data-theme="dark"] .ticket-qv-fact-label,
+html[data-theme="dark"] .tickets-priority-filter,
+html[data-theme="dark"] .dash-range-picker label {
+    color: #c4c4d0 !important;
+}
+
+html[data-theme="dark"] .live-ticket-notice {
+    background: rgba(245, 166, 35, 0.16) !important;
+    color: #f5d0a3 !important;
 }

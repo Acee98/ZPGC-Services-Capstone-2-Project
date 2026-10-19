@@ -1,5 +1,18 @@
                 <div class="dashboard-charts-toolbar">
-                    <button id="dash-range-btn" class="perf-filter-btn" type="button" data-range="week" title="Switch between This Week, This Month, and This Year">This Week</button>
+                    <div class="dash-range-picker">
+                        <label>From
+                            <input type="date" id="dash-from" max="<?php echo htmlspecialchars(date('Y-m-d')); ?>">
+                        </label>
+                        <label>To
+                            <input type="date" id="dash-to" max="<?php echo htmlspecialchars(date('Y-m-d')); ?>">
+                        </label>
+                        <button id="dash-range-apply" class="perf-filter-btn" type="button">Apply dates</button>
+                    </div>
+                    <div class="dash-range-presets">
+                        <button type="button" class="perf-filter-btn dash-preset" data-range="week">This week</button>
+                        <button type="button" class="perf-filter-btn dash-preset" data-range="month">This month</button>
+                        <button type="button" class="perf-filter-btn dash-preset" data-range="year">This year</button>
+                    </div>
                     <button id="dash-pdf-btn" class="perf-filter-btn dash-pdf-btn" type="button" title="Download the current dashboard charts as a PDF">Download PDF</button>
                 </div>
                 <div class="dashboard-charts-grid dashboard-charts-live">

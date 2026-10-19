@@ -32,8 +32,8 @@ if ($email === '' && $error === '' && $success === '') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.18">
-    <title>ZPGC Services | Verify Email</title>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/login_signup.css')); ?>">
+    <title><?php echo htmlspecialchars(zpgc_page_title('Verify Email')); ?></title>
 </head>
 
 <body>
@@ -73,6 +73,7 @@ if ($email === '' && $error === '' && $success === '') {
             </form>
         </div>
     </div>
+    <?php $zpgc_version_class = 'app-version app-version--auth'; include __DIR__ . '/partials/app_version.php'; ?>
 </body>
 
 </html>

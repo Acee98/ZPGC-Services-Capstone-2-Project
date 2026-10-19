@@ -156,6 +156,24 @@ if (!function_exists('ticket_has_column')) {
     }
 
     /**
+     * Mark every open ticket resolved. Does not archive or delete rows.
+     *
+     * @return array{tickets:int,replacements:int}
+     */
+    function ticket_resolve_all_open(mysqli $conn)
+    {
+        $tickets = 0;
+        $set = "status = 'resolved'";
+        if (ticket_has_column($conn, 'resolved_at')) {
+            $set .= ', resolved_at = IFNULL(resolved_at, NOW())';
+        }
+        if ($conn->query("UPDATE tickets SET {$set} WHERE status <> 'resolved'")) {
+            $tickets = (int) $conn->affected_rows;
+        }
+        return ['tickets' => $tickets, 'replacements' => 0];
+    }
+
+    /**
      * @param bool $archive Immediately soft-archive. Pass false when the user still
      *                      needs to submit the satisfaction survey (archive after rating).
      */

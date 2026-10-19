@@ -91,9 +91,9 @@ function showBox($cls, $msg)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.19">
-    <link rel="stylesheet" href="../css/apply.css?v=1.6.2">
-    <title>ZPGC Services | Role assignment</title>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/login_signup.css')); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/apply.css')); ?>">
+    <title><?php echo htmlspecialchars(zpgc_page_title('Role assignment')); ?></title>
 </head>
 <body class="apply-page">
 <div class="apply-page-wrap">

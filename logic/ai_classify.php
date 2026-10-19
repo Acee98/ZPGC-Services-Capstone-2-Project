@@ -367,9 +367,63 @@ if (!function_exists('ai_classifier_base')) {
         return null;
     }
 
+    function ai_it_helpdesk_reject_message()
+    {
+        return 'This request is outside the IT Helpdesk. Submit only campus IT concerns: computers and peripherals (hardware), applications and operating systems (software), Wi-Fi or internet (network), sign-in and accounts (account), or other IT office work such as lab PCs, printers, projectors, and IT process questions.';
+    }
+
+    function ai_blob_text($subject, $description)
+    {
+        return strtolower(trim((string) $subject . ' ' . (string) $description));
+    }
+
+    function ai_has_it_signal($blob)
+    {
+        return $blob !== '' && preg_match(
+            '/\b(computer|pc\b|laptop|desktop|workstation|monitor|keyboard|mouse|print(er|ing)?|scanner|projector|smart ?board|wifi|wi-?fi|wireless|ethernet|internet|vpn|router|modem|switch|lan|wan|dns|ip address|password|otp|2fa|two[ -]?factor|log ?in|sign[ -]?in|account locked|username|e-?mail|gmail|outlook|office 365|microsoft|windows|macos|chrome|browser|software|application|\bapp\b|install|update|patch|license|activation|hardware|cpu|ram|ssd|hdd|charger|battery|usb|hdmi|vga|bios|blue ?screen|bsod|network|server|portal|helpdesk|technician|cctv|biometric|id reader|pos terminal|lab pc|computer lab|it office|it support|system (error|down|outage)|cannot (open|launch|boot)|screen|display|speaker|headset|webcam|microphone|toner|cartridge)\b/i',
+            $blob
+        ) === 1;
+    }
+
+    function ai_has_non_it_signal($blob)
+    {
+        return $blob !== '' && preg_match(
+            '/\b(tuition|enrol+ment|grades?|gwa|transcript|diploma|scholarship|cafeteria|canteen|food|menu|salary|payroll|human resources|\bhr\b|maternity|vacation leave|bus schedule|jeepney|dorm(itory)?|lost wallet|lost (atm|id)|sports|basketball|volleyball|uniform|medical certificate|clinic|nurse|canteen|refund of tuition|subject load|class schedule(?!.*(computer|lab pc|wifi)))\b/i',
+            $blob
+        ) === 1;
+    }
+
+    function ai_out_of_scope_result($method = 'keyword')
+    {
+        return [
+            'ok' => true,
+            'in_scope' => false,
+            'category' => null,
+            'priority' => null,
+            'urgency' => null,
+            'impact' => null,
+            'confidence' => 0.9,
+            'method' => $method,
+            'model' => null,
+            'error' => ai_it_helpdesk_reject_message(),
+            'reject_reason' => ai_it_helpdesk_reject_message(),
+            'raw' => null,
+        ];
+    }
+
+    function ai_mark_in_scope(array $result)
+    {
+        $result['in_scope'] = true;
+        $result['reject_reason'] = null;
+        return $result;
+    }
+
     function ai_keyword_classify($subject, $description)
     {
-        $blob = strtolower(trim((string) $subject . ' ' . (string) $description));
+        $blob = ai_blob_text($subject, $description);
+        if ($blob === '' || !ai_has_it_signal($blob)) {
+            return ai_out_of_scope_result('keyword');
+        }
         $category = 'other';
         // Score every category from subject AND description so a vague title
         // ("equipment checked") cannot hide a clear problem ("Windows Update").
@@ -382,6 +436,7 @@ if (!function_exists('ai_classifier_base')) {
             ],
             'software' => [
                 '/\b(windows\s*update|software\s*update|pending\s*updates?|install\s*updates?)\b/i',
+                '/\b(update|upgrade|patch).{0,40}\b(os|operating\s*system|windows)\b|\b(os|operating\s*system|windows).{0,40}\b(update|upgrade|patch)\b/i',
                 '/\b(windows\s*(10|11)|operating\s*system|microsoft\s*office|office\s*365|excel|microsoft word|\bms word\b|google chrome|outlook|teams|zoom)\b/i',
                 '/\b(license key|activation|install (the )?(app|application|program|software)|app(lication)? (crash|frozen|not responding))\b/i',
             ],
@@ -421,7 +476,7 @@ if (!function_exists('ai_classifier_base')) {
             ? severity_from_score($urgency * $impact)
             : 'low';
 
-        return [
+        return ai_mark_in_scope([
             'ok' => true,
             'category' => $category,
             'priority' => $priority,
@@ -432,24 +487,27 @@ if (!function_exists('ai_classifier_base')) {
             'model' => null,
             'error' => null,
             'raw' => null,
-        ];
+        ]);
     }
 
     function ai_openai_classify($subject, $description)
     {
         $system = 'You classify campus IT helpdesk tickets for ZPGC. '
+            . 'The desk ONLY handles IT: computers, peripherals, printers, projectors, software, OS, campus accounts, email, Wi-Fi, internet, and IT office processes. '
             . 'Do not assign priority. The system computes priority as Urgency×Impact '
             . '(1–2 Low, 3–6 Moderate, 9 Critical) and adds +40 if 30+ identical open reports exist. '
             . 'Reply with ONLY valid JSON: '
-            . '{"category":"hardware|software|network|account|other",'
+            . '{"in_scope":true,'
+            . '"category":"hardware|software|network|account|other",'
             . '"urgency":1,'
             . '"impact":1,'
             . '"confidence":0.0,'
             . '"rationale":"short reason"} '
             . 'Read BOTH subject and description. Classify the actual problem, not vague wording. '
+            . 'If the request is NOT IT (grades, tuition, cafeteria, HR, sports, lost personal items, medical, enrollment), set in_scope false, omit category or set it null, urgency 1, impact 1. '
             . 'Windows Update, Office, Chrome, installs, patches, and OS updates are software. '
             . 'A subject like "check equipment" is still software if the body names Windows Update or an application. '
-            . 'Use other only for process questions (forms, schedules, how-to with no broken system). '
+            . 'Use other ONLY for IT Helpdesk work that is not hardware, software, network, or account: computer-lab booking via IT, IT forms, extra IT equipment requests, general campus IT how-to. Never use other for non-IT topics. '
             . 'urgency 1=can wait, 2=needs attention soon, 3=must be fixed immediately (blocked work, outage). '
             . 'impact 1=one person, 2=group/class/lab, 3=department or whole campus. '
             . 'urgency and impact must be integers 1, 2, or 3.';
@@ -478,6 +536,16 @@ if (!function_exists('ai_classifier_base')) {
             ];
         }
 
+        $inScopeRaw = $data['in_scope'] ?? true;
+        $inScope = !($inScopeRaw === false || $inScopeRaw === 0 || $inScopeRaw === 'false' || $inScopeRaw === '0');
+        if (!$inScope) {
+            $reject = ai_out_of_scope_result('openai');
+            $reject['model'] = ai_openai_model();
+            $reject['raw'] = $chat['content'];
+            $reject['confidence'] = isset($data['confidence']) ? (float) $data['confidence'] : 0.9;
+            return $reject;
+        }
+
         $allowedCat = ['hardware', 'software', 'account', 'network', 'other'];
         $cat = strtolower((string) ($data['category'] ?? ''));
         $urgency = (int) ($data['urgency'] ?? 0);
@@ -491,7 +559,7 @@ if (!function_exists('ai_classifier_base')) {
         }
         $priority = severity_from_score($urgency * $impact);
 
-        return [
+        return ai_mark_in_scope([
             'ok' => true,
             'category' => $cat,
             'priority' => $priority,
@@ -503,7 +571,7 @@ if (!function_exists('ai_classifier_base')) {
             'fallback_reason' => null,
             'error' => null,
             'raw' => $chat['content'],
-        ];
+        ]);
     }
 
     function ai_pack_troubleshoot($summary, array $steps, $ask, $method = 'keyword', $model = null)
@@ -811,7 +879,7 @@ if (!function_exists('ai_classifier_base')) {
                 'Setup needs an administrator password, or the install fails with an error code.',
             ],
             [
-                '/software update|windows update|pending update/i',
+                '/software update|windows update|pending update|(update|upgrade|patch).{0,40}\b(os|operating\s*system|windows)\b|\b(os|operating\s*system|windows).{0,40}\b(update|upgrade|patch)\b/i',
                 'Finish a software or Windows update.',
                 [
                     'Save your work. Open Settings → Windows Update (or the app’s own Help → Check for updates) and install pending updates.',
@@ -950,9 +1018,32 @@ if (!function_exists('ai_classifier_base')) {
      * If keywords find a real specialty, keep it — assignment routes by category.
      * Models often pick "other" from a vague subject while the body is specific.
      */
+    function ai_enforce_it_scope(array $result, $subject, $description)
+    {
+        if (empty($result['ok'])) {
+            return $result;
+        }
+        if (array_key_exists('in_scope', $result) && empty($result['in_scope'])) {
+            return ai_out_of_scope_result((string) ($result['method'] ?? 'keyword'));
+        }
+        $blob = ai_blob_text($subject, $description);
+        $cat = strtolower(trim((string) ($result['category'] ?? '')));
+        $allowed = ['hardware', 'software', 'account', 'network', 'other'];
+        if (!ai_has_it_signal($blob) || $cat === 'out_of_scope' || !in_array($cat, $allowed, true)) {
+            return ai_out_of_scope_result((string) ($result['method'] ?? 'keyword'));
+        }
+        return ai_mark_in_scope($result);
+    }
+
     function ai_overlay_keyword_category(array $result, $subject, $description)
     {
         $kw = ai_keyword_classify($subject, $description);
+        if (empty($kw['in_scope'])) {
+            return $kw;
+        }
+        if (array_key_exists('in_scope', $result) && empty($result['in_scope'])) {
+            return ai_enforce_it_scope($result, $subject, $description);
+        }
         $kwCat = strtolower((string) ($kw['category'] ?? 'other'));
         $cur = strtolower(trim((string) ($result['category'] ?? '')));
         if ($kwCat !== 'other' && $kwCat !== $cur) {
@@ -962,7 +1053,7 @@ if (!function_exists('ai_classifier_base')) {
         } elseif ($cur === '' || $cur === 'other') {
             $result['category'] = $kwCat;
         }
-        return $result;
+        return ai_enforce_it_scope($result, $subject, $description);
     }
 
     function ai_classify_ticket($subject, $description)
@@ -993,6 +1084,7 @@ if (!function_exists('ai_classifier_base')) {
                 $pri = ai_map_priority($data['priority'] ?? '');
                 $result['ok'] = true;
                 $result['category'] = in_array($cat, $allowedCat, true) ? $cat : null;
+                $result['in_scope'] = in_array($cat, $allowedCat, true);
                 $result['priority'] = $pri;
                 $result['urgency'] = isset($data['urgency']) ? (int) $data['urgency'] : null;
                 $result['impact'] = isset($data['impact']) ? (int) $data['impact'] : null;
@@ -1017,7 +1109,9 @@ if (!function_exists('ai_classifier_base')) {
             } else {
                 $fallback['fallback_reason'] = (string) ($direct['fallback_reason'] ?? 'openai_error');
             }
-            $fallback['error'] = (string) ($direct['error'] ?? '');
+            if (!empty($fallback['in_scope'])) {
+                $fallback['error'] = (string) ($direct['error'] ?? '');
+            }
             return $fallback;
         }
 

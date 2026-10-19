@@ -177,14 +177,24 @@
             });
         }
 
-        window.setTimeout(function () {
+        function resizeLive() {
             [reportCtx, catCtx, satCtx, sevCtx].forEach(function (canvas) {
                 var chart = canvas && Chart.getChart ? Chart.getChart(canvas) : null;
                 if (chart) {
                     chart.resize();
                 }
             });
-        }, 0);
+        }
+        window.setTimeout(resizeLive, 0);
+        window.setTimeout(resizeLive, 250);
+        window.setTimeout(resizeLive, 800);
+        if (!window.__zpgcChartResizeBound) {
+            window.__zpgcChartResizeBound = true;
+            window.addEventListener('resize', function () {
+                window.clearTimeout(window.__zpgcChartResizeTimer);
+                window.__zpgcChartResizeTimer = window.setTimeout(resizeLive, 150);
+            });
+        }
     }
 
     var RANGES = [
@@ -206,6 +216,14 @@
         return window.DASHBOARD_CHART_RANGE || 'week';
     }
 
+    function currentFrom() {
+        return window.DASHBOARD_CHART_FROM || '';
+    }
+
+    function currentTo() {
+        return window.DASHBOARD_CHART_TO || '';
+    }
+
     function setRangeLabels(label) {
         document.querySelectorAll('[data-chart-range-label]').forEach(function (el) {
             el.textContent = label;
@@ -217,9 +235,13 @@
         }
     }
 
-    function loadRange(range) {
-        var meta = rangeMeta(range);
-        return fetch('../logic/dashboard_charts_api.php?range=' + encodeURIComponent(meta.key), {
+    function loadRange(range, from, to) {
+        var meta = rangeMeta(range || 'week');
+        var q = 'range=' + encodeURIComponent(from && to ? 'custom' : meta.key);
+        if (from && to) {
+            q += '&from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to);
+        }
+        return fetch('../logic/dashboard_charts_api.php?' + q, {
             credentials: 'same-origin',
             headers: { Accept: 'application/json' },
         })
@@ -235,6 +257,8 @@
                 }
                 window.DASHBOARD_CHART_DATA = json.data;
                 window.DASHBOARD_CHART_RANGE = json.range || meta.key;
+                window.DASHBOARD_CHART_FROM = json.from || '';
+                window.DASHBOARD_CHART_TO = json.to || '';
                 setRangeLabels(json.range_label || meta.label);
                 initLiveCharts();
             });
@@ -271,6 +295,8 @@
         }
         var payload = {
             range: currentRange(),
+            from: currentFrom(),
+            to: currentTo(),
             images: {
                 report: canvasJpeg(document.getElementById('ticketsReportChart')),
                 categories: canvasJpeg(document.getElementById('ticketsCategoriesChart')),
@@ -316,22 +342,37 @@
     }
 
     function bindDashboardControls() {
-        var rangeBtn = document.getElementById('dash-range-btn');
-        if (rangeBtn && !rangeBtn.getAttribute('data-bound')) {
-            rangeBtn.setAttribute('data-bound', '1');
-            rangeBtn.addEventListener('click', function () {
-                var idx = 0;
-                var cur = currentRange();
-                for (var i = 0; i < RANGES.length; i++) {
-                    if (RANGES[i].key === cur) {
-                        idx = i;
-                        break;
-                    }
+        document.querySelectorAll('.dash-preset').forEach(function (btn) {
+            if (btn.getAttribute('data-bound') === '1') {
+                return;
+            }
+            btn.setAttribute('data-bound', '1');
+            btn.addEventListener('click', function () {
+                var fromEl = document.getElementById('dash-from');
+                var toEl = document.getElementById('dash-to');
+                if (fromEl) fromEl.value = '';
+                if (toEl) toEl.value = '';
+                btn.disabled = true;
+                loadRange(btn.getAttribute('data-range') || 'week').finally(function () {
+                    btn.disabled = false;
+                });
+            });
+        });
+        var applyBtn = document.getElementById('dash-range-apply');
+        if (applyBtn && applyBtn.getAttribute('data-bound') !== '1') {
+            applyBtn.setAttribute('data-bound', '1');
+            applyBtn.addEventListener('click', function () {
+                var fromEl = document.getElementById('dash-from');
+                var toEl = document.getElementById('dash-to');
+                var from = fromEl ? fromEl.value : '';
+                var to = toEl ? toEl.value : '';
+                if (!from || !to) {
+                    window.alert('Choose both a start date and an end date.');
+                    return;
                 }
-                var next = RANGES[(idx + 1) % RANGES.length];
-                rangeBtn.disabled = true;
-                loadRange(next.key).finally(function () {
-                    rangeBtn.disabled = false;
+                applyBtn.disabled = true;
+                loadRange('custom', from, to).finally(function () {
+                    applyBtn.disabled = false;
                 });
             });
         }
@@ -340,11 +381,13 @@
             pdfBtn.setAttribute('data-bound', '1');
             pdfBtn.addEventListener('click', downloadPdf);
         }
-        setRangeLabels(rangeMeta(currentRange()).label);
     }
 
     function bootCharts() {
         bindDashboardControls();
+        var initialLabel = (window.DASHBOARD_CHART_DATA && window.DASHBOARD_CHART_DATA.range_label)
+            || rangeMeta(currentRange()).label;
+        setRangeLabels(initialLabel);
         initLiveCharts();
         if (!document.body || typeof MutationObserver === 'undefined') {
             return;

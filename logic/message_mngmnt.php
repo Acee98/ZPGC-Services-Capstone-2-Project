@@ -34,8 +34,7 @@ $role = $_SESSION['role'] ?? '';
 if (isset($_POST['send_message'])) {
     if ($role === 'admin') {
         $_SESSION['ticket_flash'] = 'Only the user and the assigned technician can send messages.';
-        header('Location: ' . zpgc_web_path('pages/admin.php') . '?tab=messages');
-        exit();
+        zpgc_finish(zpgc_web_path('pages/admin.php') . '?tab=messages', false, ['message' => $_SESSION['ticket_flash']]);
     }
     $ticket_id = (int) ($_POST['ticket_id'] ?? 0);
     $body = trim($_POST['body'] ?? '');
@@ -66,8 +65,10 @@ if (isset($_POST['send_message'])) {
     if ($ticket_id > 0) {
         $back .= '&ticket_id=' . $ticket_id;
     }
-    header('Location: ' . $back);
-    exit();
+    zpgc_finish($back, empty($_SESSION['ticket_flash']), [
+        'message' => (string) ($_SESSION['ticket_flash'] ?? ''),
+        'action' => 'send_message',
+        'ticket_id' => (int) ($ticket_id ?? 0),
+    ]);
 }
-header('Location: ' . zpgc_web_path('pages/user.php'));
-exit();
+zpgc_finish(zpgc_web_path('pages/user.php'), true, ['message' => '']);

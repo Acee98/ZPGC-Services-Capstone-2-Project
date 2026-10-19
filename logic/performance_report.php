@@ -103,6 +103,9 @@ if (!function_exists('performance_duration_label')) {
             ];
         }
         $where = "status = 'resolved'";
+        if (function_exists('ticket_has_column') && ticket_has_column($conn, 'archived_at')) {
+            $where = "(status = 'resolved' OR archived_at IS NOT NULL)";
+        }
         $assignedTo = (int) $assignedTo;
         if ($assignedTo > 0) {
             $where .= ' AND assigned_to = ' . $assignedTo;
@@ -155,31 +158,44 @@ if (!function_exists('performance_duration_label')) {
     function performance_resolved_log(mysqli $conn, $limit = 100, $assignedTo = 0)
     {
         $limit = max(1, min(500, (int) $limit));
-        $hasCreated = ticket_has_column($conn, 'created_at');
-        $hasResponded = ticket_has_column($conn, 'responded_at');
-        $hasResolved = ticket_has_column($conn, 'resolved_at');
-        $created = $hasCreated ? 'created_at' : 'NULL AS created_at';
-        $responded = $hasResponded ? 'responded_at' : 'NULL AS responded_at';
-        $resolved = $hasResolved ? 'resolved_at' : 'NULL AS resolved_at';
-        $where = "status = 'resolved'";
+        $created = ticket_has_column($conn, 'created_at') ? 't.created_at' : 'NULL AS created_at';
+        $responded = ticket_has_column($conn, 'responded_at') ? 't.responded_at' : 'NULL AS responded_at';
+        $resolved = ticket_has_column($conn, 'resolved_at') ? 't.resolved_at' : 'NULL AS resolved_at';
+        $satCol = ticket_has_column($conn, 'satisfaction') ? 't.satisfaction' : 'NULL AS satisfaction';
+        $where = "t.status = 'resolved'";
+        if (function_exists('ticket_has_column') && ticket_has_column($conn, 'archived_at')) {
+            $where = "(t.status = 'resolved' OR t.archived_at IS NOT NULL)";
+        }
         $assignedTo = (int) $assignedTo;
         if ($assignedTo > 0) {
-            $where .= ' AND assigned_to = ' . $assignedTo;
+            $where .= ' AND t.assigned_to = ' . $assignedTo;
         }
-        $sql = "SELECT id, subject, description, category, priority, {$created}, {$responded}, {$resolved}
-                FROM tickets
+        $sql = "SELECT t.id, t.subject, t.description, t.category, t.priority, t.assigned_to,
+                       {$satCol}, {$created}, {$responded}, {$resolved},
+                       u.email AS tech_email, u.first_name AS tech_first, u.last_name AS tech_last
+                FROM tickets t
+                LEFT JOIN users u ON u.id = t.assigned_to
                 WHERE {$where}
-                ORDER BY id DESC
+                ORDER BY t.id DESC
                 LIMIT {$limit}";
         $log = [];
         $result = $conn->query($sql);
         if (!$result) {
             return $log;
         }
+        $satLabels = function_exists('ticket_satisfaction_labels') ? ticket_satisfaction_labels() : [];
         while ($row = $result->fetch_assoc()) {
+            if (function_exists('ticket_reveal_row')) {
+                ticket_reveal_row($row);
+            }
             $pri = strtolower(trim((string) ($row['priority'] ?? '')));
             if (!in_array($pri, ['critical', 'moderate', 'low'], true)) {
                 $pri = '';
+            }
+            $sat = (int) ($row['satisfaction'] ?? 0);
+            $techName = trim((string) ($row['tech_first'] ?? '') . ' ' . (string) ($row['tech_last'] ?? ''));
+            if ($techName === '') {
+                $techName = (string) ($row['tech_email'] ?? '');
             }
             $log[] = [
                 'id' => (int) $row['id'],
@@ -192,9 +208,45 @@ if (!function_exists('performance_duration_label')) {
                 'registered' => performance_registered_label($row['created_at'] ?? null),
                 'response' => performance_duration_label($row['created_at'] ?? null, $row['responded_at'] ?? null),
                 'resolution' => ticket_resolution_clock_label($row['created_at'] ?? null, $row['resolved_at'] ?? null),
+                'satisfaction' => $sat,
+                'satisfaction_label' => $satLabels[$sat] ?? '',
+                'technician' => $techName !== '' ? $techName : 'Unassigned',
             ];
         }
         return $log;
+    }
+
+    function performance_technician_rows(mysqli $conn)
+    {
+        $rows = [];
+        $resolvedJoin = "t.status = 'resolved'";
+        if (function_exists('ticket_has_column') && ticket_has_column($conn, 'archived_at')) {
+            $resolvedJoin = "(t.status = 'resolved' OR t.archived_at IS NOT NULL)";
+        }
+        $sql = "SELECT u.id, u.email, u.first_name, u.last_name,
+                       IFNULL(a.specialty, '') AS specialty,
+                       COUNT(t.id) AS total
+                FROM users u
+                LEFT JOIN technician_applications a ON a.user_id = u.id
+                LEFT JOIN tickets t ON t.assigned_to = u.id AND {$resolvedJoin}
+                WHERE u.role = 'techn'
+                GROUP BY u.id, u.email, u.first_name, u.last_name, a.specialty
+                ORDER BY total DESC, u.email ASC";
+        $result = $conn->query($sql);
+        if (!$result) {
+            return $rows;
+        }
+        while ($row = $result->fetch_assoc()) {
+            $name = trim((string) ($row['first_name'] ?? '') . ' ' . (string) ($row['last_name'] ?? ''));
+            $rows[] = [
+                'id' => (int) $row['id'],
+                'name' => $name !== '' ? $name : (string) $row['email'],
+                'email' => (string) $row['email'],
+                'specialty' => (string) ($row['specialty'] ?? ''),
+                'total' => (int) $row['total'],
+            ];
+        }
+        return $rows;
     }
 
     function performance_service_summary(mysqli $conn)

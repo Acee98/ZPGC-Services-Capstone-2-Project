@@ -29,8 +29,8 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.18">
-    <title>ZPGC Services | Login/Signup</title>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/login_signup.css')); ?>">
+    <title><?php echo htmlspecialchars(zpgc_page_title('Login/Signup')); ?></title>
 </head>
 
 <body>
@@ -48,7 +48,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
                 <?php echo showError($login_error); ?>
                 <?php echo showSuccess($login_success); ?>
                 <h5>Enter your credentials to access, create, or track your tickets</h5>
-                <input type="email" name="email" placeholder="TSU email (student or staff)" autocomplete="email" required title="Use your @student.tsu.edu.ph or @tsu.edu.ph address">
+                <input type="email" name="email" placeholder="TSU or Gmail address" autocomplete="email" required title="Use your TSU Outlook or Gmail address">
                 <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
                 <button type="submit" name="login">Login</button>
                 <p><a href="forgot_password.php">Forgot Password?</a></p>
@@ -61,16 +61,17 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
 <?php echo zpgc_csrf_field(); ?>
                 <h1>SIGNUP</h1>
                 <?php echo showError($signup_error); ?>
-                <h5>Use your TSU Outlook email (@student.tsu.edu.ph or @tsu.edu.ph). Users auto-activate after the 6-digit code; technicians then submit a specialty and resume for admin approval.</h5>
+                <h5>Use TSU Outlook (@student.tsu.edu.ph or @tsu.edu.ph) or Gmail. Students and staff auto-activate after the 6-digit code; technicians then submit a specialty and resume for admin approval.</h5>
                 <input type="text" name="first_name" placeholder="First Name" required>
                 <input type="text" name="last_name" placeholder="Last Name" required>
-                <input type="email" name="email" placeholder="you@student.tsu.edu.ph or you@tsu.edu.ph" required
-                    title="Use your @student.tsu.edu.ph or @tsu.edu.ph Outlook address">
+                <input type="email" name="email" placeholder="you@student.tsu.edu.ph or you@gmail.com" required
+                    title="Use your TSU Outlook or Gmail address">
                 <input type="password" name="password" id="signup-password" placeholder="Password (8+ characters)" minlength="8" autocomplete="new-password" required>
                 <input type="password" name="confirm_password" id="signup-confirm-password" placeholder="Confirm password" minlength="8" autocomplete="new-password" required>
                 <select name="role" required>
-                    <option value="" disabled selected>Role</option>
-                    <option value="user">User</option>
+                    <option value="" disabled selected>I am a…</option>
+                    <option value="student">Student</option>
+                    <option value="staff">Staff / faculty</option>
                     <option value="techn">Technician</option>
                 </select>
                 <label class="terms-check">
@@ -114,6 +115,7 @@ $openSignup = (($_GET['form'] ?? '') === 'signup') || $signup_error !== '';
     <?php if ($openSignup) { ?>
     <script>showForm('signup-form');</script>
     <?php } ?>
+    <?php $zpgc_version_class = 'app-version app-version--auth'; include __DIR__ . '/partials/app_version.php'; ?>
 </body>
 
 </html>

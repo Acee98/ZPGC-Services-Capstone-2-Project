@@ -71,4 +71,5 @@ By default the app may create missing tables/columns (`ZPGC_ALLOW_RUNTIME_DDL=1`
 
 ## Version
 
-Git tag: **V1.6**.
+**Paper / product label:** ZPGC Services **V1.6** (documentation freeze 16 October 2026).  
+Git tag: **V1.6**. Folder `CP2_V1.6`. Stages 8–9 (testing and finalization) do not change this label. Asset `?v=1.6.xx` strings are cache-bust only.

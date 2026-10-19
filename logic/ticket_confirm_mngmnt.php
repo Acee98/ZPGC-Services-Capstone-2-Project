@@ -8,8 +8,7 @@ require_role('user');
 zpgc_csrf_require();
 
 if (!isset($_POST['confirm_ticket'])) {
-    header('Location: ../pages/user.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/user.php?tab=tickets', false, ['message' => $_SESSION['confirm_error'] ?? '']);
 }
 
 $ticket_id = (int) ($_POST['ticket_id'] ?? 0);
@@ -17,8 +16,7 @@ $decision = (string) ($_POST['decision'] ?? '');
 $user_id = current_user_id($conn);
 
 if ($ticket_id <= 0 || $user_id <= 0 || !in_array($decision, ['solved', 'not_solved'], true)) {
-    header('Location: ../pages/user.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/user.php?tab=tickets', false, ['message' => $_SESSION['confirm_error'] ?? '']);
 }
 
 $stmt = $conn->prepare(
@@ -31,8 +29,7 @@ $stmt->close();
 
 if (!$row || !ticket_awaiting_confirmation($row['status'])) {
     $_SESSION['confirm_error'] = 'That ticket is not waiting on your confirmation.';
-    header('Location: ../pages/user.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/user.php?tab=tickets', false, ['message' => $_SESSION['confirm_error'] ?? '']);
 }
 
 if ($decision === 'solved') {
@@ -77,5 +74,10 @@ if ($decision === 'solved') {
         );
     }
 }
-header('Location: ../pages/user.php?tab=tickets');
-exit();
+zpgc_finish('../pages/user.php?tab=tickets', true, [
+    'message' => (string) ($_SESSION['confirm_success'] ?? ''),
+    'action' => 'confirm_ticket',
+    'ticket_id' => $ticket_id,
+    'status' => $newStatus,
+    'decision' => $decision,
+]);

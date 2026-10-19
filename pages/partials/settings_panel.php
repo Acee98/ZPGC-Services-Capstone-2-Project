@@ -1,5 +1,8 @@
 <?php
-$themeNow = function_exists('current_ui_theme') ? current_ui_theme() : 'light';
+$themeNow = function_exists('current_ui_theme') ? current_ui_theme() : '';
+if ($themeNow !== 'dark') {
+    $themeNow = 'light';
+}
 $settings_success = $_SESSION['settings_success'] ?? '';
 $settings_error = $_SESSION['settings_error'] ?? '';
 unset($_SESSION['settings_success'], $_SESSION['settings_error']);
@@ -13,27 +16,33 @@ unset($_SESSION['settings_success'], $_SESSION['settings_error']);
     <?php } ?>
     <div class="settings-card">
         <div class="settings-card-header">
-            <h2>Appearance</h2>
-            <p>Stay in control of how the dashboard looks on this account.</p>
+            <h2><?php echo htmlspecialchars(zpgc_t('Appearance')); ?></h2>
         </div>
-        <form action="../logic/settings_mngmnt.php" method="post" class="settings-form">
+        <form action="../logic/settings_mngmnt.php" method="post" class="settings-form" id="settings-appearance-form">
 <?php echo zpgc_csrf_field(); ?>
+            <input type="hidden" name="save_appearance" value="1">
             <div class="settings-pref-row">
-                <span class="settings-pref-label">Browser preferences</span>
-                <select name="theme" class="settings-pref-select">
-                    <option value="light" <?php echo $themeNow === 'light' ? 'selected' : ''; ?>>Light</option>
-                    <option value="dark" <?php echo $themeNow === 'dark' ? 'selected' : ''; ?>>Dark</option>
+                <span class="settings-pref-label"><?php echo htmlspecialchars(zpgc_t('Theme')); ?></span>
+                <select name="theme" class="settings-pref-select" data-theme-select>
+                    <option value="light" <?php echo $themeNow === 'light' ? 'selected' : ''; ?>><?php echo htmlspecialchars(zpgc_t('Light')); ?></option>
+                    <option value="dark" <?php echo $themeNow === 'dark' ? 'selected' : ''; ?>><?php echo htmlspecialchars(zpgc_t('Dark')); ?></option>
                 </select>
             </div>
-            <button type="submit" name="save_appearance" class="btn-save-ticket settings-save-btn">Save appearance</button>
         </form>
+        <script>
+        (function () {
+            var sel = document.querySelector('[data-theme-select]');
+            var applied = document.documentElement.getAttribute('data-theme');
+            if (sel && (applied === 'dark' || applied === 'light')) {
+                sel.value = applied;
+            }
+        })();
+        </script>
     </div>
     <div class="settings-card">
         <div class="settings-card-header">
             <h2>Security</h2>
-            <p>Sign-in methods. Keep this password up to date.</p>
         </div>
-        <h3 class="settings-subheading">Password</h3>
         <form action="../logic/settings_mngmnt.php" method="post" class="settings-form settings-password-form">
 <?php echo zpgc_csrf_field(); ?>
             <div class="settings-form-field">

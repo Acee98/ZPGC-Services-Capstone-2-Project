@@ -5,6 +5,7 @@ require_once 'ticket_status.php';
 require_once 'ticket_times.php';
 require_once 'audit_log.php';
 require_once 'auth_mail.php';
+require_once 'ticket_crypto.php';
 require_role('admin');
 zpgc_csrf_require();
 
@@ -19,8 +20,7 @@ if (isset($_POST['save_ticket'])) {
     $priority = in_array($pri_raw, ['critical', 'moderate', 'low'], true) ? $pri_raw : null;
 
     if ($ticket_id <= 0 || !in_array($status, $allowed, true)) {
-        header('Location: ../pages/admin.php?tab=tickets');
-        exit();
+        zpgc_finish('../pages/admin.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash'] ?? '']);
     }
 
     $prevAssigned = 0;
@@ -49,8 +49,7 @@ if (isset($_POST['save_ticket'])) {
         $check->close();
         if (!$ok) {
             $_SESSION['ticket_flash'] = 'Pick an active technician, or Unassigned.';
-            header('Location: ../pages/admin.php?tab=tickets');
-            exit();
+            zpgc_finish('../pages/admin.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash']]);
         }
         $stmt = $conn->prepare(
             'UPDATE tickets SET assigned_to = ?, status = ?, priority = ? WHERE id = ?'
@@ -62,8 +61,7 @@ if (isset($_POST['save_ticket'])) {
             $stmt->close();
         }
         $_SESSION['ticket_flash'] = 'Could not save ticket #' . $ticket_id . '.';
-        header('Location: ../pages/admin.php?tab=tickets');
-        exit();
+        zpgc_finish('../pages/admin.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash'] ?? '']);
     }
     $stmt->close();
     if ($assigned_raw !== '' && $assigned_raw !== '0') {
@@ -107,6 +105,9 @@ if (isset($_POST['save_ticket'])) {
         $owner = (int) $ticket['user_id'];
         $assignee = (int) ($ticket['assigned_to'] ?? 0);
         $subject = (string) $ticket['subject'];
+        if (function_exists('ticket_decrypt_text')) {
+            $subject = ticket_decrypt_text($subject);
+        }
         if ($status === 'awaiting_confirmation') {
             notify_user_email(
                 $conn,
@@ -135,5 +136,9 @@ if (isset($_POST['save_ticket'])) {
     }
 }
 
-header('Location: ../pages/admin.php?tab=tickets');
-exit();
+zpgc_finish('../pages/admin.php?tab=tickets', true, [
+    'message' => (string) ($_SESSION['ticket_flash'] ?? ''),
+    'action' => 'save_ticket',
+    'ticket_id' => (int) ($_POST['ticket_id'] ?? 0),
+    'status' => (string) ($_POST['status'] ?? ''),
+]);

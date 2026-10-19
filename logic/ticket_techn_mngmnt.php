@@ -4,12 +4,13 @@ require_once 'config.php';
 require_once 'ticket_status.php';
 require_once 'ticket_files.php';
 require_once 'auth_mail.php';
+require_once 'ticket_crypto.php';
+require_once 'techn_queue.php';
 require_role('techn');
 zpgc_csrf_require();
 
 if (!isset($_POST['save_tech_ticket'])) {
-    header('Location: ../pages/techn.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/techn.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash'] ?? '']);
 }
 
 $ticket_id = (int) ($_POST['ticket_id'] ?? 0);
@@ -18,30 +19,22 @@ $tech_id = current_user_id($conn);
 $allowed = ticket_techn_allowed_statuses();
 
 if ($ticket_id <= 0 || $tech_id <= 0 || !in_array($status, $allowed, true)) {
-    header('Location: ../pages/techn.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/techn.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash'] ?? '']);
 }
 
-$check = $conn->prepare(
-    'SELECT id FROM tickets WHERE id = ? AND assigned_to = ? LIMIT 1'
-);
-$check->bind_param('ii', $ticket_id, $tech_id);
-$check->execute();
-$owned = $check->get_result()->fetch_assoc();
-$check->close();
-
-if (!$owned) {
-    header('Location: ../pages/techn.php?tab=tickets');
-    exit();
+if (!techn_queue_can_access($conn, $ticket_id, $tech_id)) {
+    $_SESSION['ticket_flash'] = 'You can only update tickets in your technical role.';
+    zpgc_finish('../pages/techn.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash']]);
 }
+
+techn_queue_claim_if_open($conn, $ticket_id, $tech_id);
 
 $upd = $conn->prepare('UPDATE tickets SET status = ? WHERE id = ? AND assigned_to = ?');
 $upd->bind_param('sii', $status, $ticket_id, $tech_id);
 if (!$upd->execute()) {
     $upd->close();
     $_SESSION['ticket_flash'] = 'Could not update ticket #' . $ticket_id . '.';
-    header('Location: ../pages/techn.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/techn.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash'] ?? '']);
 }
 $upd->close();
 
@@ -54,11 +47,15 @@ if ($status === 'awaiting_confirmation') {
     $ticket = $info->get_result()->fetch_assoc();
     $info->close();
     if ($ticket) {
+        $subj = (string) ($ticket['subject'] ?? '');
+        if (function_exists('ticket_decrypt_text')) {
+            $subj = ticket_decrypt_text($subj);
+        }
         notify_user_email(
             $conn,
             (int) $ticket['user_id'],
             'Ticket #' . $ticket_id . ' needs your confirmation',
-            "Ticket #{$ticket_id} is ready for your confirmation.\nSubject: " . $ticket['subject']
+            "Ticket #{$ticket_id} is ready for your confirmation.\nSubject: " . $subj
             . "\nOpen Tickets and choose Solved or Not Solved Yet."
         );
     }
@@ -71,5 +68,9 @@ if (isset($_FILES['ticket_image']) && (int) ($_FILES['ticket_image']['error'] ??
         : ('Ticket #' . $ticket_id . ' updated to ' . ticket_status_label($status) . ' and image attached.');
 }
 
-header('Location: ../pages/techn.php?tab=tickets');
-exit();
+zpgc_finish('../pages/techn.php?tab=tickets', true, [
+    'message' => (string) ($_SESSION['ticket_flash'] ?? ''),
+    'action' => 'save_tech_ticket',
+    'ticket_id' => (int) ($ticket_id ?? 0),
+    'status' => (string) ($status ?? ''),
+]);

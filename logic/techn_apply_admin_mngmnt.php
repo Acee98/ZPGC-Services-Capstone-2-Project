@@ -6,22 +6,21 @@ require_once 'techn_apply.php';
 require_role('admin');
 zpgc_csrf_require();
 
-function apply_admin_redirect()
+function apply_admin_redirect($ok = true, array $payload = [])
 {
-    header('Location: ../pages/admin.php?tab=utilities');
-    exit();
+    zpgc_finish('../pages/admin.php?tab=utilities', $ok, $payload);
 }
 
 function apply_admin_fail($msg)
 {
     $_SESSION['utilities_error'] = $msg;
-    apply_admin_redirect();
+    apply_admin_redirect(false, ['message' => $msg, 'flash' => 'error']);
 }
 
 function apply_admin_ok($msg)
 {
     $_SESSION['utilities_success'] = $msg;
-    apply_admin_redirect();
+    apply_admin_redirect(true, ['message' => $msg, 'flash' => 'ok', 'action' => 'apply_review']);
 }
 
 techn_apply_ready($conn);

@@ -1,5 +1,9 @@
 <?php
 
+if (is_file(__DIR__ . '/ticket_crypto.php')) {
+    require_once __DIR__ . '/ticket_crypto.php';
+}
+
 if (!function_exists('priority_queue_base_slots')) {
 
     function priority_queue_base_slots()
@@ -164,9 +168,13 @@ if (!function_exists('priority_queue_base_slots')) {
         if ($result) {
             while ($row = $result->fetch_assoc()) {
                 $sev = priority_queue_normalize_priority($row['priority'] ?? '');
+                $subject = (string) ($row['subject'] ?? '');
+                if (function_exists('ticket_decrypt_text')) {
+                    $subject = ticket_decrypt_text($subject);
+                }
                 $grouped[$sev][] = [
                     'id' => (int) $row['id'],
-                    'subject' => (string) ($row['subject'] ?? ''),
+                    'subject' => $subject,
                     'assigned_to' => (int) ($row['assigned_to'] ?? 0),
                     'priority' => $sev,
                 ];

@@ -15,18 +15,74 @@ if (!function_exists('dashboard_chart_data')) {
     function dashboard_normalize_range($range)
     {
         $range = strtolower(trim((string) $range));
-        return in_array($range, ['week', 'month', 'year'], true) ? $range : 'week';
+        return in_array($range, ['week', 'month', 'year', 'custom'], true) ? $range : 'week';
     }
 
-    function dashboard_range_label($range)
+    function dashboard_parse_ymd($raw)
     {
+        $raw = trim((string) $raw);
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw, $m)) {
+            return '';
+        }
+        if (!checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
+            return '';
+        }
+        return $m[1] . '-' . $m[2] . '-' . $m[3];
+    }
+
+    function dashboard_custom_bounds($from, $to)
+    {
+        $from = dashboard_parse_ymd($from);
+        $to = dashboard_parse_ymd($to);
+        if ($from === '' && $to === '') {
+            return null;
+        }
+        if ($from === '') {
+            $from = $to;
+        }
+        if ($to === '') {
+            $to = $from;
+        }
+        if ($from > $to) {
+            $tmp = $from;
+            $from = $to;
+            $to = $tmp;
+        }
+        $start = strtotime($from . ' 00:00:00');
+        $end = strtotime($to . ' 00:00:00');
+        if ($start === false || $end === false) {
+            return null;
+        }
+        if (($end - $start) > 366 * 86400) {
+            $to = date('Y-m-d', $start + 366 * 86400);
+        }
+        return [$from, $to];
+    }
+
+    function dashboard_sql_between($column, $from, $to)
+    {
+        $column = preg_replace('/[^a-zA-Z0-9_\(\), ]/', '', (string) $column);
+        $from = dashboard_parse_ymd($from);
+        $to = dashboard_parse_ymd($to);
+        if ($column === '' || $from === '' || $to === '') {
+            return '1=1';
+        }
+        return "{$column} >= '{$from} 00:00:00' AND {$column} < DATE_ADD('{$to} 00:00:00', INTERVAL 1 DAY)";
+    }
+
+    function dashboard_range_label($range, $from = '', $to = '')
+    {
+        $bounds = dashboard_custom_bounds($from, $to);
+        if ($bounds) {
+            return $bounds[0] . ' to ' . $bounds[1];
+        }
         $range = dashboard_normalize_range($range);
         $labels = [
             'week' => 'This Week',
             'month' => 'This Month',
             'year' => 'This Year',
         ];
-        return $labels[$range];
+        return $labels[$range] ?? 'This Week';
     }
 
     function dashboard_range_clause($range, $column = 'created_at')
@@ -53,11 +109,23 @@ if (!function_exists('dashboard_chart_data')) {
         return 'created_at';
     }
 
-    function dashboard_chart_data(mysqli $conn, $range = 'week')
+    function dashboard_chart_data(mysqli $conn, $range = 'week', $from = '', $to = '')
     {
-        $range = dashboard_normalize_range($range);
+        $bounds = dashboard_custom_bounds($from, $to);
+        if ($bounds) {
+            $range = 'custom';
+            $from = $bounds[0];
+            $to = $bounds[1];
+        } else {
+            $range = dashboard_normalize_range($range);
+            if ($range === 'custom') {
+                $range = 'week';
+            }
+            $from = '';
+            $to = '';
+        }
         $ttl = 45;
-        $cacheKey = '_dash_charts_' . $range;
+        $cacheKey = '_dash_charts_' . $range . '_' . $from . '_' . $to;
         $cacheAtKey = $cacheKey . '_at';
         $cached = $_SESSION[$cacheKey] ?? null;
         $at = (int) ($_SESSION[$cacheAtKey] ?? 0);
@@ -66,11 +134,82 @@ if (!function_exists('dashboard_chart_data')) {
         }
 
         $hasCreated = dashboard_has_created_at($conn);
-        $where = $hasCreated ? dashboard_range_clause($range, 'created_at') : '1=1';
         $resolvedExpr = $hasCreated ? dashboard_resolved_date_expr($conn) : 'created_at';
-        $resolvedWhere = $hasCreated ? dashboard_range_clause($range, $resolvedExpr) : '1=1';
+        if ($bounds && $hasCreated) {
+            $where = dashboard_sql_between('created_at', $from, $to);
+            $resolvedWhere = dashboard_sql_between($resolvedExpr, $from, $to);
+        } else {
+            $where = $hasCreated ? dashboard_range_clause($range, 'created_at') : '1=1';
+            $resolvedWhere = $hasCreated ? dashboard_range_clause($range, $resolvedExpr) : '1=1';
+        }
 
-        if ($range === 'year') {
+        if ($range === 'custom' && $hasCreated) {
+            $startTs = strtotime($from . ' 00:00:00');
+            $endTs = strtotime($to . ' 00:00:00');
+            $days = (int) floor(($endTs - $startTs) / 86400) + 1;
+            $labels = [];
+            $submitted = [];
+            $resolved = [];
+            $index = [];
+            if ($days <= 45) {
+                for ($i = 0; $i < $days; $i++) {
+                    $day = date('Y-m-d', $startTs + ($i * 86400));
+                    $index[$day] = $i;
+                    $labels[] = date('M j', $startTs + ($i * 86400));
+                    $submitted[] = 0;
+                    $resolved[] = 0;
+                }
+                $sql = "SELECT DATE(created_at) AS bucket, COUNT(*) AS cnt FROM tickets WHERE {$where} GROUP BY DATE(created_at)";
+                if ($res = $conn->query($sql)) {
+                    while ($row = $res->fetch_assoc()) {
+                        $key = (string) $row['bucket'];
+                        if (isset($index[$key])) {
+                            $submitted[$index[$key]] = (int) $row['cnt'];
+                        }
+                    }
+                }
+                $sqlR = "SELECT DATE({$resolvedExpr}) AS bucket, COUNT(*) AS cnt FROM tickets WHERE status = 'resolved' AND {$resolvedWhere} GROUP BY DATE({$resolvedExpr})";
+                if ($res = $conn->query($sqlR)) {
+                    while ($row = $res->fetch_assoc()) {
+                        $key = (string) $row['bucket'];
+                        if (isset($index[$key])) {
+                            $resolved[$index[$key]] = (int) $row['cnt'];
+                        }
+                    }
+                }
+            } else {
+                $cursor = strtotime(date('Y-m-01', $startTs));
+                $endMonth = strtotime(date('Y-m-01', $endTs));
+                $i = 0;
+                while ($cursor <= $endMonth) {
+                    $key = date('Y-m', $cursor);
+                    $index[$key] = $i;
+                    $labels[] = date('M Y', $cursor);
+                    $submitted[] = 0;
+                    $resolved[] = 0;
+                    $cursor = strtotime('+1 month', $cursor);
+                    $i++;
+                }
+                $sql = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS bucket, COUNT(*) AS cnt FROM tickets WHERE {$where} GROUP BY bucket";
+                if ($res = $conn->query($sql)) {
+                    while ($row = $res->fetch_assoc()) {
+                        $key = (string) $row['bucket'];
+                        if (isset($index[$key])) {
+                            $submitted[$index[$key]] = (int) $row['cnt'];
+                        }
+                    }
+                }
+                $sqlR = "SELECT DATE_FORMAT({$resolvedExpr}, '%Y-%m') AS bucket, COUNT(*) AS cnt FROM tickets WHERE status = 'resolved' AND {$resolvedWhere} GROUP BY bucket";
+                if ($res = $conn->query($sqlR)) {
+                    while ($row = $res->fetch_assoc()) {
+                        $key = (string) $row['bucket'];
+                        if (isset($index[$key])) {
+                            $resolved[$index[$key]] = (int) $row['cnt'];
+                        }
+                    }
+                }
+            }
+        } elseif ($range === 'year') {
             $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             $submitted = array_fill(0, 12, 0);
             $resolved = array_fill(0, 12, 0);
@@ -232,7 +371,9 @@ if (!function_exists('dashboard_chart_data')) {
         $payload = [
             'live' => true,
             'range' => $range,
-            'range_label' => dashboard_range_label($range),
+            'range_label' => dashboard_range_label($range, $from, $to),
+            'from' => $from,
+            'to' => $to,
             'report' => [
                 'labels' => $labels,
                 'submitted' => $submitted,

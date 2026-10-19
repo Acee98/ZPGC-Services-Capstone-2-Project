@@ -3,32 +3,33 @@ require_once 'session_config.php';
 require_once 'config.php';
 require_once 'audit_log.php';
 require_once 'techn_apply.php';
+require_once 'ticket_status.php';
+require_once 'account_kind.php';
 require_role('admin');
 zpgc_csrf_require();
 
 $allowedRoles = ['user', 'admin', 'techn'];
 $allowedStatuses = ['active', 'inactive'];
 
-function utilities_redirect($extra = '')
+function utilities_redirect($extra = '', $ok = true, array $payload = [])
 {
     $q = $extra !== '' ? '?' . ltrim($extra, '?') : '?tab=utilities';
     if (strpos($q, 'tab=') === false) {
         $q = '?tab=utilities&' . ltrim($q, '?&');
     }
-    header('Location: ../pages/admin.php' . $q);
-    exit();
+    zpgc_finish('../pages/admin.php' . $q, $ok, $payload);
 }
 
-function utilities_fail($message, $extra = 'tab=utilities')
+function utilities_fail($message, $extra = 'tab=utilities', array $payload = [])
 {
     $_SESSION['utilities_error'] = $message;
-    utilities_redirect($extra);
+    utilities_redirect($extra, false, array_merge(['message' => $message, 'flash' => 'error'], $payload));
 }
 
-function utilities_ok($message)
+function utilities_ok($message, array $payload = [])
 {
     $_SESSION['utilities_success'] = $message;
-    utilities_redirect('tab=utilities');
+    utilities_redirect('tab=utilities', true, array_merge(['message' => $message, 'flash' => 'ok'], $payload));
 }
 
 function utilities_audit(mysqli $conn, $action, $targetId, $detail)
@@ -76,6 +77,15 @@ if (isset($_POST['add_user'])) {
     }
     $newId = (int) $conn->insert_id;
     $insert->close();
+    if ($role === 'user') {
+        $kind = strtolower(trim((string) ($_POST['account_kind'] ?? '')));
+        if ($kind !== 'staff' && $kind !== 'student') {
+            $kind = account_kind_from_email($email, 'user');
+        }
+        account_kind_set($conn, $newId, $kind, 'user');
+    } else {
+        account_kind_set($conn, $newId, '', $role);
+    }
     if ($role === 'techn') {
         $spec = techn_apply_admin_set_specialty($conn, $newId, $_POST['specialty'] ?? '');
         if (empty($spec['ok'])) {
@@ -142,6 +152,15 @@ if (isset($_POST['edit_user'])) {
         utilities_fail('Could not update that account.', 'tab=utilities&edit_id=' . $id);
     }
     $update->close();
+    if ($role === 'user') {
+        $kind = strtolower(trim((string) ($_POST['account_kind'] ?? '')));
+        if ($kind !== 'staff' && $kind !== 'student') {
+            $kind = account_kind_from_email($email, 'user');
+        }
+        account_kind_set($conn, $id, $kind, 'user');
+    } else {
+        account_kind_set($conn, $id, '', $role);
+    }
     if ($role === 'techn') {
         $spec = techn_apply_admin_set_specialty($conn, $id, $_POST['specialty'] ?? '');
         if (empty($spec['ok'])) {
@@ -194,12 +213,24 @@ if (isset($_POST['set_status'])) {
     $who = (string) ($roleRow['email'] ?? ('#' . $id));
 
     utilities_audit($conn, 'set_status', $id, 'Set account status to ' . $status . ' (' . $roleLabel . ').');
+    $nextStatus = $status === 'active' ? 'inactive' : 'active';
+    $nextIcon = $status === 'active' ? 'deactivate' : 'activate';
+    $extra = [
+        'action' => 'set_status',
+        'id' => $id,
+        'status' => $status,
+        'status_label' => $status === 'active' ? 'Active' : 'Pending',
+        'next_status' => $nextStatus,
+        'next_icon' => $nextIcon,
+        'next_label' => $status === 'active' ? 'Deactivate' : 'Activate',
+        'icon_html' => ticket_action_icon($nextIcon),
+    ];
     if ($status === 'active' && in_array($roleLabel, ['techn', 'technician', 'tech'], true)) {
-        utilities_ok('Technician account activated. ' . $who . ' can log in now.');
+        utilities_ok('Technician account activated. ' . $who . ' can log in now.', $extra);
     } elseif ($status === 'active') {
-        utilities_ok('Account activated and ready to log in (email marked verified).');
+        utilities_ok('Account activated and ready to log in (email marked verified).', $extra);
     } else {
-        utilities_ok('Account deactivated.');
+        utilities_ok('Account deactivated.', $extra);
     }
 }
 
@@ -245,7 +276,7 @@ if (isset($_POST['delete_user'])) {
     $delete->close();
 
     utilities_audit($conn, 'delete_user', $id, 'Deleted a user or technician account.');
-    utilities_ok('Account deleted.');
+    utilities_ok('Account deleted.', ['action' => 'delete_user', 'id' => $id]);
 }
 
 utilities_redirect('tab=utilities');

@@ -1,1 +1,11 @@
 startup.sh text eol=lf
+
+# PHP, not Facebook Hack (Linguist also maps .php to Hack).
+*.php linguist-language=PHP
+
+# Library, not project JavaScript.
+js/chart.umd.js linguist-vendored
+
+# Paper notes, not the running desk.
+*.md linguist-documentation
+docs/** linguist-documentation

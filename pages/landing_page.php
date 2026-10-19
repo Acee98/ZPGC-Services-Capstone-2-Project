@@ -1,10 +1,13 @@
+<?php
+require_once __DIR__ . '/../logic/version.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/landing_page.css?v=1.6.1">
-    <title>ZPGC Services</title>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/landing_page.css')); ?>">
+    <title><?php echo htmlspecialchars(zpgc_page_title()); ?></title>
 </head>
 <body>
     <nav class="navbar">
@@ -22,6 +25,7 @@
 
     <div class="hero">
         <h1 id="header">Welcome to ZPGC Services!</h1>
+        <?php $zpgc_version_class = 'app-version app-version--hero'; include __DIR__ . '/partials/app_version.php'; ?>
         <br>
         <h4 id="subhead">Experience seameless technology support that prioritizes your workflow and minimizes downtime.</h4>
         <br>

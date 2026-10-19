@@ -10,8 +10,7 @@ $ticketId = (int) ($_POST['ticket_id'] ?? 0);
 $userId = current_user_id($conn);
 if ($ticketId <= 0 || $userId <= 0) {
     $_SESSION['ticket_flash'] = 'Choose a ticket to delete.';
-    header('Location: ../pages/user.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/user.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash'] ?? '']);
 }
 
 $owned = $conn->prepare('SELECT id, status FROM tickets WHERE id = ? AND user_id = ? LIMIT 1');
@@ -21,15 +20,17 @@ $found = $owned->get_result()->fetch_assoc();
 $owned->close();
 if (!$found) {
     $_SESSION['ticket_flash'] = 'That ticket is not yours.';
-    header('Location: ../pages/user.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/user.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash'] ?? '']);
 }
 // Resolved tickets are soft-archived (kept for Performance), not hard-deleted.
 if (($found['status'] ?? '') === 'resolved') {
     ticket_mark_archived($conn, $ticketId);
     $_SESSION['ticket_flash'] = 'Ticket #' . $ticketId . ' was archived from your active list.';
-    header('Location: ../pages/user.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/user.php?tab=tickets', true, [
+        'message' => $_SESSION['ticket_flash'],
+        'action' => 'delete_ticket',
+        'ticket_id' => $ticketId,
+    ]);
 }
 
 $conn->query('DELETE FROM messages WHERE ticket_id = ' . $ticketId);
@@ -48,5 +49,8 @@ $delete->execute();
 $delete->close();
 
 $_SESSION['ticket_flash'] = 'Ticket #' . $ticketId . ' was deleted.';
-header('Location: ../pages/user.php?tab=tickets');
-exit();
+zpgc_finish('../pages/user.php?tab=tickets', true, [
+    'message' => $_SESSION['ticket_flash'],
+    'action' => 'delete_ticket',
+    'ticket_id' => $ticketId,
+]);

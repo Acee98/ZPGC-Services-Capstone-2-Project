@@ -25,6 +25,7 @@ LimitRequestBody 20971520
     RewriteRule (^|/)\.git - [F,L]
     RewriteRule \.env$ - [F,L]
     RewriteRule ^logic/mail\.env$ - [F,L]
+    RewriteRule ^logic/.*\.key$ - [F,L]
     RewriteRule ^(logs|docs|tools|database|vendor|\.venv)(/|$) - [F,L]
     RewriteRule ^ai/data/ - [F,L]
     RewriteRule ^ai/(probe_|benchmark_|eval_|rebuild_|smoke_) - [F,L]

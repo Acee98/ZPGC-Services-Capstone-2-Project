@@ -1,5 +1,7 @@
 # Deploy & live test — Azure (then Hostinger)
 
+**Product / paper label:** ZPGC Services **V1.6** (16 October 2026 freeze).
+
 ZPGC Services is PHP + MySQL. Use **Azure** for a short live smoke test, then move the same repo to **Hostinger** for longer hosting.
 
 Local XAMPP still works with no env vars (defaults in `logic/config.php`).

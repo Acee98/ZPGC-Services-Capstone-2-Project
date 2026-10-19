@@ -13,16 +13,22 @@ if ($returnRole === 'user') {
 }
 
 if (isset($_POST['save_appearance'])) {
-    $theme = ($_POST['theme'] ?? 'light') === 'dark' ? 'dark' : 'light';
+    $theme = strtolower(trim((string) ($_POST['theme'] ?? 'light'))) === 'dark' ? 'dark' : 'light';
     save_ui_theme($theme);
-    $_SESSION['settings_success'] = 'Appearance saved.';
-    header('Location: ../pages/' . $returnPage . '?tab=settings');
-    exit();
+    zpgc_finish('../pages/' . $returnPage . '?tab=settings', true, [
+        'message' => '',
+        'action' => 'save_settings',
+        'theme' => $theme,
+        'flash' => 'ok',
+    ]);
 }
 
 if (!isset($_POST['change_password'])) {
-    header('Location: ../pages/' . $returnPage . '?tab=settings');
-    exit();
+    zpgc_finish('../pages/' . $returnPage . '?tab=settings', isset($_SESSION['settings_success']), [
+        'message' => $_SESSION['settings_success'] ?? $_SESSION['settings_error'] ?? '',
+        'action' => 'save_settings',
+        'flash' => isset($_SESSION['settings_error']) ? 'error' : 'ok',
+    ]);
 }
 
 $current = (string) ($_POST['current_password'] ?? '');
@@ -32,8 +38,11 @@ $email = $_SESSION['email'] ?? '';
 
 if ($email === '' || strlen($new) < 8 || $new !== $confirm) {
     $_SESSION['settings_error'] = 'Use at least 8 characters and make sure the new passwords match.';
-    header('Location: ../pages/' . $returnPage . '?tab=settings');
-    exit();
+    zpgc_finish('../pages/' . $returnPage . '?tab=settings', isset($_SESSION['settings_success']), [
+        'message' => $_SESSION['settings_success'] ?? $_SESSION['settings_error'] ?? '',
+        'action' => 'save_settings',
+        'flash' => isset($_SESSION['settings_error']) ? 'error' : 'ok',
+    ]);
 }
 
 $stmt = $conn->prepare('SELECT password FROM users WHERE email = ? LIMIT 1');
@@ -44,8 +53,11 @@ $stmt->close();
 
 if (!$row || !password_verify($current, $row['password'])) {
     $_SESSION['settings_error'] = 'Current password is not correct.';
-    header('Location: ../pages/' . $returnPage . '?tab=settings');
-    exit();
+    zpgc_finish('../pages/' . $returnPage . '?tab=settings', isset($_SESSION['settings_success']), [
+        'message' => $_SESSION['settings_success'] ?? $_SESSION['settings_error'] ?? '',
+        'action' => 'save_settings',
+        'flash' => isset($_SESSION['settings_error']) ? 'error' : 'ok',
+    ]);
 }
 
 $hash = password_hash($new, PASSWORD_DEFAULT);
@@ -55,5 +67,7 @@ $upd->execute();
 $upd->close();
 
 $_SESSION['settings_success'] = 'Password updated.';
-header('Location: ../pages/' . $returnPage . '?tab=settings');
-exit();
+zpgc_finish('../pages/' . $returnPage . '?tab=settings', true, [
+    'message' => 'Password updated.',
+    'action' => 'save_settings',
+]);

@@ -1,5 +1,7 @@
 <?php
 require_once '../logic/session_config.php';
+require_once '../logic/version.php';
+require_once '../logic/i18n.php';
 require_once '../logic/config.php';
 require_once '../logic/ui_state.php';
 require_once '../logic/ticket_status.php';
@@ -7,6 +9,10 @@ require_once '../logic/ticket_files.php';
 require_once '../logic/ticket_times.php';
 require_once '../logic/ticket_retention.php';
 require_once '../logic/performance_report.php';
+require_once '../logic/techn_queue.php';
+require_once '../logic/ticket_crypto.php';
+require_once '../logic/iso20000.php';
+require_once '../logic/ai_reclassify.php';
 require_role('techn');
 
 $current_user_id = current_user_id($conn);
@@ -17,6 +23,7 @@ $ticket_flash = $_SESSION['ticket_flash'] ?? '';
 unset($_SESSION['ticket_flash']);
 
 ticket_ensure_archived_column($conn);
+ticket_retention_maybe_auto_purge($conn);
 // Skip heavy index DDL + retention backfill on every technician page load.
 $tech_tickets = [];
 $hasArchived = ticket_has_column($conn, 'archived_at');
@@ -31,16 +38,33 @@ if (ticket_has_column($conn, 'resolved_at')) {
 if (ticket_has_column($conn, 'responded_at')) {
     $cols .= ', responded_at';
 }
-$stmt = $conn->prepare(
-    "SELECT {$cols} FROM tickets WHERE assigned_to = ? ORDER BY id DESC LIMIT 200"
-);
-$stmt->bind_param('i', $current_user_id);
+if (ticket_has_column($conn, 'satisfaction')) {
+    $cols .= ', satisfaction';
+}
+$techSpecialty = techn_queue_specialty($conn, $current_user_id);
+$techCategory = techn_queue_category_key($techSpecialty);
+if ($techCategory !== '') {
+    $stmt = $conn->prepare(
+        "SELECT {$cols} FROM tickets
+         WHERE LOWER(TRIM(IFNULL(category, ''))) = ?
+           AND (assigned_to = ? OR assigned_to IS NULL)
+         ORDER BY id DESC LIMIT 200"
+    );
+    $stmt->bind_param('si', $techCategory, $current_user_id);
+} else {
+    $stmt = $conn->prepare(
+        "SELECT {$cols} FROM tickets WHERE assigned_to = ? ORDER BY id DESC LIMIT 200"
+    );
+    $stmt->bind_param('i', $current_user_id);
+}
 $stmt->execute();
 $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()) {
     $tech_tickets[] = $row;
 }
 $stmt->close();
+ticket_reveal_rows($tech_tickets);
+ai_reclassify_pending($conn, 3);
 $replaceIds = [];
 $replaceTable = $conn->query("SHOW TABLES LIKE 'replacement_requests'");
 if ($replaceTable && $replaceTable->num_rows > 0) {
@@ -59,26 +83,27 @@ if ($replaceTable && $replaceTable->num_rows > 0) {
 $mailbox_tickets = $active_tech_tickets;
 $listed_tickets = ticket_sort_for_attention($active_tech_tickets, $replaceIds);
 $techn_statuses = ticket_techn_allowed_statuses();
-$performance_categories = [];
-$performance_log = [];
-if ($tab === 'performance') {
-    $performance_categories = performance_category_rows($conn, $current_user_id);
-    $performance_log = performance_resolved_log($conn, 100, $current_user_id);
-}
-$ui_theme = current_ui_theme();
+$performance_categories = performance_category_rows($conn, $current_user_id);
+$performance_log = performance_resolved_log($conn, 100, $current_user_id);
+$office_kpis = performance_office_kpis($conn, $current_user_id);
+$iso_clauses = [];
+$iso_show_capacity = false;
+$ui_theme_pref = current_ui_theme();
+$ui_theme = $ui_theme_pref !== '' ? $ui_theme_pref : 'light';
 ?>
 
 <!DOCTYPE html>
-<html lang="en" data-theme="<?php echo htmlspecialchars($ui_theme); ?>">
+<html <?php echo zpgc_html_root_attrs(); ?>>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.34">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.32">
+    <?php echo zpgc_theme_boot_script(); ?>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/main_interface.css')); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/theme.css')); ?>">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
-    <title>ZPGC Services | Technician</title>
+    <title><?php echo htmlspecialchars(zpgc_page_title('Technician')); ?></title>
 </head>
 
 <body data-page="<?php echo htmlspecialchars($tab); ?>" data-role="techn" data-web-base="<?php echo htmlspecialchars(zpgc_web_base(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -96,6 +121,7 @@ $ui_theme = current_ui_theme();
                                 </svg>
                             </button>
                         </div>
+                        <?php include __DIR__ . '/partials/app_version.php'; ?>
                         <ul class="nav-list">
                             <li class="nav-list-item<?php echo zpgc_nav_selected_class($tab, 'dashboard'); ?>" data-nav="dashboard">
                                 <a href="?tab=dashboard" class="nav-link">
@@ -124,7 +150,7 @@ $ui_theme = current_ui_theme();
                                 <a href="?tab=performance" class="nav-link">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                                         viewBox="0 0 24 24">
-                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2M9 17H7v-7h2zm4 0h-2V7h2zm4 0h-2v-4h2z"></path>
+                                        <path d="m6.89 12.45 1.05-2.1 3.14 7.06c.16.36.52.59.91.59h.05c.41-.02.77-.29.9-.68l2.98-8.93 1.11 3.89c.12.43.52.73.96.73h4v-2h-3.25l-1.79-6.27c-.12-.42-.5-.72-.94-.73a.98.98 0 0 0-.97.68l-3.18 9.55L8.91 7.6c-.16-.35-.5-.58-.89-.59-.41-.04-.74.21-.92.55l-1.72 3.45H2v2h4c.38 0 .73-.21.89-.55Z"></path>
                                     </svg>
                                     <span class="link-text">Performance</span>
                                 </a>
@@ -201,6 +227,9 @@ $ui_theme = current_ui_theme();
                 <?php if ($ticket_flash !== '') { ?>
                 <div class="utilities-notice"><?php echo htmlspecialchars($ticket_flash); ?></div>
                 <?php } ?>
+                <div class="tickets-toolbar">
+                    <?php echo ticket_priority_filter_markup('techn-tickets-priority', 'techn-tickets-body'); ?>
+                </div>
                 <div class="tickets-list tickets-list-techn-actions tickets-list-techn-actions--times">
                 <div class="tickets-list-header">
                     <span class="tickets-col-id">ID</span>
@@ -212,7 +241,7 @@ $ui_theme = current_ui_theme();
                     <span class="tickets-col-resolution">Resolution Time</span>
                     <span class="tickets-col-action">Action</span>
                 </div>
-                <div class="tickets-list-body" id="techn-tickets-body">
+                <div class="tickets-list-body js-paged-table" id="techn-tickets-body" data-page-size="15">
                     <?php if (empty($listed_tickets)) { ?>
                     <div class="tickets-empty-state">
                         <p>No tickets assigned yet.</p>
@@ -234,7 +263,9 @@ $ui_theme = current_ui_theme();
                     ?>
                     <?php if ($canEditStatus) { ?>
                     <form class="ticket-row" action="../logic/ticket_techn_mngmnt.php" method="post"
-                        data-status="<?php echo htmlspecialchars($st); ?>">
+                        data-ticket-id="<?php echo $tid; ?>"
+                        data-status="<?php echo htmlspecialchars($st); ?>"
+                        data-priority="<?php echo htmlspecialchars(ticket_priority_key($ticket['priority'] ?? '')); ?>">
                         <?php echo zpgc_csrf_field(); ?>
                         <input type="hidden" name="ticket_id" value="<?php echo $tid; ?>">
                         <span class="tickets-col-id">#<?php echo $tid; ?></span>
@@ -252,8 +283,9 @@ $ui_theme = current_ui_theme();
                             </select>
                         </span>
                         <span class="tickets-col-queue"<?php echo $queueAttr; ?>><?php echo htmlspecialchars($queueLabel); ?></span>
-                        <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
+                        <span class="tickets-col-resolution<?php echo (trim((string) $resLabel) === '—' || trim((string) $resLabel) === '') ? ' ticket-col-empty' : ''; ?>"><?php echo htmlspecialchars($resLabel); ?></span>
                         <span class="tickets-col-action">
+                            <?php echo ticket_quick_view_button($ticket); ?>
                             <button type="submit" name="save_tech_ticket" class="btn-save-ticket">Save</button>
                             <button type="submit" class="ticket-icon-btn" formaction="../logic/ticket_replace_mngmnt.php" name="replace_me" aria-label="Replace" title="Ask admin to replace me">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 16H2v2h14v4l6-5-6-5zM8 1 2 6l6 5V7h14V5H8z"></path></svg>
@@ -261,7 +293,7 @@ $ui_theme = current_ui_theme();
                         </span>
                     </form>
                     <?php } else { ?>
-                    <div class="ticket-row" data-status="<?php echo htmlspecialchars($st); ?>">
+                    <div class="ticket-row" data-ticket-id="<?php echo $tid; ?>" data-status="<?php echo htmlspecialchars($st); ?>" data-priority="<?php echo htmlspecialchars(ticket_priority_key($ticket['priority'] ?? '')); ?>">
                         <span class="tickets-col-id">#<?php echo $tid; ?></span>
                         <span class="tickets-col-category"><?php echo htmlspecialchars(ticket_category_label($ticket['category'] ?? '')); ?></span>
                         <span class="tickets-col-subject"><?php echo htmlspecialchars($ticket['subject']); ?></span>
@@ -272,8 +304,9 @@ $ui_theme = current_ui_theme();
                             </span>
                         </span>
                         <span class="tickets-col-queue"<?php echo $queueAttr; ?>><?php echo htmlspecialchars($queueLabel); ?></span>
-                        <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
+                        <span class="tickets-col-resolution<?php echo (trim((string) $resLabel) === '—' || trim((string) $resLabel) === '') ? ' ticket-col-empty' : ''; ?>"><?php echo htmlspecialchars($resLabel); ?></span>
                         <span class="tickets-col-action">
+                            <?php echo ticket_quick_view_button($ticket); ?>
                             <span class="techn-status-readonly">Closed by reporter</span>
                         </span>
                     </div>
@@ -287,6 +320,9 @@ $ui_theme = current_ui_theme();
                 $history_title = 'Ticket History';
                 $history_subtitle = 'Resolved and archived tickets';
                 $history_show_times = true;
+                $history_show_satisfaction = ticket_has_column($conn, 'satisfaction');
+                $history_show_preview = true;
+                $history_allow_rate = false;
                 include __DIR__ . '/partials/ticket_history_list.php';
                 ?>
             </div>
@@ -306,7 +342,11 @@ $ui_theme = current_ui_theme();
                         <?php include __DIR__ . '/partials/profile_menu.php'; ?>
                     </header>
                 </div>
-                <?php include __DIR__ . '/partials/performance_panel.php'; ?>
+                <?php
+                include __DIR__ . '/partials/kpi_iso_panel.php';
+                $performance_show_view = true;
+                include __DIR__ . '/partials/performance_panel.php';
+                ?>
             </div>
             <div class="page-content" id="page-messages">
                 <div class="head">
@@ -350,8 +390,12 @@ $ui_theme = current_ui_theme();
             </div>
         </section>
     </main>
-    <script src="../js/lazy_load.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.27" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.55"></script>
+    <script src="../js/table_controls.js?v=1.6.88"></script>
+    <script src="../js/ajax_forms.js?v=1.6.87"></script>
+    <script src="../js/ticket_live.js?v=1.6.40"></script>
+    <script src="../js/ticket_quick_view.js?v=1.6.87"></script>
+    <script src="../js/behavior.js?v=1.6.87" defer></script>
     <script src="../js/performance_filter.js?v=1.6.22"></script>
 </body>
 

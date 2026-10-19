@@ -1,8 +1,8 @@
 # ZPGC Services — pre-defense notes
 
-**System:** ZPGC Services, a web-based AI-assisted IT helpdesk  
+**System / paper label:** ZPGC Services **V1.6** (freeze 16 October 2026)  
 **Build to show:** `C:\xampp\htdocs\CP2_V1.6`  
-**Date:** 1 October 2026  
+**Date:** 16 October 2026 (speaker note first written 1 October)  
 **Repository:** GitHub `main`, tag **V1.6** (`a652265`), plus a follow-up commit that stops publishing the `docs` folder
 
 This note is for the speakers. It is kept on this computer. It is not part of the public code snapshot.
@@ -24,7 +24,7 @@ Students and staff submit an IT ticket. On submit, the system reads the subject 
 | v1.5 | The AI sidecar (Flask plus OpenAI), least-busy assignment, low-priority tips, and live charts. |
 | v1.6 | Submit itself scores the ticket using the paper’s tables. Performance counts resolved tickets by category. My Profile matches the paper layout. |
 
-Stages 1 through 6 are closed. V1.6 is the build to demonstrate. Load testing, an accuracy study, and the defense package are still open.
+Stages 1 through 7 are closed in the product. The official timeline PNGs still show Stage 6 In Progress and Stages 7–9 Planned — say the **software is ahead of that slide**. Stage 8: screens work; concurrent check 10×3 is on Performance; Luna accuracy study is not run. Stage 9: live at `zpgc-services.online`; Chapter 5 Word file is in `docs/CHAPTER_5_SYSTEM_PRESENTATION.docx`. Oral defense script still open.
 
 ## How priority assignment works
 

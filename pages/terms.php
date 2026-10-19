@@ -1,13 +1,14 @@
 <?php
 require_once '../logic/session_config.php';
+require_once '../logic/version.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/terms.css?v=1.6.1">
-    <title>ZPGC Services | Terms of Service</title>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/terms.css')); ?>">
+    <title><?php echo htmlspecialchars(zpgc_page_title('Terms of Service')); ?></title>
 </head>
 <body class="terms-page">
     <div class="terms-shell">
@@ -24,7 +25,8 @@ require_once '../logic/session_config.php';
                     technicians, and administrators.
                 </p>
                 <div class="terms-meta">
-                    <span>Last updated: 3 October 2026</span>
+                    <span>Last updated: <?php echo htmlspecialchars(ZPGC_DOC_FREEZE); ?></span>
+                    <span><?php echo htmlspecialchars(ZPGC_PRODUCT_LABEL); ?></span>
                 </div>
             </header>
 
@@ -99,9 +101,10 @@ require_once '../logic/session_config.php';
                     <h2>4. Role-Based Access Control (RBAC) &amp; Data Privacy</h2>
                     <ul>
                         <li>
-                            <strong>Users.</strong> Students, faculty, and staff using the User role may
-                            view, monitor, confirm, and manage only their own tickets and related mailbox
-                            threads.
+                            <strong>Students and staff.</strong> Campus requesters sign up as Student or
+                            Staff. They may view, monitor, confirm, and manage only their own tickets and
+                            related mailbox threads. Both use the User workspace; the account type is
+                            stored for reporting.
                         </li>
                         <li>
                             <strong>Technicians &amp; administrators.</strong> Technicians and
@@ -111,10 +114,11 @@ require_once '../logic/session_config.php';
                         <li>
                             <strong>Data protection.</strong> Account details, ticket history, and
                             messages are stored for campus IT support and protected under role-based
-                            access. Passwords are stored as secure hashes. Administrative account and
+                            access. Passwords are stored as secure hashes. Ticket subject, description,
+                            and AI guidance are encrypted at rest (AES-256-GCM). Administrative account and
                             ticket changes may be recorded in the Audit security check. Email
-                            notifications may be sent when enabled in My Profile; SMS preference is stored
-                            for preference only in the current build.
+                            notifications may be sent when enabled in My Profile. See the campus privacy
+                            note in the project documentation.
                         </li>
                     </ul>
                 </section>
@@ -124,9 +128,11 @@ require_once '../logic/session_config.php';
                     <ul>
                         <li>
                             <strong>AI processing.</strong> Tickets may be processed with OpenAI language
-                            models (or approved keyword fallback when the model is unavailable) to support
-                            category labels such as Hardware, Software, Network, Account, and Other, and
-                            priority bands Low, Moderate, and Critical based on urgency and impact.
+                            models. If the paid model is unavailable, keyword rules still file and score
+                            the ticket; the system retries the model on later page loads and stores the
+                            OpenAI result when it succeeds. Category labels include Hardware, Software,
+                            Network, Account, and Other, with priority bands Low, Moderate, and Critical
+                            based on urgency and impact.
                         </li>
                         <li>
                             <strong>Routing assistance.</strong> Moderate and Critical tickets may be
@@ -146,7 +152,9 @@ require_once '../logic/session_config.php';
                     <ul>
                         <li>
                             Response and resolution times depend on priority, queue capacity, and
-                            technician availability.
+                            technician availability. Administrators see office-wide average response time
+                            and resolution rate on Performance, with an ISO/IEC 25010:2023 quality view
+                            and an on-demand concurrent health check.
                         </li>
                         <li>
                             Scheduled or emergency maintenance, local server outages, or third-party AI

@@ -17,15 +17,13 @@ $score = (int) ($_POST['satisfaction'] ?? 0);
 $userId = current_user_id($conn);
 if ($ticketId <= 0 || !isset($labels[$score]) || $userId <= 0) {
     $_SESSION['ticket_flash'] = 'Choose a rating from the list.';
-    header('Location: ../pages/user.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/user.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash'] ?? '']);
 }
 
 if (!ticket_ensure_satisfaction_column($conn)) {
     $_SESSION['ticket_flash'] = 'Satisfaction ratings are unavailable until the database migration is applied.';
     unset($_SESSION['rate_ticket_id']);
-    header('Location: ../pages/user.php?tab=tickets');
-    exit();
+    zpgc_finish('../pages/user.php?tab=tickets', false, ['message' => $_SESSION['ticket_flash'] ?? '']);
 }
 
 $stmt = $conn->prepare(
@@ -43,5 +41,8 @@ $_SESSION['ticket_flash'] = $saved
     ? 'Thanks. Ticket #' . $ticketId . ' was marked ' . $labels[$score] . ' and archived from your active list.'
     : 'Only a resolved ticket that you own can be rated once.';
 unset($_SESSION['rate_ticket_id']);
-header('Location: ../pages/user.php?tab=tickets');
-exit();
+zpgc_finish('../pages/user.php?tab=tickets', true, [
+    'message' => (string) ($_SESSION['ticket_flash'] ?? ''),
+    'action' => 'rate_ticket',
+    'ticket_id' => $ticketId,
+]);

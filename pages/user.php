@@ -1,5 +1,6 @@
 <?php
 require_once '../logic/session_config.php';
+require_once '../logic/i18n.php';
 require_once '../logic/config.php';
 require_once '../logic/ui_state.php';
 require_once '../logic/ticket_status.php';
@@ -7,6 +8,8 @@ require_once '../logic/ticket_files.php';
 require_once '../logic/ticket_times.php';
 require_once '../logic/ticket_retention.php';
 require_once '../logic/performance_report.php';
+require_once '../logic/ticket_crypto.php';
+require_once '../logic/ai_reclassify.php';
 require_role('user');
 
 $current_user_id = current_user_id($conn);
@@ -50,6 +53,7 @@ unset($_SESSION['confirm_success'], $_SESSION['confirm_error'], $_SESSION['ticke
 $has_ai_guidance = ticket_has_column($conn, 'ai_guidance');
 $has_satisfaction = ticket_ensure_satisfaction_column($conn);
 ticket_ensure_archived_column($conn);
+ticket_retention_maybe_auto_purge($conn);
 // Skip heavy index DDL + retention backfill on every user page load.
 $rating_labels = [
     5 => 'Very satisfied',
@@ -85,23 +89,28 @@ while ($row = $result->fetch_assoc()) {
     $user_tickets[] = $row;
 }
 $stmt->close();
+ticket_crypto_ensure_columns($conn);
+ticket_reveal_rows($user_tickets);
+ai_reclassify_pending($conn, 3);
 [$active_user_tickets, $history_tickets] = ticket_partition_active_history($user_tickets);
 $mailbox_tickets = $active_user_tickets;
 $listed_tickets = ticket_sort_for_attention($active_user_tickets, []);
-$ui_theme = current_ui_theme();
+$ui_theme_pref = current_ui_theme();
+$ui_theme = $ui_theme_pref !== '' ? $ui_theme_pref : 'light';
 ?>
 
 <!DOCTYPE html>
-<html lang="en" data-theme="<?php echo htmlspecialchars($ui_theme); ?>">
+<html <?php echo zpgc_html_root_attrs(); ?>>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php echo zpgc_theme_boot_script(); ?>
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.40">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.32">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/main_interface.css')); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/theme.css')); ?>">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
-    <title>ZPGC Services | User</title>
+    <title><?php echo htmlspecialchars(zpgc_page_title('User')); ?></title>
 </head>
 
 <body data-page="<?php echo htmlspecialchars($tab); ?>" data-role="user" data-web-base="<?php echo htmlspecialchars(zpgc_web_base(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -119,6 +128,7 @@ $ui_theme = current_ui_theme();
                                 </svg>
                             </button>
                         </div>
+                        <?php include __DIR__ . '/partials/app_version.php'; ?>
                         <ul class="nav-list">
                             <li class="nav-list-item<?php echo zpgc_nav_selected_class($tab, 'dashboard'); ?>" data-nav="dashboard">
                                 <a href="?tab=dashboard" class="nav-link">
@@ -212,6 +222,7 @@ $ui_theme = current_ui_theme();
                     </header>
                 </div>
                 <div class="tickets-toolbar">
+                    <?php echo ticket_priority_filter_markup('user-tickets-priority', 'user-tickets-body'); ?>
                     <a href="ticket.php?v=1.6.21" class="btn-new-ticket">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                             viewBox="0 0 24 24">
@@ -239,9 +250,9 @@ $ui_theme = current_ui_theme();
                     <span class="tickets-col-reg">Registration Date &amp; Time</span>
                     <span class="tickets-col-resolution">Resolution Time</span>
                     <span class="tickets-col-confirm">Confirm</span>
-                    <span class="tickets-col-delete"> </span>
+                    <span class="tickets-col-delete">Actions</span>
                 </div>
-                <div class="tickets-list-body" id="user-tickets-body">
+                <div class="tickets-list-body js-paged-table" id="user-tickets-body" data-page-size="15">
                     <?php if (empty($listed_tickets)) { ?>
                     <div class="tickets-empty-state">
                         <p>No tickets submitted yet.</p>
@@ -256,7 +267,7 @@ $ui_theme = current_ui_theme();
                         $regLabel = performance_registered_label($ticket['created_at'] ?? null);
                         $resLabel = ticket_resolution_clock_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null);
                     ?>
-                    <div class="ticket-row" data-status="<?php echo htmlspecialchars($st); ?>">
+                    <div class="ticket-row" data-ticket-id="<?php echo (int) $ticket['id']; ?>" data-status="<?php echo htmlspecialchars($st); ?>" data-priority="<?php echo htmlspecialchars(ticket_priority_key($ticket['priority'] ?? '')); ?>">
                         <span class="tickets-col-id">#
                             <?php echo (int) $ticket['id']; ?>
                         </span>
@@ -273,9 +284,10 @@ $ui_theme = current_ui_theme();
                             </span>
                         </span>
                         <span class="tickets-col-reg"><?php echo htmlspecialchars($regLabel); ?></span>
-                        <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
+                        <span class="tickets-col-resolution<?php echo (trim((string) $resLabel) === '—' || trim((string) $resLabel) === '') ? ' ticket-col-empty' : ''; ?>"><?php echo htmlspecialchars($resLabel); ?></span>
                         <span class="tickets-col-confirm">
                             <?php if ($needsConfirm) { ?>
+                            <div class="confirm-actions">
                             <form class="confirm-form" action="../logic/ticket_confirm_mngmnt.php" method="post">
 <?php echo zpgc_csrf_field(); ?>
                                 <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
@@ -288,6 +300,7 @@ $ui_theme = current_ui_theme();
                                 <input type="hidden" name="decision" value="not_solved">
                                 <button type="submit" name="confirm_ticket" value="1" class="btn-confirm-reopen">Not Solved Yet</button>
                             </form>
+                            </div>
                             <?php } elseif ($st === 'resolved' && isset($rating_labels[(int) ($ticket['satisfaction'] ?? 0)])) { ?>
                             <span class="confirm-placeholder"><?php echo htmlspecialchars($rating_labels[(int) $ticket['satisfaction']]); ?></span>
                             <?php } elseif ($st === 'resolved' && $has_satisfaction) { ?>
@@ -297,6 +310,11 @@ $ui_theme = current_ui_theme();
                             <?php } ?>
                         </span>
                         <span class="tickets-col-delete">
+                            <?php
+                            echo ticket_quick_view_button($ticket, [
+                                'data-qv-registered' => $regLabel,
+                            ]);
+                            ?>
                             <form action="../logic/ticket_delete_mngmnt.php" method="post" class="ticket-delete-form"
                                 onsubmit="return confirm('Delete this ticket?');">
 <?php echo zpgc_csrf_field(); ?>
@@ -305,6 +323,15 @@ $ui_theme = current_ui_theme();
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 6V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H2v2h2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8h2V6zM9 4h6v2H9zM6 20V8h12v12z"></path><path d="M9 10h2v8H9zm4 0h2v8h-2z"></path></svg>
                                 </button>
                             </form>
+                            <?php if (!$showSelfHelp && $unassigned && ($ticket['priority'] ?? '') === 'low' && $st !== 'resolved') { ?>
+                            <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
+<?php echo zpgc_csrf_field(); ?>
+                                <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
+                                <button type="submit" name="request_technician" value="1" class="btn-request-tech">
+                                    Request Technician
+                                </button>
+                            </form>
+                            <?php } ?>
                         </span>
                         <?php if ($showSelfHelp) { ?>
                         <details class="ai-selfhelp">
@@ -327,14 +354,6 @@ $ui_theme = current_ui_theme();
                             </form>
                             </div>
                         </details>
-                        <?php } elseif ($unassigned && ($ticket['priority'] ?? '') === 'low' && $st !== 'resolved') { ?>
-                        <form action="../logic/ticket_escalate_mngmnt.php" method="post" class="ai-escalate-form">
-<?php echo zpgc_csrf_field(); ?>
-                            <input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
-                            <button type="submit" name="request_technician" value="1" class="btn-request-tech">
-                                Request Technician
-                            </button>
-                        </form>
                         <?php } ?>
                     </div>
                     <?php } ?>
@@ -346,6 +365,7 @@ $ui_theme = current_ui_theme();
                 $history_title = 'Ticket History';
                 $history_subtitle = 'Resolved and archived tickets';
                 $history_show_satisfaction = $has_satisfaction;
+                $history_allow_rate = true;
                 $history_show_times = true;
                 $history_rating_labels = $rating_labels;
                 include __DIR__ . '/partials/ticket_history_list.php';
@@ -407,6 +427,9 @@ $ui_theme = current_ui_theme();
         $rateStmt->close();
         $already = (int) ($rateRow['satisfaction'] ?? 0);
         if ($rateRow && !isset($rating_labels[$already])) {
+            if (function_exists('ticket_reveal_row')) {
+                ticket_reveal_row($rateRow);
+            }
             $rateTicket = $rateRow;
         } else {
             unset($_SESSION['rate_ticket_id']);
@@ -435,8 +458,12 @@ $ui_theme = current_ui_theme();
         </form>
     </div>
     <?php } ?>
-    <script src="../js/lazy_load.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.27" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.55"></script>
+    <script src="../js/table_controls.js?v=1.6.88"></script>
+    <script src="../js/ajax_forms.js?v=1.6.87"></script>
+    <script src="../js/ticket_live.js?v=1.6.40"></script>
+    <script src="../js/ticket_quick_view.js?v=1.6.87"></script>
+    <script src="../js/behavior.js?v=1.6.87" defer></script>
 </body>
 
 </html>

@@ -1,9 +1,34 @@
 <?php
 $performance_categories = $performance_categories ?? [];
 $performance_log = $performance_log ?? [];
+$performance_technicians = $performance_technicians ?? [];
+$performance_show_technician = !empty($performance_show_technician);
+$performance_show_view = !empty($performance_show_view);
 ?>
+<?php if (!empty($performance_technicians)) { ?>
 <div class="perf-section-header">
-    <h2>Resolved by Category</h2>
+    <h2>Resolved by Technician</h2>
+</div>
+<div class="tickets-list perf-tech-list">
+    <div class="tickets-list-header">
+        <span class="pcol-category">Technician</span>
+        <span class="pcol-resolved">Role</span>
+        <span class="pcol-critical">Tickets Resolved</span>
+    </div>
+    <div class="tickets-list-body">
+        <?php foreach ($performance_technicians as $techRow) { ?>
+        <div class="ticket-row">
+            <span class="pcol-category"><?php echo htmlspecialchars($techRow['name']); ?></span>
+            <span class="pcol-resolved"><?php echo htmlspecialchars($techRow['specialty'] !== '' ? $techRow['specialty'] : 'Unspecified'); ?></span>
+            <span class="pcol-critical"><?php echo (int) $techRow['total']; ?></span>
+        </div>
+        <?php } ?>
+    </div>
+</div>
+<div class="perf-table-spacer"></div>
+<?php } ?>
+<div class="perf-section-header">
+    <h2><?php echo htmlspecialchars(function_exists('zpgc_t') ? zpgc_t('Resolved by Category') : 'Resolved by Category'); ?></h2>
 </div>
 <div class="tickets-list perf-category-list">
     <div class="tickets-list-header">
@@ -14,6 +39,11 @@ $performance_log = $performance_log ?? [];
         <span class="pcol-low">Low</span>
     </div>
     <div class="tickets-list-body">
+        <?php if (empty($performance_categories)) { ?>
+        <div class="tickets-empty-state">
+            <p>No resolved tickets yet.</p>
+        </div>
+        <?php } else { ?>
         <?php foreach ($performance_categories as $perfRow) { ?>
         <div class="ticket-row">
             <span class="pcol-category"><?php echo htmlspecialchars($perfRow['label']); ?></span>
@@ -22,6 +52,7 @@ $performance_log = $performance_log ?? [];
             <span class="pcol-moderate"><span class="perf-count moderate"><?php echo (int) $perfRow['moderate']; ?></span></span>
             <span class="pcol-low"><span class="perf-count low"><?php echo (int) $perfRow['low']; ?></span></span>
         </div>
+        <?php } ?>
         <?php } ?>
     </div>
 </div>
@@ -37,7 +68,7 @@ $performance_log = $performance_log ?? [];
         <input type="search" class="search-bar" id="perf-log-search" placeholder="Search ticket ID, subject, times..." aria-label="Search resolved tickets">
     </div>
 </div>
-<div class="tickets-list perf-detail-list">
+<div class="tickets-list perf-detail-list<?php echo $performance_show_technician ? ' perf-detail-list--tech' : ''; ?><?php echo $performance_show_view ? ' perf-detail-list--view' : ''; ?>">
     <div class="tickets-list-header">
         <span class="dcol-ticket">Ticket ID</span>
         <span class="dcol-category">Category</span>
@@ -47,8 +78,15 @@ $performance_log = $performance_log ?? [];
         <span class="dcol-response">Response Time</span>
         <span class="dcol-resolution">Resolution Time</span>
         <span class="dcol-severity">Severity Level</span>
+        <?php if ($performance_show_technician) { ?>
+        <span class="dcol-tech">Technician</span>
+        <?php } ?>
+        <span class="dcol-satisfaction">Satisfaction</span>
+        <?php if ($performance_show_view) { ?>
+        <span class="dcol-preview">View</span>
+        <?php } ?>
     </div>
-    <div class="tickets-list-body" id="perf-log-body">
+    <div class="tickets-list-body js-paged-table" id="perf-log-body" data-page-size="15">
         <?php if (empty($performance_log)) { ?>
         <div class="tickets-empty-state">
             <p>No resolved tickets yet.</p>
@@ -66,6 +104,8 @@ $performance_log = $performance_log ?? [];
                 (string) $logRow['response'],
                 (string) $logRow['resolution'],
                 (string) $logRow['priority_label'],
+                (string) ($logRow['technician'] ?? ''),
+                (string) ($logRow['satisfaction_label'] ?? ''),
             ]));
         ?>
         <div class="ticket-row" data-perf-search="<?php echo htmlspecialchars($searchBlob); ?>">
@@ -83,6 +123,29 @@ $performance_log = $performance_log ?? [];
                 <span class="severity-badge undefined">None</span>
                 <?php } ?>
             </span>
+            <?php if ($performance_show_technician) { ?>
+            <span class="dcol-tech"><?php echo htmlspecialchars((string) ($logRow['technician'] ?? '—')); ?></span>
+            <?php } ?>
+            <span class="dcol-satisfaction"><?php echo htmlspecialchars(($logRow['satisfaction_label'] ?? '') !== '' ? $logRow['satisfaction_label'] : 'Unrated'); ?></span>
+            <?php if ($performance_show_view) { ?>
+            <span class="dcol-preview">
+                <?php
+                echo ticket_quick_view_button([
+                    'id' => $logRow['id'],
+                    'subject' => $logRow['subject'],
+                    'description' => $logRow['description'],
+                    'category' => $logRow['category'],
+                    'priority' => $logRow['priority'],
+                    'status' => 'resolved',
+                    'satisfaction' => $logRow['satisfaction'] ?? 0,
+                ], [
+                    'data-qv-assigned' => (string) ($logRow['technician'] ?? ''),
+                    'data-qv-registered' => (string) ($logRow['registered'] ?? ''),
+                    'data-qv-satisfaction' => (string) (($logRow['satisfaction_label'] ?? '') !== '' ? $logRow['satisfaction_label'] : 'Unrated'),
+                ]);
+                ?>
+            </span>
+            <?php } ?>
         </div>
         <?php } ?>
         <?php } ?>

@@ -48,9 +48,9 @@ $awaiting = $app && ($app['status'] ?? '') === 'awaiting_role_change';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/ticket.css?v=1.6.22">
-    <link rel="stylesheet" href="../css/apply.css?v=1.6.2">
-    <title>ZPGC Services | Technician application</title>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/ticket.css')); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/apply.css')); ?>">
+    <title><?php echo htmlspecialchars(zpgc_page_title('Technician application')); ?></title>
 </head>
 <body class="apply-page">
 <?php

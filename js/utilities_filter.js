@@ -18,8 +18,15 @@
         if (filter === 'pending') {
             return status === 'inactive' || status === 'pending';
         }
-        // user | techn | admin — show every account with that role
+        // user | student | staff | techn | admin
         var role = (row.getAttribute('data-role') || '').toLowerCase();
+        var kind = (row.getAttribute('data-kind') || '').toLowerCase();
+        if (filter === 'student' || filter === 'staff') {
+            if (role === 'user' && kind === '') {
+                kind = 'student';
+            }
+            return role === 'user' && kind === filter;
+        }
         return role === filter;
     }
 

@@ -9,7 +9,7 @@ if (!function_exists('zpgc_ui_allowed_tabs')) {
     {
         $role = strtolower(trim((string) $role));
         if ($role === 'admin') {
-            return ['dashboard', 'tickets', 'messages', 'utilities', 'profile', 'settings'];
+            return ['dashboard', 'tickets', 'performance', 'messages', 'utilities', 'profile', 'settings'];
         }
         if ($role === 'techn') {
             return ['dashboard', 'tickets', 'performance', 'messages', 'profile', 'settings'];

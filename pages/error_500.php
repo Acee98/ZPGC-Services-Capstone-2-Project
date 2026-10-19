@@ -1,12 +1,13 @@
 <?php
 http_response_code(500);
 header('Cache-Control: no-store');
+require_once __DIR__ . '/../logic/version.php';
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZPGC Services | Something went wrong</title>
+    <title><?php echo htmlspecialchars(zpgc_page_title('Something went wrong')); ?></title>
     <style>
         body { font-family: Inter, Segoe UI, sans-serif; background: #f4f4f5; color: #1a1a1a; margin: 0; }
         main { max-width: 480px; margin: 12vh auto; padding: 32px; background: #fff; border-radius: 12px; }
@@ -20,6 +21,7 @@ header('Cache-Control: no-store');
         <h1>Something went wrong</h1>
         <p>The request could not be completed. Try again in a moment. If this keeps happening, tell an administrator.</p>
         <p><a href="login_signup.php">Return to sign in</a></p>
+        <?php include __DIR__ . '/partials/app_version.php'; ?>
     </main>
 </body>
 </html>

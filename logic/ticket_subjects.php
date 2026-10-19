@@ -28,6 +28,7 @@ if (!function_exists('ticket_subject_word_limit')) {
                 'I cannot open an application',
                 'I need a program installed',
                 'Software is running slow',
+                'Could not update Windows or the OS',
             ],
             'network' => [
                 'Internet problem',

@@ -48,8 +48,8 @@ $canReset = $token !== '' && auth_mail_find_token($conn, 'reset_password', $toke
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/login_signup.css?v=1.6.18">
-    <title>ZPGC Services | Reset Password</title>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/login_signup.css')); ?>">
+    <title><?php echo htmlspecialchars(zpgc_page_title('Reset Password')); ?></title>
 </head>
 <body>
     <div class="container">
@@ -72,5 +72,6 @@ $canReset = $token !== '' && auth_mail_find_token($conn, 'reset_password', $toke
             </form>
         </div>
     </div>
+    <?php $zpgc_version_class = 'app-version app-version--auth'; include __DIR__ . '/partials/app_version.php'; ?>
 </body>
 </html>

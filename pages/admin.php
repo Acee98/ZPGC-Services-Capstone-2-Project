@@ -1,5 +1,7 @@
 <?php
 require_once '../logic/session_config.php';
+require_once '../logic/version.php';
+require_once '../logic/i18n.php';
 require_once '../logic/config.php';
 require_once '../logic/priority_queue.php';
 require_once '../logic/dashboard_stats.php';
@@ -8,6 +10,11 @@ require_once '../logic/ticket_retention.php';
 require_once '../logic/audit_log.php';
 require_once '../logic/ticket_status.php';
 require_once '../logic/performance_report.php';
+require_once '../logic/iso20000.php';
+require_once '../logic/ticket_crypto.php';
+require_once '../logic/ai_reclassify.php';
+require_once '../logic/account_kind.php';
+require_once '../logic/capacity.php';
 require_once '../logic/ui_state.php';
 require_once '../logic/techn_apply.php';
 require_role('admin');
@@ -19,6 +26,7 @@ zpgc_ui_no_store();
 
 ticket_ensure_archived_column($conn);
 ticket_ensure_satisfaction_column($conn);
+ticket_retention_maybe_auto_purge($conn);
 // Index ensure + archive backfill only on utilities (not every admin click).
 if ($tab === 'utilities') {
     ticket_ensure_indexes($conn);
@@ -29,20 +37,18 @@ if ($tab === 'utilities') {
          WHERE status = 'active' AND COALESCE(email_verified, 0) = 0"
     );
 }
-$purge_rules = ticket_retention_rules_summary();
-$purge_eligible = 0;
-$purge_flash = '';
-$auto_purge = null;
-if ($tab === 'utilities') {
-    // Count only on GET — never auto-delete during demos (use Run disposal batch).
-    $purge_eligible = ticket_retention_count_eligible_cached($conn);
-}
 
 $role_labels = [
-    'user' => 'User',
+    'user' => 'Student / Staff',
     'techn' => 'Technician',
     'admin' => 'Administrator',
 ];
+account_kind_ensure($conn);
+ticket_crypto_ensure_columns($conn);
+if ($tab === 'performance' || $tab === 'tickets') {
+    ticket_crypto_migrate_batch($conn, 15);
+    ai_reclassify_pending($conn, 4);
+}
 
 $all_users = [];
 $techn_applications = [];
@@ -97,13 +103,25 @@ $status_counts = [
 $needsTickets = in_array($tab, ['tickets', 'messages'], true);
 $needsDashboardList = ($tab === 'dashboard');
 $needsTechnicians = in_array($tab, ['tickets', 'messages'], true);
+$performance_categories = performance_category_rows($conn, 0);
+$performance_log = performance_resolved_log($conn, 150, 0);
+$performance_technicians = performance_technician_rows($conn);
+$office_kpis = performance_office_kpis($conn, 0);
+$iso_last_capacity = iso20000_last_capacity($conn);
+$iso_clauses = iso20000_clauses($conn, $office_kpis, $iso_last_capacity);
+capacity_ensure_table($conn);
 $hasArchivedCol = ticket_has_column($conn, 'archived_at');
 
 // Load accounts only on Utilities (filters / Activate) — not every admin tab.
 if ($tab === 'utilities') {
     $result = $conn->query(
-        'SELECT id, first_name, last_name, email, role, status FROM users ORDER BY id ASC LIMIT 500'
+        'SELECT id, first_name, last_name, email, role, status, account_kind FROM users ORDER BY id ASC LIMIT 500'
     );
+    if (!$result) {
+        $result = $conn->query(
+            'SELECT id, first_name, last_name, email, role, status FROM users ORDER BY id ASC LIMIT 500'
+        );
+    }
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $all_users[] = $row;
@@ -141,11 +159,11 @@ if ($tab === 'utilities') {
 
 if ($needsTechnicians) {
     $tech_result = $conn->query(
-        "SELECT u.id, u.first_name, u.last_name, a.specialty
+        "SELECT u.id, u.email, a.specialty
          FROM users u
          LEFT JOIN technician_applications a ON a.user_id = u.id
          WHERE u.role = 'techn' AND u.status = 'active'
-         ORDER BY u.last_name, u.first_name"
+         ORDER BY u.email"
     );
     if ($tech_result) {
         while ($row = $tech_result->fetch_assoc()) {
@@ -165,6 +183,9 @@ if ($needsTickets || $needsDashboardList) {
     }
     if (ticket_has_column($conn, 'responded_at')) {
         $ticketCols .= ', t.responded_at';
+    }
+    if (ticket_has_column($conn, 'satisfaction')) {
+        $ticketCols .= ', t.satisfaction';
     }
     $ticketCols .= ',
             u.first_name, u.last_name,
@@ -210,6 +231,8 @@ if ($needsTickets || $needsDashboardList) {
         }
     }
 
+    ticket_reveal_rows($active_tickets);
+    ticket_reveal_rows($history_tickets);
     $mailbox_tickets = $active_tickets;
     $recent_tickets = $history_tickets;
 
@@ -241,6 +264,9 @@ if ($needsTickets || $needsDashboardList) {
             );
             if ($replaceRows) {
                 while ($row = $replaceRows->fetch_assoc()) {
+                    if (function_exists('ticket_reveal_row')) {
+                        ticket_reveal_row($row);
+                    }
                     $replacement_requests[] = $row;
                 }
             }
@@ -258,6 +284,21 @@ if ($tab === 'dashboard' || $tab === 'tickets') {
 }
 if ($tab === 'dashboard') {
     $dashboard_charts = dashboard_chart_data($conn);
+    $hate_tickets = [];
+    if (ticket_has_column($conn, 'satisfaction')) {
+        $hateRes = $conn->query(
+            "SELECT id, subject, description, category, status, priority, created_at
+             FROM tickets
+             WHERE satisfaction = 1
+             ORDER BY id DESC
+             LIMIT 40"
+        );
+        if ($hateRes) {
+            while ($row = $hateRes->fetch_assoc()) {
+                $hate_tickets[] = $row;
+            }
+        }
+    }
     $count_result = $conn->query('SELECT status, COUNT(*) AS cnt FROM tickets GROUP BY status');
     if ($count_result) {
         while ($row = $count_result->fetch_assoc()) {
@@ -295,75 +336,24 @@ $utilities_success = $_SESSION['utilities_success'] ?? '';
 $utilities_error = $_SESSION['utilities_error'] ?? '';
 $ticket_flash = $_SESSION['ticket_flash'] ?? '';
 unset($_SESSION['utilities_success'], $_SESSION['utilities_error'], $_SESSION['ticket_flash']);
-$ui_theme = current_ui_theme();
+$ui_theme_pref = current_ui_theme();
+$ui_theme = $ui_theme_pref !== '' ? $ui_theme_pref : 'light';
 ?>
 
 <!DOCTYPE html>
-<html lang="en" data-theme="<?php echo htmlspecialchars($ui_theme); ?>">
+<html <?php echo zpgc_html_root_attrs(); ?>>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/main_interface.css?v=1.6.39">
+    <?php echo zpgc_theme_boot_script(); ?>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/main_interface.css')); ?>">
     <link rel="stylesheet" href="../css/apply.css?v=1.6.3">
-    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.32">
-    <link rel="stylesheet" href="../css/theme.css?v=1.6.32">
+    <link rel="stylesheet" href="../css/dashboard_extra.css?v=1.6.55">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/theme.css')); ?>">
     <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
-    <style id="zpgc-tickets-table-mobile">
-        @media (max-width: 768px) {
-            body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin-five {
-                overflow: auto !important;
-                -webkit-overflow-scrolling: touch;
-                max-width: 100% !important;
-                max-height: calc(100dvh - 250px - 58px) !important;
-            }
-            body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header {
-                position: sticky !important;
-                top: 0 !important;
-                z-index: 8 !important;
-                background: #f5f5f5 !important;
-            }
-            html[data-theme="dark"] body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header {
-                background: #2a2a32 !important;
-            }
-            body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header,
-            body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row:not(.ticket-row-filtered-out) {
-                display: grid !important;
-                grid-template-columns: 52px 70px minmax(90px, 1fr) minmax(100px, 1.1fr) 110px 96px minmax(110px, 0.95fr) 158px 88px 120px 72px !important;
-                min-width: 1420px !important;
-                width: 1420px !important;
-                max-width: none !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                background: transparent !important;
-            }
-            html[data-theme="dark"] body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin-five {
-                background: #222228 !important;
-            }
-            html[data-theme="dark"] body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row:not(.ticket-row-filtered-out) {
-                background: transparent !important;
-                color: #f2f2f7 !important;
-            }
-            html[data-theme="dark"] body[data-page="tickets"] #page-tickets .tickets-list-admin-five .ticket-row span {
-                color: #f2f2f7 !important;
-            }
-            body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header {
-                display: grid !important;
-            }
-            body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row > span::before {
-                content: none !important;
-                display: none !important;
-            }
-            body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row > span {
-                grid-column: auto !important;
-            }
-            body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row.ticket-row-filtered-out {
-                display: none !important;
-            }
-        }
-    </style>
-    <title>ZPGC Services | Administrator</title>
+    <title><?php echo htmlspecialchars(zpgc_page_title('Administrator')); ?></title>
 </head>
 
 <body data-page="<?php echo htmlspecialchars($tab); ?>" data-role="admin" data-web-base="<?php echo htmlspecialchars(zpgc_web_base(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -381,6 +371,7 @@ $ui_theme = current_ui_theme();
                                 </svg>
                             </button>
                         </div>
+                        <?php include __DIR__ . '/partials/app_version.php'; ?>
                         <ul class="nav-list">
                             <li class="nav-list-item<?php echo zpgc_nav_selected_class($tab, 'dashboard'); ?>" data-nav="dashboard">
                                 <a href="?tab=dashboard" class="nav-link">
@@ -403,6 +394,15 @@ $ui_theme = current_ui_theme();
                                         <path d="M15 12h1v2h-1zm0 3h1v2h-1z"></path>
                                     </svg>
                                     <span class="link-text">Tickets</span>
+                                </a>
+                            </li>
+                            <li class="nav-list-item<?php echo zpgc_nav_selected_class($tab, 'performance'); ?>" data-nav="performance">
+                                <a href="?tab=performance" class="nav-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path d="m6.89 12.45 1.05-2.1 3.14 7.06c.16.36.52.59.91.59h.05c.41-.02.77-.29.9-.68l2.98-8.93 1.11 3.89c.12.43.52.73.96.73h4v-2h-3.25l-1.79-6.27c-.12-.42-.5-.72-.94-.73a.98.98 0 0 0-.97.68l-3.18 9.55L8.91 7.6c-.16-.35-.5-.58-.89-.59-.41-.04-.74.21-.92.55l-1.72 3.45H2v2h4c.38 0 .73-.21.89-.55Z"></path>
+                                    </svg>
+                                    <span class="link-text">Performance</span>
                                 </a>
                             </li>
                             <li class="nav-list-item<?php echo zpgc_nav_selected_class($tab, 'utilities'); ?>" data-nav="utilities">
@@ -459,6 +459,7 @@ $ui_theme = current_ui_theme();
                 <?php } ?>
                 <?php include __DIR__ . '/partials/dashboard_status_cards.php'; ?>
                 <?php include __DIR__ . '/partials/dashboard_charts.php'; ?>
+                <?php include __DIR__ . '/partials/dashboard_negative_ratings.php'; ?>
                 <?php include __DIR__ . '/partials/admin_dashboard_history.php'; ?>
             </div>
             <div class="page-content" id="page-tickets">
@@ -478,7 +479,7 @@ $ui_theme = current_ui_theme();
                     </header>
                 </div>
                 <div class="tickets-toolbar">
-                    <div class="tickets-filter-tabs" id="admin-tickets-filter-tabs">
+                    <div class="tickets-filter-tabs" id="admin-tickets-filter-tabs" data-status-tabs="admin-tickets-body">
                         <button type="button" class="filter-tab active-tab" data-filter="all">Active</button>
                         <button type="button" class="filter-tab" data-filter="pending">Pending</button>
                         <button type="button" class="filter-tab" data-filter="ongoing">Ongoing</button>
@@ -486,6 +487,7 @@ $ui_theme = current_ui_theme();
                         <button type="button" class="filter-tab" data-filter="awaiting_confirmation">Confirming</button>
                         <button type="button" class="filter-tab" data-filter="replacement">Replacement</button>
                     </div>
+                    <?php echo ticket_priority_filter_markup('admin-tickets-priority', 'admin-tickets-body'); ?>
                 </div>
                 <?php if ($ticket_flash !== '') { ?>
                 <div class="utilities-notice"><?php echo htmlspecialchars($ticket_flash); ?></div>
@@ -505,7 +507,7 @@ $ui_theme = current_ui_theme();
                         <span class="tickets-col-resolution">Resolution Time</span>
                         <span class="tickets-col-action">Action</span>
                     </div>
-                    <div class="tickets-list-body" id="admin-tickets-body">
+                    <div class="tickets-list-body js-paged-table" id="admin-tickets-body" data-page-size="15">
                         <?php if (empty($attention_tickets)) {?>
                         <div class="tickets-empty-state">
                             <p>No tickets found.</p>
@@ -535,7 +537,9 @@ $ui_theme = current_ui_theme();
                             $queueAttr = ($queueLive && $queueStart > 0) ? ' data-queue-start="' . (int) $queueStart . '"' : '';
                         ?>
                         <form class="ticket-row<?php echo $needsReplace ? ' ticket-needs-replace' : ''; ?>" action="../logic/ticket_admin_mngmnt.php" method="post"
+                            data-ticket-id="<?php echo $tid; ?>"
                             data-status="<?php echo htmlspecialchars($st); ?>"
+                            data-priority="<?php echo htmlspecialchars(ticket_priority_key($pri)); ?>"
                             data-replace="<?php echo $needsReplace ? '1' : '0'; ?>">
                             <?php echo zpgc_csrf_field(); ?>
                             <input type="hidden" name="ticket_id" value="<?php echo $tid; ?>">
@@ -574,15 +578,25 @@ $ui_theme = current_ui_theme();
                                     <option value="" <?php echo empty($ticket['assigned_to']) ? 'selected' : ''; ?>>
                                         Unassigned
                                     </option>
-                                    <?php foreach ($technicians as $tech) { ?>
-                                    <option value="<?php echo (int) $tech['id']; ?>"
-                                        <?php echo ((int) ($ticket['assigned_to'] ?? 0) === (int) $tech['id']) ? 'selected' : ''; ?>>
-                                        <?php
-                                        $techName = trim((string) $tech['first_name'] . ' ' . (string) $tech['last_name']);
-                                        $techSpec = trim((string) ($tech['specialty'] ?? ''));
-                                        echo htmlspecialchars($techSpec !== '' ? $techName . ' · ' . $techSpec : $techName);
-                                        ?>
-                                    </option>
+                                    <?php
+                                    $assignGroups = [];
+                                    foreach ($technicians as $tech) {
+                                        $group = trim((string) ($tech['specialty'] ?? ''));
+                                        if ($group === '') {
+                                            $group = 'Unspecified';
+                                        }
+                                        $assignGroups[$group][] = $tech;
+                                    }
+                                    foreach ($assignGroups as $groupLabel => $groupTechs) { ?>
+                                    <optgroup label="<?php echo htmlspecialchars($groupLabel); ?>">
+                                        <?php foreach ($groupTechs as $tech) { ?>
+                                        <option value="<?php echo (int) $tech['id']; ?>"
+                                            data-specialty="<?php echo htmlspecialchars(strtolower((string) ($tech['specialty'] ?? ''))); ?>"
+                                            <?php echo ((int) ($ticket['assigned_to'] ?? 0) === (int) $tech['id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars(trim((string) ($tech['email'] ?? ''))); ?>
+                                        </option>
+                                        <?php } ?>
+                                    </optgroup>
                                     <?php } ?>
                                 </select>
                             </span>
@@ -590,6 +604,7 @@ $ui_theme = current_ui_theme();
                             <span class="tickets-col-queue"<?php echo $queueAttr; ?>><?php echo htmlspecialchars($queueLabel); ?></span>
                             <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
                             <span class="tickets-col-action">
+                                <?php echo ticket_quick_view_button($ticket, ['data-qv-registered' => $regLabel]); ?>
                                 <button type="submit" name="save_ticket" class="btn-save-ticket">Save</button>
                             </span>
                         </form>
@@ -603,7 +618,27 @@ $ui_theme = current_ui_theme();
                 $history_subtitle = 'Resolved and archived tickets';
                 $history_empty = 'No resolved tickets in history yet.';
                 $history_show_times = true;
+                $history_show_satisfaction = ticket_has_column($conn, 'satisfaction');
+                $history_allow_rate = false;
                 include __DIR__ . '/partials/ticket_history_list.php';
+                ?>
+            </div>
+            <div class="page-content" id="page-performance">
+                <div class="head">
+                    <header>
+                        <h1>Performance</h1>
+                        <div class="search-bar-wrapper">
+                            <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                        </div>
+                        <?php include __DIR__ . '/partials/profile_menu.php'; ?>
+                    </header>
+                </div>
+                <?php
+                $iso_show_capacity = true;
+                include __DIR__ . '/partials/kpi_iso_panel.php';
+                $performance_show_technician = true;
+                $performance_show_view = true;
+                include __DIR__ . '/partials/performance_panel.php';
                 ?>
             </div>
             <div class="page-content" id="page-utilities">
@@ -626,9 +661,6 @@ $ui_theme = current_ui_theme();
                 <?php if ($utilities_success !== '') { ?>
                 <div class="utilities-notice"><?php echo htmlspecialchars($utilities_success); ?></div>
                 <?php } ?>
-                <?php if ($purge_flash !== '') { ?>
-                <div class="utilities-notice"><?php echo htmlspecialchars($purge_flash); ?></div>
-                <?php } ?>
                 <?php if ($utilities_error !== '') { ?>
                 <div class="utilities-notice-error"><?php echo htmlspecialchars($utilities_error); ?></div>
                 <?php } ?>
@@ -642,7 +674,6 @@ $ui_theme = current_ui_theme();
                     <header class="apply-shell-head">
                         <p class="apply-kicker">Technician hiring</p>
                         <h2>Review application</h2>
-                        <p>Keep the requested role and Approve to activate immediately. Choose a different role to send a formal Outlook offer instead.</p>
                     </header>
                     <div class="apply-review-person">
                         <span class="apply-avatar" aria-hidden="true"><?php echo htmlspecialchars($revInitials !== '' ? $revInitials : 'T'); ?></span>
@@ -729,7 +760,6 @@ $ui_theme = current_ui_theme();
                     <header class="apply-shell-head">
                         <p class="apply-kicker">Account utilities</p>
                         <h2>New user</h2>
-                        <p>Create an account that is active immediately. A technical role is asked only when the account is a technician.</p>
                     </header>
                     <form class="user-form apply-user-form" action="../logic/user_admin_mngmnt.php" method="post">
 <?php echo zpgc_csrf_field(); ?>
@@ -750,9 +780,9 @@ $ui_theme = current_ui_theme();
                         <div class="user-form-row">
                             <div class="user-form-field">
                                 <label for="add_role">Account role</label>
-                                <select id="add_role" name="role" required data-specialty-toggle="add-specialty-wrap">
+                                <select id="add_role" name="role" required data-specialty-toggle="add-specialty-wrap" data-kind-toggle="add-kind-wrap">
                                     <option value="" disabled selected>Select a role</option>
-                                    <option value="user">User</option>
+                                    <option value="user">Student / Staff</option>
                                     <option value="techn">Technician</option>
                                     <option value="admin">Administrator</option>
                                 </select>
@@ -760,8 +790,14 @@ $ui_theme = current_ui_theme();
                             <div class="user-form-field">
                                 <label for="add_password">Temporary password</label>
                                 <input type="password" id="add_password" name="password" minlength="8" required>
-                                <small>At least 8 characters.</small>
                             </div>
+                        </div>
+                        <div class="user-form-field is-user-kind" id="add-kind-wrap" hidden>
+                            <label for="add_account_kind">Student or staff</label>
+                            <select id="add_account_kind" name="account_kind">
+                                <option value="student">Student</option>
+                                <option value="staff">Staff / faculty</option>
+                            </select>
                         </div>
                         <div class="user-form-field is-techn-only" id="add-specialty-wrap">
                             <label for="add_specialty">Technical role</label>
@@ -771,7 +807,6 @@ $ui_theme = current_ui_theme();
                                 <option value="<?php echo htmlspecialchars($spec); ?>"><?php echo htmlspecialchars($spec); ?></option>
                                 <?php } ?>
                             </select>
-                            <small>Tickets in this category are routed to this technician.</small>
                         </div>
                         <div class="user-form-actions">
                             <a href="?tab=utilities" class="apply-btn apply-btn-ghost">Cancel</a>
@@ -785,7 +820,6 @@ $ui_theme = current_ui_theme();
                     <header class="apply-shell-head">
                         <p class="apply-kicker">Account utilities</p>
                         <h2>Edit user</h2>
-                        <p>Update this account’s name, email, or role. Technical role appears only for technicians.</p>
                     </header>
                     <form class="user-form apply-user-form" action="../logic/user_admin_mngmnt.php" method="post">
 <?php echo zpgc_csrf_field(); ?>
@@ -809,7 +843,7 @@ $ui_theme = current_ui_theme();
                         </div>
                         <div class="user-form-field">
                             <label for="edit_role">Role</label>
-                            <select id="edit_role" name="role" required data-specialty-toggle="edit-specialty-wrap">
+                            <select id="edit_role" name="role" required data-specialty-toggle="edit-specialty-wrap" data-kind-toggle="edit-kind-wrap">
                                 <?php foreach ($role_labels as $val => $label) { ?>
                                 <option value="<?php echo htmlspecialchars($val); ?>"
                                     <?php echo $editing_user['role'] === $val ? 'selected' : ''; ?>>
@@ -824,6 +858,14 @@ $ui_theme = current_ui_theme();
                             $editSpec = (string) (($techn_spec_by_user[(int) $editing_user['id']]['specialty'] ?? ''));
                         }
                         ?>
+                        <div class="user-form-field is-user-kind<?php echo ($editing_user['role'] ?? '') === 'user' ? ' is-open' : ''; ?>" id="edit-kind-wrap" <?php echo ($editing_user['role'] ?? '') === 'user' ? '' : 'hidden'; ?>>
+                            <label for="edit_account_kind">Student or staff</label>
+                            <?php $editKind = (($editing_user['account_kind'] ?? '') === 'staff') ? 'staff' : 'student'; ?>
+                            <select id="edit_account_kind" name="account_kind">
+                                <option value="student" <?php echo $editKind === 'student' ? 'selected' : ''; ?>>Student</option>
+                                <option value="staff" <?php echo $editKind === 'staff' ? 'selected' : ''; ?>>Staff / faculty</option>
+                            </select>
+                        </div>
                         <div class="user-form-field is-techn-only<?php echo ($editing_user['role'] ?? '') === 'techn' ? ' is-open' : ''; ?>" id="edit-specialty-wrap">
                             <label for="edit_specialty">Technical role</label>
                             <select id="edit_specialty" name="specialty" <?php echo ($editing_user['role'] ?? '') === 'techn' ? 'required' : ''; ?>>
@@ -835,7 +877,6 @@ $ui_theme = current_ui_theme();
                                 </option>
                                 <?php } ?>
                             </select>
-                            <small>Tickets in this category are routed to this technician.</small>
                         </div>
                         <div class="user-form-actions">
                             <a href="?tab=utilities" class="apply-btn apply-btn-ghost">Cancel</a>
@@ -871,7 +912,10 @@ $ui_theme = current_ui_theme();
                                 </span>
                             </div>
                             <div class="techn-apply-actions">
-                                <a href="?tab=utilities&review_app=<?php echo (int) $appRow['id']; ?>" class="btn-update-status">Review</a>
+                                <a href="?tab=utilities&review_app=<?php echo (int) $appRow['id']; ?>" class="ticket-icon-btn" data-icon="review" aria-label="Review application" title="Review">
+                                    <?php echo ticket_action_icon('review'); ?>
+                                    <span class="ticket-icon-fallback">Review</span>
+                                </a>
                             </div>
                         </div>
                         <?php } ?>
@@ -879,40 +923,11 @@ $ui_theme = current_ui_theme();
                     <?php } ?>
                 </div>
 
-                <div class="ticket-retention-card">
-                    <div class="ticket-retention-copy">
-                        <h2>Resolved ticket retention</h2>
-                        <p class="form-subtitle">
-                            Resolved tickets are archived automatically. Eligible archived tickets are permanently disposed
-                            in batches (max <?php echo (int) $purge_rules['batch']; ?> per run).
-                        </p>
-                        <ul class="ticket-retention-rules">
-                            <li>Auto-archive when a ticket becomes <strong>resolved</strong>.</li>
-                            <li>Dispose rated archived tickets after <strong><?php echo (int) $purge_rules['rated_days']; ?> days</strong>.</li>
-                            <li>Dispose unrated archived tickets after <strong><?php echo (int) $purge_rules['unrated_days']; ?> days</strong>.</li>
-                            <li>Disposal runs only when an admin clicks <strong>Run disposal batch</strong> (no surprise deletes).</li>
-                        </ul>
-                    </div>
-                    <div class="ticket-retention-footer">
-                        <div class="ticket-retention-meta">
-                            <span class="ticket-retention-meta-label">Eligible for disposal</span>
-                            <span class="ticket-retention-meta-value"><?php echo (int) $purge_eligible; ?></span>
-                            <span class="ticket-retention-meta-note">Batch capacity <?php echo (int) $purge_rules['batch']; ?></span>
-                        </div>
-                        <form class="ticket-retention-form" action="../logic/ticket_purge_mngmnt.php" method="post"
-                            onsubmit="return confirm('Permanently dispose up to <?php echo (int) $purge_rules['batch']; ?> archived resolved tickets that meet retention rules?\n\nThis cannot be undone.');">
-                            <?php echo zpgc_csrf_field(); ?>
-                            <button type="submit" name="dispose_archived_tickets" value="1" class="btn-dispose-batch">
-                                Run disposal batch
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
                 <div class="tickets-toolbar">
                     <div class="tickets-filter-tabs" id="utilities-filter-tabs">
                         <button type="button" class="filter-tab active-tab" data-filter="all">All</button>
-                        <button type="button" class="filter-tab" data-filter="user">User</button>
+                        <button type="button" class="filter-tab" data-filter="student">Student</button>
+                        <button type="button" class="filter-tab" data-filter="staff">Staff</button>
                         <button type="button" class="filter-tab" data-filter="techn">Technician</button>
                         <button type="button" class="filter-tab" data-filter="admin">Administrator</button>
                         <button type="button" class="filter-tab" data-filter="pending">Pending Approval</button>
@@ -935,7 +950,7 @@ $ui_theme = current_ui_theme();
                         <span class="ucol-status">Status</span>
                         <span class="ucol-action">Actions</span>
                     </div>
-                    <div class="tickets-list-body" id="utilities-users-body">
+                    <div class="tickets-list-body js-paged-table" id="utilities-users-body" data-page-size="15">
                         <?php if (empty($all_users)) { ?>
                         <div class="tickets-empty-state">
                             <p>No user accounts found.</p>
@@ -943,11 +958,18 @@ $ui_theme = current_ui_theme();
                         <?php } else { ?>
                         <?php foreach ($all_users as $u) {
                             $isActive = ($u['status'] === 'active');
-                            if (isset($role_labels[$u['role']])) {
+                            if (($u['role'] ?? '') === 'user') {
+                                $roleLabel = function_exists('account_kind_label')
+                                    ? account_kind_label('user', $u['account_kind'] ?? 'student')
+                                    : 'Student';
+                            } elseif (isset($role_labels[$u['role']])) {
                                 $roleLabel = $role_labels[$u['role']];
                             } else {
                                 $roleLabel = ucfirst($u['role']);
                             }
+                            $kindAttr = function_exists('account_kind_normalize')
+                                ? account_kind_normalize($u['account_kind'] ?? '', $u['role'] ?? 'user')
+                                : ((($u['role'] ?? '') === 'user') ? 'student' : '');
                             $specInfo = $techn_spec_by_user[(int) $u['id']] ?? null;
                             $specLabel = '';
                             if (($u['role'] ?? '') === 'techn') {
@@ -967,7 +989,9 @@ $ui_theme = current_ui_theme();
                             );
                         ?>
                         <div class="ticket-row"
+                            data-user-id="<?php echo (int) $u['id']; ?>"
                             data-role="<?php echo htmlspecialchars($u['role']); ?>"
+                            data-kind="<?php echo htmlspecialchars($kindAttr); ?>"
                             data-status="<?php echo htmlspecialchars($u['status']); ?>">
                             <span class="ucol-id">#<?php echo (int) $u['id']; ?></span>
                             <span class="ucol-name">
@@ -997,15 +1021,24 @@ $ui_theme = current_ui_theme();
                                     ? ($apps_by_user[(int) $u['id']] ?? null)
                                     : null;
                                 if ($pendingApp) { ?>
-                                <a href="?tab=utilities&review_app=<?php echo (int) $pendingApp['id']; ?>" class="btn-update-status">Review</a>
+                                <a href="?tab=utilities&review_app=<?php echo (int) $pendingApp['id']; ?>" class="ticket-icon-btn" data-icon="review" aria-label="Review application" title="Review">
+                                    <?php echo ticket_action_icon('review'); ?>
+                                    <span class="ticket-icon-fallback">Review</span>
+                                </a>
+                                <span class="ucol-action-spacer" aria-hidden="true"></span>
+                                <span class="ucol-action-spacer" aria-hidden="true"></span>
                                 <?php } else { ?>
-                                <a href="?tab=utilities&edit_id=<?php echo (int) $u['id']; ?>" class="btn-assign">Edit</a>
+                                <a href="?tab=utilities&edit_id=<?php echo (int) $u['id']; ?>" class="ticket-icon-btn" data-icon="edit" aria-label="Edit account" title="Edit">
+                                    <?php echo ticket_action_icon('edit'); ?>
+                                    <span class="ticket-icon-fallback">Edit</span>
+                                </a>
                                 <form action="../logic/user_admin_mngmnt.php" method="post" class="ucol-action-form">
 <?php echo zpgc_csrf_field(); ?>
                                     <input type="hidden" name="id" value="<?php echo (int) $u['id']; ?>">
                                     <input type="hidden" name="status" value="<?php echo $isActive ? 'inactive' : 'active'; ?>">
-                                    <button type="submit" name="set_status" class="btn-update-status">
-                                        <?php echo $isActive ? 'Deactivate' : 'Activate'; ?>
+                                    <button type="submit" name="set_status" class="ticket-icon-btn" data-icon="<?php echo $isActive ? 'deactivate' : 'activate'; ?>" aria-label="<?php echo $isActive ? 'Deactivate account' : 'Activate account'; ?>" title="<?php echo $isActive ? 'Deactivate' : 'Activate'; ?>">
+                                        <?php echo ticket_action_icon($isActive ? 'deactivate' : 'activate'); ?>
+                                        <span class="ticket-icon-fallback"><?php echo $isActive ? 'Deactivate' : 'Activate'; ?></span>
                                     </button>
                                 </form>
                                 <?php if ($u['role'] !== 'admin') { ?>
@@ -1013,7 +1046,10 @@ $ui_theme = current_ui_theme();
                                     onsubmit="return confirm('Permanently delete ' + <?php echo $deleteConfirmName; ?> + '\'s account? This can\'t be undone.');">
                                     <?php echo zpgc_csrf_field(); ?>
                                     <input type="hidden" name="id" value="<?php echo (int) $u['id']; ?>">
-                                    <button type="submit" name="delete_user" class="btn-delete">Delete</button>
+                                    <button type="submit" name="delete_user" class="ticket-icon-btn" data-icon="delete" aria-label="Delete account" title="Delete">
+                                        <?php echo ticket_action_icon('delete'); ?>
+                                        <span class="ticket-icon-fallback">Delete</span>
+                                    </button>
                                 </form>
                                 <?php } else { ?>
                                 <span class="ucol-action-spacer" aria-hidden="true"></span>
@@ -1085,65 +1121,15 @@ $ui_theme = current_ui_theme();
                         <?php include __DIR__ . '/partials/profile_menu.php'; ?>
                     </header>
                 </div>
-                <div class="settings-container">
-                    <?php
-                    $settings_success = $_SESSION['settings_success'] ?? '';
-                    $settings_error = $_SESSION['settings_error'] ?? '';
-                    unset($_SESSION['settings_success'], $_SESSION['settings_error']);
-                    ?>
-                    <?php if ($settings_success !== '') { ?>
-                    <div class="utilities-notice"><?php echo htmlspecialchars($settings_success); ?></div>
-                    <?php } ?>
-                    <?php if ($settings_error !== '') { ?>
-                    <div class="utilities-notice-error"><?php echo htmlspecialchars($settings_error); ?></div>
-                    <?php } ?>
-                    <div class="settings-card">
-                        <div class="settings-card-header">
-                            <h2>Appearance</h2>
-                            <p>Stay in control of how the dashboard looks on this account.</p>
-                        </div>
-                        <form action="../logic/settings_mngmnt.php" method="post" class="settings-form">
-<?php echo zpgc_csrf_field(); ?>
-                            <div class="settings-pref-row">
-                                <span class="settings-pref-label">Theme</span>
-                                <select name="theme" class="settings-pref-select">
-                                    <option value="light" <?php echo $ui_theme === 'light' ? 'selected' : ''; ?>>Light</option>
-                                    <option value="dark" <?php echo $ui_theme === 'dark' ? 'selected' : ''; ?>>Dark</option>
-                                </select>
-                            </div>
-                            <button type="submit" name="save_appearance" class="btn-save-ticket settings-save-btn">Save appearance</button>
-                        </form>
-                    </div>
-                    <div class="settings-card">
-                        <div class="settings-card-header">
-                            <h2>Security</h2>
-                        </div>
-                        <h3 class="settings-subheading">Change password</h3>
-                        <p class="settings-subtitle">Use at least 8 characters. You will stay signed in after updating.</p>
-                        <form action="../logic/settings_mngmnt.php" method="post" class="settings-form settings-password-form">
-<?php echo zpgc_csrf_field(); ?>
-                            <div class="settings-form-field">
-                                <label for="settings-current-password">Current password</label>
-                                <input type="password" id="settings-current-password" name="current_password" required autocomplete="current-password">
-                            </div>
-                            <div class="settings-form-field">
-                                <label for="settings-new-password">New password</label>
-                                <input type="password" id="settings-new-password" name="new_password" minlength="8" required autocomplete="new-password">
-                            </div>
-                            <div class="settings-form-field">
-                                <label for="settings-confirm-password">Confirm new password</label>
-                                <input type="password" id="settings-confirm-password" name="confirm_password" minlength="8" required autocomplete="new-password">
-                            </div>
-                            <button type="submit" name="change_password" class="btn-save-ticket settings-save-btn">Update password</button>
-                        </form>
-                    </div>
-                </div>
+                <?php include __DIR__ . '/partials/settings_panel.php'; ?>
             </div>
         </section>
     </main>
     <script>
         window.DASHBOARD_CHART_DATA = <?php echo json_encode($dashboard_charts, JSON_UNESCAPED_UNICODE); ?>;
         window.DASHBOARD_CHART_RANGE = <?php echo json_encode($dashboard_charts['range'] ?? 'week'); ?>;
+        window.DASHBOARD_CHART_FROM = <?php echo json_encode($dashboard_charts['from'] ?? ''); ?>;
+        window.DASHBOARD_CHART_TO = <?php echo json_encode($dashboard_charts['to'] ?? ''); ?>;
         window.ZPGC_CSRF = <?php echo json_encode(zpgc_csrf_token()); ?>;
         (function () {
             function bindSpecialty(roleId) {
@@ -1172,13 +1158,46 @@ $ui_theme = current_ui_theme();
                 role.addEventListener('change', sync);
                 sync();
             }
-            bindSpecialty('add_role');
-            bindSpecialty('edit_role');
+            function bindKind(roleId) {
+                var role = document.getElementById(roleId);
+                if (!role) {
+                    return;
+                }
+                var wrapId = role.getAttribute('data-kind-toggle');
+                var wrap = wrapId ? document.getElementById(wrapId) : null;
+                if (!wrap) {
+                    return;
+                }
+                var spec = wrap.querySelector('select');
+                function syncKind() {
+                    var on = role.value === 'user';
+                    wrap.classList.toggle('is-open', on);
+                    wrap.hidden = !on;
+                    if (spec) {
+                        spec.disabled = !on;
+                    }
+                }
+                role.addEventListener('change', syncKind);
+                syncKind();
+            }
+            window.zpgcBindUtilitiesSpecialty = function () {
+                bindSpecialty('add_role');
+                bindSpecialty('edit_role');
+                bindKind('add_role');
+                bindKind('edit_role');
+            };
+            window.zpgcBindUtilitiesSpecialty();
         })();
     </script>
-    <script src="../js/lazy_load.js?v=1.6.27"></script>
-    <script src="../js/utilities_filter.js?v=1.6.18"></script>
-    <script src="../js/behavior.js?v=1.6.27" defer></script>
+    <script src="../js/lazy_load.js?v=1.6.55"></script>
+    <script src="../js/utilities_filter.js?v=1.6.88"></script>
+    <script src="../js/table_controls.js?v=1.6.88"></script>
+    <script src="../js/ajax_forms.js?v=1.6.87"></script>
+    <script src="../js/ticket_live.js?v=1.6.40"></script>
+    <script src="../js/ticket_quick_view.js?v=1.6.87"></script>
+    <script src="../js/performance_filter.js?v=1.6.22"></script>
+    <script src="../js/capacity_check.js?v=1.6.83"></script>
+    <script src="../js/behavior.js?v=1.6.87" defer></script>
     <!-- chart.umd.js, dashboard charts, tickets/utilities filters: lazy-loaded per tab via lazy_load.js -->
 </body>
 

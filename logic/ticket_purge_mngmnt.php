@@ -8,8 +8,7 @@ zpgc_csrf_require();
 
 $requested = isset($_POST['dispose_archived_tickets']) || isset($_POST['purge_archived_tickets']);
 if (!$requested) {
-    header('Location: ../pages/admin.php?tab=utilities');
-    exit();
+    zpgc_finish('../pages/admin.php?tab=utilities', true, ['message' => '', 'action' => 'purge']);
 }
 
 $result = ticket_retention_purge_batch($conn);
@@ -35,5 +34,7 @@ if ($result['deleted'] > 0) {
         . $rules['unrated_days'] . ' days, batch ≤' . $rules['batch'] . '.';
 }
 
-header('Location: ../pages/admin.php?tab=utilities');
-exit();
+zpgc_finish('../pages/admin.php?tab=utilities', true, [
+    'message' => (string) ($_SESSION['utilities_success'] ?? ''),
+    'action' => 'purge',
+]);

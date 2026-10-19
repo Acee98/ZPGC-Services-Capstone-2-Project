@@ -13,9 +13,11 @@ $input = json_decode((string) $raw, true);
 if (!is_array($input)) {
     $input = $_POST;
 }
+$from = dashboard_parse_ymd($input['from'] ?? '');
+$to = dashboard_parse_ymd($input['to'] ?? '');
 $range = dashboard_normalize_range($input['range'] ?? 'week');
-$stats = dashboard_chart_data($conn, $range);
-$rangeLabel = dashboard_range_label($range);
+$stats = dashboard_chart_data($conn, $range, $from, $to);
+$rangeLabel = (string) ($stats['range_label'] ?? dashboard_range_label($range, $from, $to));
 
 function zpgc_pdf_jpeg_from_b64($b64)
 {

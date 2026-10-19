@@ -9,22 +9,24 @@ $tickets = $recent_tickets ?? [];
 </div>
 
 <div class="tickets-list admin-dashboard-history-list admin-dashboard-history-list--times">
-    <div class="tickets-list-header">
-        <span class="tcol-id">ID</span>
-        <span class="tcol-category">Category</span>
-        <span class="tcol-subject">Subject</span>
-        <span class="tcol-priority">Priority</span>
-        <span class="tcol-status">Status</span>
-        <span class="tcol-assigned">Assigned To</span>
-        <span class="tcol-reg">Registration Date &amp; Time</span>
-        <span class="tcol-resolution">Resolution Time</span>
-    </div>
-    <div class="tickets-list-body" id="admin-dashboard-history-body">
-        <?php if (empty($tickets)) { ?>
+    <div class="tickets-scroll">
+        <div class="tickets-list-header">
+            <span class="tcol-id">ID</span>
+            <span class="tcol-category">Category</span>
+            <span class="tcol-subject">Subject</span>
+            <span class="tcol-priority">Priority</span>
+            <span class="tcol-status">Status</span>
+            <span class="tcol-assigned">Assigned To</span>
+            <span class="tcol-reg">Registered</span>
+            <span class="tcol-resolution">Resolution</span>
+            <span class="tcol-preview">View</span>
+        </div>
+        <div class="tickets-list-body js-paged-table" id="admin-dashboard-history-body" data-page-size="15">
+            <?php if (empty($tickets)) { ?>
             <div class="tickets-empty-state">
                 <p>No resolved tickets in history yet.</p>
             </div>
-        <?php } else { ?>
+            <?php } else { ?>
             <?php foreach ($tickets as $ticket) { ?>
                 <?php
                     $tid = (int) $ticket['id'];
@@ -59,8 +61,15 @@ $tickets = $recent_tickets ?? [];
                     <span class="tcol-assigned"><?php echo htmlspecialchars($assignedLabel); ?></span>
                     <span class="tcol-reg"><?php echo htmlspecialchars(function_exists('performance_registered_label') ? performance_registered_label($ticket['created_at'] ?? null) : '—'); ?></span>
                     <span class="tcol-resolution"><?php echo htmlspecialchars(function_exists('ticket_resolution_clock_label') ? ticket_resolution_clock_label($ticket['created_at'] ?? null, $ticket['resolved_at'] ?? null) : '—'); ?></span>
+                    <span class="tcol-preview">
+                        <?php
+                        echo function_exists('ticket_quick_view_button')
+                            ? ticket_quick_view_button($ticket, ['data-qv-assigned' => $assignedLabel])
+                            : '';
+                        ?>
+                    </span>
                 </div>
             <?php } ?>
-        <?php } ?>
-    </div>
+            <?php } ?>
+        </div>
 </div>

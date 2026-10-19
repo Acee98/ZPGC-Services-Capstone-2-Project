@@ -50,6 +50,11 @@
           setStatus(data.error || 'AI suggestion failed.', true);
           return;
         }
+        if (data.in_scope === false) {
+          setStatus(data.reject_reason || data.error || 'This is outside the IT Helpdesk.', true);
+          box.hidden = true;
+          return;
+        }
 
         if (data.category && category) {
           category.value = data.category;

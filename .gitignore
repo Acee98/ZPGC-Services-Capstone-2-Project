@@ -7,6 +7,7 @@ backup_db/
 ai/.env
 logic/mail.env
 logic/mail.env.hostinger
+logic/ticket.key
 db_hostinger_creds.txt
 database/_import_live.sql
 pages/_zpgc_import.php

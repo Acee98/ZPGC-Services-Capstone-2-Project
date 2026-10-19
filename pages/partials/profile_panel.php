@@ -9,9 +9,7 @@ $profile_error = $_SESSION['profile_error'] ?? '';
 unset($_SESSION['profile_success'], $_SESSION['profile_error']);
 $fullName = trim((string) $profile['first_name'] . ' ' . (string) $profile['last_name']);
 $initials = strtoupper(substr((string) $profile['first_name'], 0, 1) . substr((string) $profile['last_name'], 0, 1));
-$phone = trim((string) ($profile['phone'] ?? ''));
 $emailNotify = (int) ($profile['email_notify'] ?? 0) === 1;
-$smsNotify = (int) ($profile['sms_notify'] ?? 0) === 1;
 $language = (string) ($profile['preferred_language'] ?? 'English');
 if ($language !== 'Filipino') {
     $language = 'English';
@@ -22,7 +20,7 @@ if ($language !== 'Filipino') {
         <header>
             <h1>My Profile</h1>
             <div class="search-bar-wrapper">
-                <input type="search" class="search-bar" placeholder="Search" aria-label="Search">
+                <input type="search" class="search-bar" placeholder="Search this page" aria-label="Search this page">
             </div>
             <?php include __DIR__ . '/profile_menu.php'; ?>
         </header>
@@ -40,12 +38,34 @@ if ($language !== 'Filipino') {
                 <span class="profile-avatar-dot" aria-hidden="true"></span>
             </div>
             <p class="profile-hero-name"><?php echo htmlspecialchars($fullName); ?></p>
+            <div class="profile-hero-tags">
+                <span class="profile-role-badge role-<?php echo htmlspecialchars((string) ($profile['role'] ?? 'user')); ?>">
+                    <?php echo htmlspecialchars((string) ($profile['account_label'] ?? 'User')); ?>
+                </span>
+                <?php if (($profile['role'] ?? '') === 'techn') { ?>
+                <span class="profile-spec-badge">
+                    <?php echo htmlspecialchars((string) (($profile['specialty_label'] ?? '') !== '' ? $profile['specialty_label'] : 'Unspecified')); ?>
+                </span>
+                <?php } ?>
+            </div>
         </div>
         <form action="../logic/profile_mngmnt.php" method="post" class="profile-form">
 <?php echo zpgc_csrf_field(); ?>
             <div class="profile-row">
                 <section class="profile-card">
                     <h2>Personal Information</h2>
+                    <div class="profile-info-row">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3m0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08s5.97 1.09 6 3.08c-1.29 1.94-3.5 3.22-6 3.22"></path></svg>
+                        <div class="profile-info-text">
+                            <span class="profile-info-label">Account type</span>
+                            <span class="profile-info-value">
+                                <?php echo htmlspecialchars((string) ($profile['account_label'] ?? 'User')); ?>
+                                <?php if (($profile['role'] ?? '') === 'techn') { ?>
+                                · <?php echo htmlspecialchars((string) (($profile['specialty_label'] ?? '') !== '' ? $profile['specialty_label'] : 'Unspecified')); ?>
+                                <?php } ?>
+                            </span>
+                        </div>
+                    </div>
                     <div class="profile-info-row" data-profile-edit>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5m0-8c1.65 0 3 1.35 3 3s-1.35 3-3 3-3-1.35-3-3 1.35-3 3-3M4 22h16c.55 0 1-.45 1-1v-1c0-3.86-3.14-7-7-7h-4c-3.86 0-7 3.14-7 7v1c0 .55.45 1 1 1m6-7h4c2.76 0 5 2.24 5 5H5c0-2.76 2.24-5 5-5"></path></svg>
                         <div class="profile-info-text">
@@ -66,27 +86,10 @@ if ($language !== 'Filipino') {
                             <span class="profile-info-label">E-mail</span>
                             <span class="profile-info-value"><?php echo htmlspecialchars((string) $profile['email']); ?></span>
                             <span class="profile-info-editfields" hidden>
-                                <input type="email" name="email" required readonly value="<?php echo htmlspecialchars((string) $profile['email']); ?>" aria-label="E-mail" title="Email cannot be changed here">
+                                <input type="email" name="email" required value="<?php echo htmlspecialchars((string) $profile['email']); ?>" aria-label="E-mail" title="Changing email sends a new verification code">
                             </span>
                         </div>
                         <button type="button" class="profile-info-edit" data-profile-pencil aria-label="Edit e-mail">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path></svg>
-                        </button>
-                    </div>
-                    <div class="profile-info-row" data-profile-edit>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.07 22h.35c.47-.02.9-.26 1.17-.64l2.14-3.09c.23-.33.32-.74.24-1.14s-.31-.74-.64-.97l-4.64-3.09a1.47 1.47 0 0 0-.83-.25c-.41 0-.81.16-1.1.48l-1.47 1.59c-.69-.43-1.61-1.07-2.36-1.82-.72-.72-1.37-1.64-1.82-2.36l1.59-1.47c.54-.5.64-1.32.23-1.93L7.84 2.67c-.22-.33-.57-.57-.97-.64a1.46 1.46 0 0 0-1.13.24L2.65 4.41c-.39.27-.62.7-.64 1.17-.03.69-.16 6.9 4.68 11.74 4.35 4.35 9.81 4.69 11.38 4.69ZM6.88 10.05c-.16.15-.21.39-.11.59.05.09 1.15 2.24 2.74 3.84 1.6 1.6 3.75 2.7 3.84 2.75.2.1.44.06.59-.11l1.99-2.15 3.86 2.57-1.7 2.46c-1.16 0-6.13-.24-9.99-4.1S4 7.06 4 5.91l2.46-1.7 2.57 3.86-2.15 1.99Z"></path></svg>
-                        <div class="profile-info-text">
-                            <span class="profile-info-label">Phone Number</span>
-                            <?php if ($phone === '') { ?>
-                            <span class="profile-info-value profile-info-empty">Not set</span>
-                            <?php } else { ?>
-                            <span class="profile-info-value"><?php echo htmlspecialchars($phone); ?></span>
-                            <?php } ?>
-                            <span class="profile-info-editfields" hidden>
-                                <input type="tel" name="phone" value="<?php echo htmlspecialchars($phone); ?>" aria-label="Phone number" placeholder="Phone number">
-                            </span>
-                        </div>
-                        <button type="button" class="profile-info-edit" data-profile-pencil aria-label="Edit phone number">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path></svg>
                         </button>
                     </div>
@@ -98,14 +101,6 @@ if ($language !== 'Filipino') {
                         <span class="profile-pref-label">E-mail Notifications</span>
                         <label class="toggle-switch">
                             <input type="checkbox" name="email_notify" value="1" <?php echo $emailNotify ? 'checked' : ''; ?>>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="profile-pref-row">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8.59 15.41 3c-.78-.78-2.05-.78-2.83 0L3 12.59c-.78.78-.78 2.05 0 2.83l5.59 5.59c.39.39.9.58 1.41.58s1.02-.19 1.41-.58L21 11.42c.78-.78.78-2.05 0-2.83m-11 11L4.41 14 14 4.41 19.59 10l-9.58 9.59Z"></path><path d="M8.29 14.29A.996.996 0 1 0 9.7 15.7a.996.996 0 1 0-1.41-1.41m6 6L15 21l.71.71 3-3 3-3L21 15l-.71-.71-3 3zM9.71 3.71 9 3l-.71-.71-3 3-3 3L3 9l.71.71 3-3z"></path></svg>
-                        <span class="profile-pref-label">SMS Notifications</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" name="sms_notify" value="1" <?php echo $smsNotify ? 'checked' : ''; ?>>
                             <span class="toggle-slider"></span>
                         </label>
                     </div>

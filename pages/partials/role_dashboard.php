@@ -16,15 +16,16 @@ $showDashTimes = !empty($dash_show_times);
     <?php foreach ($cards as $key) {
         $cardClass = preg_replace('/[^a-z_]/', '', strtolower((string) $key));
     ?>
-    <div class="status-card tech-accent status-card--<?php echo htmlspecialchars($cardClass); ?>">
+    <a class="status-card tech-accent status-card--<?php echo htmlspecialchars($cardClass); ?>"
+        href="?tab=tickets&amp;status=<?php echo htmlspecialchars((string) $key); ?>">
         <div class="status-card-info">
             <span class="status-card-count"><?php echo (int) ($counts[$key] ?? 0); ?></span>
-            <span class="status-card-label"><?php echo htmlspecialchars($labels[$key] ?? $key); ?></span>
+            <span class="status-card-label"><?php echo htmlspecialchars(function_exists('zpgc_t') ? zpgc_t($labels[$key] ?? $key) : ($labels[$key] ?? $key)); ?></span>
         </div>
-    </div>
+    </a>
     <?php } ?>
 </div>
-<div class="tickets-list role-dash-list<?php echo $showCategory ? ' role-dash-list--category' : ''; ?>">
+<div class="tickets-list role-dash-list<?php echo $showCategory ? ' role-dash-list--category' : ''; ?><?php echo $showDashTimes ? ' role-dash-list--times' : ''; ?>">
     <div class="tickets-list-header">
         <span class="tickets-col-id">ID</span>
         <?php if ($showCategory) { ?>
@@ -40,6 +41,7 @@ $showDashTimes = !empty($dash_show_times);
         <span class="tickets-col-reg">Registration Date &amp; Time</span>
         <span class="tickets-col-resolution">Resolution Time</span>
         <?php } ?>
+        <span class="tickets-col-preview">View</span>
     </div>
     <div class="tickets-list-body">
         <?php if (empty($rows)) { ?>
@@ -81,6 +83,13 @@ $showDashTimes = !empty($dash_show_times);
             <span class="tickets-col-reg"><?php echo htmlspecialchars($regLabel); ?></span>
             <span class="tickets-col-resolution"><?php echo htmlspecialchars($resLabel); ?></span>
             <?php } ?>
+            <span class="tickets-col-preview">
+                <?php
+                echo function_exists('ticket_quick_view_button')
+                    ? ticket_quick_view_button($row, ['data-qv-registered' => $regLabel])
+                    : '';
+                ?>
+            </span>
         </div>
         <?php } ?>
         <?php } ?>

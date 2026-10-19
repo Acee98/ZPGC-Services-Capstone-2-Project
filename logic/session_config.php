@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/version.php';
+
 if (!defined('ZPGC_SESSION_NAME')) {
     define('ZPGC_SESSION_NAME', 'ZPGCSESSID');
 }
@@ -312,6 +314,11 @@ if (!function_exists('zpgc_establish_login_session')) {
         $_SESSION['last_name'] = (string) ($user['last_name'] ?? '');
         $_SESSION['email'] = (string) ($user['email'] ?? '');
         $_SESSION['role'] = (string) ($user['role'] ?? '');
+        if (!empty($user['preferred_language'])) {
+            $_SESSION['preferred_language'] = ((string) $user['preferred_language'] === 'Filipino')
+                ? 'Filipino'
+                : 'English';
+        }
         $_SESSION['_last_seen'] = time();
         if (!headers_sent()) {
             zpgc_write_session_cookie();
@@ -406,6 +413,16 @@ function require_role($role)
         global $conn;
         if ($conn instanceof mysqli) {
             auth_mail_assert_session_still_allowed($conn);
+            $kindFile = __DIR__ . '/account_kind.php';
+            if (is_file($kindFile)) {
+                require_once $kindFile;
+                if (function_exists('account_kind_ensure')) {
+                    account_kind_ensure($conn);
+                }
+                if (function_exists('account_touch_last_seen')) {
+                    account_touch_last_seen($conn, (int) ($_SESSION['id'] ?? 0));
+                }
+            }
         }
     }
 }
@@ -433,10 +450,15 @@ function current_user_id($conn)
 
 function current_ui_theme()
 {
-    $theme = $_SESSION['theme'] ?? ($_COOKIE['zpgc_theme'] ?? 'light');
-    $theme = $theme === 'dark' ? 'dark' : 'light';
-    $_SESSION['theme'] = $theme;
-    return $theme;
+    $theme = (string) ($_SESSION['theme'] ?? '');
+    if ($theme !== 'dark' && $theme !== 'light') {
+        $theme = (string) ($_COOKIE['zpgc_theme'] ?? '');
+    }
+    if ($theme === 'dark' || $theme === 'light') {
+        $_SESSION['theme'] = $theme;
+        return $theme;
+    }
+    return '';
 }
 
 function save_ui_theme($theme)
@@ -451,3 +473,19 @@ function save_ui_theme($theme)
         'samesite' => 'Lax',
     ]);
 }
+
+function clear_ui_theme()
+{
+    unset($_SESSION['theme']);
+    if (!headers_sent()) {
+        setcookie('zpgc_theme', '', [
+            'expires' => time() - 3600,
+            'path' => ZPGC_COOKIE_PATH,
+            'secure' => zpgc_request_is_https(),
+            'httponly' => false,
+            'samesite' => 'Lax',
+        ]);
+    }
+}
+
+require_once __DIR__ . '/i18n.php';

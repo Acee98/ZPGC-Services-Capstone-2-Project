@@ -36,8 +36,9 @@ $quotaBlocked = !$quota['ok'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(zpgc_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-    <link rel="stylesheet" href="../css/ticket.css?v=1.6.22">
-    <title>ZPGC Services | Ticket Creation</title>
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(zpgc_asset('../css/ticket.css')); ?>">
+    <?php include __DIR__ . '/partials/critical_ui_fixes.php'; ?>
+    <title><?php echo htmlspecialchars(zpgc_page_title('Ticket Creation')); ?></title>
 </head>
 <body>
     <div class="ticket-container">
@@ -49,7 +50,7 @@ $quotaBlocked = !$quota['ok'];
             <?php } elseif ($quotaBlocked) { ?>
             <div class="ticket-notice-error">This account already created <?php echo $quotaLimit; ?> tickets in the last 24 hours. You can submit again after some of those tickets fall outside that window.</div>
             <?php } ?>
-            <p class="ticket-hint">Each account can create up to <?php echo $quotaLimit; ?> tickets per 24 hours (<?php echo $quotaUsed; ?> used, <?php echo $quotaRemaining; ?> left).</p>
+            <p class="ticket-hint">Each account can create up to <?php echo $quotaLimit; ?> tickets per 24 hours (<?php echo $quotaUsed; ?> used, <?php echo $quotaRemaining; ?> left). AI classification accepts campus IT Helpdesk issues only (hardware, software, network, account, or other IT office work). Non-IT requests are rejected.</p>
 
             <div class="ticket-field">
                 <label for="subject">Subject:</label>
@@ -239,5 +240,6 @@ $quotaBlocked = !$quota['ok'];
         refreshCounts();
     })();
     </script>
+    <?php $zpgc_version_class = 'app-version app-version--auth'; include __DIR__ . '/partials/app_version.php'; ?>
 </body>
 </html>

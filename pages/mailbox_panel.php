@@ -4,16 +4,72 @@ if (!isset($mailbox_tickets) || !isset($current_user_id)) {
 }
 $active_tid = (int) ($_GET['ticket_id'] ?? 0);
 $active_subject = 'Select a ticket';
+$active_id_label = '';
 $active_issue = '';
 foreach ($mailbox_tickets as $mt) {
     if ((int) $mt['id'] === $active_tid) {
         $active_subject = (string) $mt['subject'];
-        $active_issue = '#' . (int) $mt['id'] . ' · ' . (string) ($mt['description'] ?? '');
+        $active_id_label = '#' . (int) $mt['id'];
+        $active_issue = (string) ($mt['description'] ?? '');
         break;
     }
 }
 $can_attach = in_array(strtolower((string) ($_SESSION['role'] ?? '')), ['user', 'techn'], true);
 ?>
+<style id="zpgc-mailbox-theme">
+.mailbox-container,
+.mailbox-container .mailbox-threads,
+.mailbox-container .mailbox-threads-header,
+.mailbox-container .mailbox-threads-list,
+.mailbox-container .mailbox-thread-item,
+.mailbox-container .mailbox-compose,
+.mailbox-container .mailbox-readonly-note,
+.mailbox-container .mailbox-chat-header {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    border-color: #e8e8e8 !important;
+}
+.mailbox-container .mailbox-chat { background: #f5f5f5 !important; color: #1a1a1a !important; }
+.mailbox-container .mailbox-threads-title,
+.mailbox-container .mailbox-thread-subject,
+.mailbox-container .mailbox-chat-header-subject { color: #1a1a1a !important; }
+.mailbox-container .mailbox-thread-time,
+.mailbox-container .mailbox-chat-header-sub { color: #787777 !important; }
+.mailbox-container .mailbox-search,
+.mailbox-container .mailbox-chat-input {
+    background: #f5f5f5 !important;
+    color: #1a1a1a !important;
+    border-color: #d9d9d9 !important;
+}
+.mailbox-container .mailbox-thread-item.active { background: #fdf0f0 !important; }
+html[data-theme="dark"] .mailbox-container,
+html[data-theme="dark"] .mailbox-container .mailbox-threads,
+html[data-theme="dark"] .mailbox-container .mailbox-threads-header,
+html[data-theme="dark"] .mailbox-container .mailbox-threads-list,
+html[data-theme="dark"] .mailbox-container .mailbox-thread-item,
+html[data-theme="dark"] .mailbox-container .mailbox-compose,
+html[data-theme="dark"] .mailbox-container .mailbox-readonly-note,
+html[data-theme="dark"] .mailbox-container .mailbox-chat,
+html[data-theme="dark"] .mailbox-container .mailbox-chat-header {
+    background: #222228 !important;
+    background-color: #222228 !important;
+    color: #f2f2f7 !important;
+    border-color: rgba(255,255,255,.12) !important;
+}
+html[data-theme="dark"] .mailbox-container .mailbox-threads-title,
+html[data-theme="dark"] .mailbox-container .mailbox-thread-subject,
+html[data-theme="dark"] .mailbox-container .mailbox-chat-header-subject { color: #f2f2f7 !important; }
+html[data-theme="dark"] .mailbox-container .mailbox-thread-time,
+html[data-theme="dark"] .mailbox-container .mailbox-chat-header-sub { color: #c4c4d0 !important; }
+html[data-theme="dark"] .mailbox-container .mailbox-search,
+html[data-theme="dark"] .mailbox-container .mailbox-chat-input {
+    background: #2a2a32 !important;
+    color: #f2f2f7 !important;
+    border-color: rgba(255,255,255,.14) !important;
+}
+html[data-theme="dark"] .mailbox-container .mailbox-thread-item.active { background: rgba(139,74,82,.38) !important; }
+</style>
                 <div class="mailbox-container">
                     <aside class="mailbox-threads">
                         <div class="mailbox-threads-header">
@@ -51,6 +107,7 @@ $can_attach = in_array(strtolower((string) ($_SESSION['role'] ?? '')), ['user', 
                             </button>
                             <div class="mailbox-chat-header-text">
                                 <span class="mailbox-chat-header-subject" id="mailbox-chat-subject"><?php echo htmlspecialchars($active_subject); ?></span>
+                                <span class="mailbox-chat-header-id" id="mailbox-chat-id"><?php echo htmlspecialchars($active_id_label); ?></span>
                                 <span class="mailbox-chat-header-sub" id="mailbox-chat-issue"><?php echo htmlspecialchars($active_issue); ?></span>
                             </div>
                         </div>

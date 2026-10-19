@@ -7,6 +7,7 @@ require_once 'priority_queue.php';
 require_once 'severity_matrix.php';
 require_once 'ticket_subjects.php';
 require_once 'auth_mail.php';
+require_once 'ticket_crypto.php';
 require_role('user');
 zpgc_csrf_require();
 
@@ -50,6 +51,20 @@ if (isset($_POST['submit-ticket'])) {
     $description = $checked['description'];
     unset($_SESSION['ticket_form_old']);
     $ai = ai_classify_ticket($subject, $description);
+    if (empty($ai['in_scope'])) {
+        $_SESSION['ticket_form_error'] = (string) ($ai['reject_reason'] ?? $ai['error'] ?? '');
+        if ($_SESSION['ticket_form_error'] === '') {
+            $_SESSION['ticket_form_error'] = function_exists('ai_it_helpdesk_reject_message')
+                ? ai_it_helpdesk_reject_message()
+                : 'This request is outside the IT Helpdesk.';
+        }
+        $_SESSION['ticket_form_old'] = [
+            'subject' => $subject,
+            'description' => $description,
+        ];
+        header('Location: ../pages/ticket.php');
+        exit();
+    }
     $axes = severity_estimate_axes($subject, $description);
     $urgency = $axes['urgency'];
     $impact = $axes['impact'];
@@ -104,10 +119,26 @@ if (isset($_POST['submit-ticket'])) {
         exit();
     }
 
+    ticket_crypto_ensure_columns($conn);
+    $storeSubject = ticket_encrypt_text($subject);
+    $storeDescription = ticket_encrypt_text($description);
+    $subjectHash = ticket_subject_hash($subject);
+    $hasHash = tickets_has_column($conn, 'subject_hash');
     $hasScore = tickets_has_column($conn, 'severity_score')
         && tickets_has_column($conn, 'urgency')
         && tickets_has_column($conn, 'impact_level');
-    if ($hasScore) {
+    if ($hasScore && $hasHash) {
+        $stmt = $conn->prepare(
+            'INSERT INTO tickets (user_id, subject, description, category, priority, urgency, impact_level, severity_score, subject_hash)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        if ($stmt) {
+            $urg = (int) $matrix['urgency'];
+            $imp = (int) $matrix['impact'];
+            $score = (int) $matrix['final_score'];
+            $stmt->bind_param('issssiiis', $user_id, $storeSubject, $storeDescription, $category, $priority, $urg, $imp, $score, $subjectHash);
+        }
+    } elseif ($hasScore) {
         $stmt = $conn->prepare(
             'INSERT INTO tickets (user_id, subject, description, category, priority, urgency, impact_level, severity_score)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
@@ -116,14 +147,21 @@ if (isset($_POST['submit-ticket'])) {
             $urg = (int) $matrix['urgency'];
             $imp = (int) $matrix['impact'];
             $score = (int) $matrix['final_score'];
-            $stmt->bind_param('issssiii', $user_id, $subject, $description, $category, $priority, $urg, $imp, $score);
+            $stmt->bind_param('issssiii', $user_id, $storeSubject, $storeDescription, $category, $priority, $urg, $imp, $score);
+        }
+    } elseif ($hasHash) {
+        $stmt = $conn->prepare(
+            'INSERT INTO tickets (user_id, subject, description, category, priority, subject_hash) VALUES (?, ?, ?, ?, ?, ?)'
+        );
+        if ($stmt) {
+            $stmt->bind_param('isssss', $user_id, $storeSubject, $storeDescription, $category, $priority, $subjectHash);
         }
     } else {
         $stmt = $conn->prepare(
             'INSERT INTO tickets (user_id, subject, description, category, priority) VALUES (?, ?, ?, ?, ?)'
         );
         if ($stmt) {
-            $stmt->bind_param('issss', $user_id, $subject, $description, $category, $priority);
+            $stmt->bind_param('issss', $user_id, $storeSubject, $storeDescription, $category, $priority);
         }
     }
     if (!$stmt) {
@@ -161,7 +199,7 @@ if (isset($_POST['submit-ticket'])) {
         if ($priority === 'low' && $hasGuidance) {
             $tips = ai_troubleshoot_ticket($subject, $description, $category, 'low');
             if ($tips['ok']) {
-                $guidance = (string) $tips['guidance_text'];
+                $guidance = ticket_encrypt_text((string) $tips['guidance_text']);
                 $upd = $conn->prepare('UPDATE tickets SET ai_guidance = ? WHERE id = ?');
                 $upd->bind_param('si', $guidance, $ticket_id);
                 $upd->execute();
