@@ -1,5 +1,6 @@
 <?php
 require_once '../logic/session_config.php';
+require_once '../logic/version.php';
 require_once '../logic/config.php';
 require_once '../logic/techn_apply.php';
 require_login();

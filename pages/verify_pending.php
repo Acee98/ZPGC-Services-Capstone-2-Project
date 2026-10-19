@@ -1,5 +1,6 @@
 <?php
 require_once '../logic/session_config.php';
+require_once '../logic/version.php';
 
 function showError($error) {
     if ($error !== '') {

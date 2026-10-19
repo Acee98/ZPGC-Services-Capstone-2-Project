@@ -1,5 +1,6 @@
 <?php
 require_once '../logic/session_config.php';
+require_once '../logic/version.php';
 require_once '../logic/i18n.php';
 require_once '../logic/config.php';
 require_once '../logic/ui_state.php';
