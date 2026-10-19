@@ -18,9 +18,6 @@
         if (filter === 'pending') {
             return status === 'inactive' || status === 'pending';
         }
-        if (filter === 'not-tsu') {
-            return (row.getAttribute('data-campus') || '') === '0';
-        }
         // user | student | staff | techn | admin
         var role = (row.getAttribute('data-role') || '').toLowerCase();
         var kind = (row.getAttribute('data-kind') || '').toLowerCase();
