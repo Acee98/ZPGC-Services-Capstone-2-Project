@@ -640,7 +640,7 @@ if (!function_exists('ai_classifier_base')) {
                 '/forgot (my )?password|reset (my )?password|password (expired|not working|incorrect|won\'t work)/i',
                 'Reset a campus password safely.',
                 [
-                    'Check Caps Lock and that you are using your campus username (not a personal Gmail unless that is the official login).',
+                    'Check Caps Lock and that you are using your campus TSU Outlook email, not a personal mailbox.',
                     'Use only the Forgot password / official reset link on the school sign-in page. Do not use random websites that ask for your password.',
                     'After a successful reset, wait about two minutes, then sign in again on one device.',
                     'If the same password fails on campus Wi-Fi and on a PC, write down the exact error text and request a technician. Never send your password in the ticket.',

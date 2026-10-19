@@ -38,7 +38,7 @@ Cloud deployment (Azure / Hostinger), App Settings, and smoke tests are in [`DEP
 | Technician | Work assigned tickets, update status, mailbox |
 | Administrator | Priority queue, utilities, performance, activate users, data retention |
 
-Accounts created through signup remain inactive until the email is verified and an administrator activates them.
+Signup requires a TSU Outlook address (`@student.tsu.edu.ph` or `@tsu.edu.ph`). Students and staff activate after the 6-digit code; technicians then apply for administrator approval. Gmail is not accepted for new accounts.
 
 ## Ticket classification (`ai/`)
 

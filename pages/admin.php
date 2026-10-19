@@ -14,6 +14,7 @@ require_once '../logic/iso20000.php';
 require_once '../logic/ticket_crypto.php';
 require_once '../logic/ai_reclassify.php';
 require_once '../logic/account_kind.php';
+require_once '../logic/auth_mail.php';
 require_once '../logic/capacity.php';
 require_once '../logic/ui_state.php';
 require_once '../logic/techn_apply.php';
@@ -925,6 +926,21 @@ $ui_theme = $ui_theme_pref !== '' ? $ui_theme_pref : 'light';
                     <?php } ?>
                 </div>
 
+                <?php
+                $non_tsu_n = 0;
+                foreach ($all_users as $uCount) {
+                    if (!auth_mail_is_tsu_email((string) ($uCount['email'] ?? ''))) {
+                        $non_tsu_n++;
+                    }
+                }
+                if ($non_tsu_n > 0) {
+                    ?>
+                <p class="utilities-notice">
+                    <?php echo (int) $non_tsu_n; ?> account<?php echo $non_tsu_n === 1 ? '' : 's'; ?>
+                    not on TSU Outlook. Use <strong>Not TSU</strong>, then Delete when you are ready.
+                    Nothing is removed automatically.
+                </p>
+                <?php } ?>
                 <div class="tickets-toolbar">
                     <div class="tickets-filter-tabs" id="utilities-filter-tabs">
                         <button type="button" class="filter-tab active-tab" data-filter="all">All</button>
@@ -933,6 +949,7 @@ $ui_theme = $ui_theme_pref !== '' ? $ui_theme_pref : 'light';
                         <button type="button" class="filter-tab" data-filter="techn">Technician</button>
                         <button type="button" class="filter-tab" data-filter="admin">Administrator</button>
                         <button type="button" class="filter-tab" data-filter="pending">Pending Approval</button>
+                        <button type="button" class="filter-tab" data-filter="not-tsu">Not TSU</button>
                     </div>
                     <a href="?tab=utilities&action=add" class="btn-new-ticket">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
@@ -972,6 +989,7 @@ $ui_theme = $ui_theme_pref !== '' ? $ui_theme_pref : 'light';
                             $kindAttr = function_exists('account_kind_normalize')
                                 ? account_kind_normalize($u['account_kind'] ?? '', $u['role'] ?? 'user')
                                 : ((($u['role'] ?? '') === 'user') ? 'student' : '');
+                            $isCampusMail = auth_mail_is_tsu_email((string) ($u['email'] ?? ''));
                             $specInfo = $techn_spec_by_user[(int) $u['id']] ?? null;
                             $specLabel = '';
                             if (($u['role'] ?? '') === 'techn') {
@@ -994,13 +1012,17 @@ $ui_theme = $ui_theme_pref !== '' ? $ui_theme_pref : 'light';
                             data-user-id="<?php echo (int) $u['id']; ?>"
                             data-role="<?php echo htmlspecialchars($u['role']); ?>"
                             data-kind="<?php echo htmlspecialchars($kindAttr); ?>"
-                            data-status="<?php echo htmlspecialchars($u['status']); ?>">
+                            data-status="<?php echo htmlspecialchars($u['status']); ?>"
+                            data-campus="<?php echo $isCampusMail ? '1' : '0'; ?>">
                             <span class="ucol-id">#<?php echo (int) $u['id']; ?></span>
                             <span class="ucol-name">
                                 <?php echo htmlspecialchars($u['first_name'] . ' ' . $u['last_name']); ?>
                             </span>
                             <span class="ucol-email">
                                 <?php echo htmlspecialchars($u['email']); ?>
+                                <?php if (!$isCampusMail) { ?>
+                                <span class="status-badge inactive-account">Not TSU</span>
+                                <?php } ?>
                             </span>
                             <span class="ucol-role">
                                 <span class="ucol-role-stack">
@@ -1192,7 +1214,7 @@ $ui_theme = $ui_theme_pref !== '' ? $ui_theme_pref : 'light';
         })();
     </script>
     <script src="../js/lazy_load.js?v=1.6.55"></script>
-    <script src="../js/utilities_filter.js?v=1.6.88"></script>
+    <script src="<?php echo htmlspecialchars(zpgc_asset('../js/utilities_filter.js')); ?>"></script>
     <script src="../js/table_controls.js?v=1.6.88"></script>
     <script src="../js/ajax_forms.js?v=1.6.87"></script>
     <script src="../js/ticket_live.js?v=1.6.40"></script>

@@ -16,7 +16,7 @@ if (!defined('ZPGC_DOC_FREEZE')) {
     define('ZPGC_DOC_FREEZE', '16 October 2026');
 }
 if (!defined('ZPGC_ASSET_VERSION')) {
-    define('ZPGC_ASSET_VERSION', '1.6.99');
+    define('ZPGC_ASSET_VERSION', '1.6.100');
 }
 
 if (!function_exists('zpgc_page_title')) {
