@@ -85,10 +85,10 @@
 
 .dashboard-charts-toolbar {
     display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    padding: 0 15px 10px;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 var(--ui-pad-x, 15px) 14px;
     flex-wrap: wrap;
 }
 
@@ -133,22 +133,34 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
 }
 
 #page-dashboard.admin-dashboard-page .admin-dashboard-history-list {
+    display: flex;
+    flex-direction: column;
     flex: 0 0 auto;
-    min-height: 280px;
+    min-height: 220px;
+    max-height: var(--zpgc-table-max-h, 420px);
     height: auto;
-    overflow: visible;
+    overflow: hidden;
     margin-top: 0;
     margin-bottom: 24px;
 }
 
+#page-dashboard.admin-dashboard-page .admin-dashboard-history-list > .tickets-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    scrollbar-gutter: stable;
+}
 #page-dashboard.admin-dashboard-page .admin-dashboard-history-list .tickets-list-body {
-    flex: 0 0 auto;
-    min-height: 80px;
+    flex: none;
+    min-height: 0;
+    max-height: none;
     overflow: visible;
 }
 
 #page-dashboard.admin-dashboard-page .admin-history-row .tcol-assigned {
-    flex: 0 0 18%;
+    flex: unset;
+    min-width: 0;
+    width: 100%;
 }
 
 .dashboard-requesters {
@@ -349,74 +361,16 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
         grid-template-columns: 1fr;
     }
 
+    .tickets-list-admin,
+    .tickets-list-user,
+    .tickets-list-admin-five,
     body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin,
     body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user,
-    .tickets-list-admin,
-    .tickets-list-user {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin-five {
+        overflow-x: hidden;
         max-width: 100%;
         width: 100%;
         box-sizing: border-box;
-    }
-
-    .tickets-list-admin .tickets-list-header,
-    .tickets-list-admin .ticket-row,
-    .tickets-list-user .tickets-list-header,
-    .tickets-list-user .ticket-row,
-    .tickets-list-user--actions .tickets-list-header,
-    .tickets-list-user--actions .ticket-row {
-        min-width: 860px;
-        width: 860px;
-        max-width: none;
-        box-sizing: border-box;
-    }
-
-    /* admin-five: same table as desktop — swipe sideways, never cards */
-    .tickets-list-admin-five,
-    body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin-five {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-        max-width: 100%;
-    }
-
-    body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header,
-    body[data-page="tickets"] #page-tickets .tickets-list-admin-five .ticket-row:not(.ticket-row-filtered-out),
-    body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row:not(.ticket-row-filtered-out),
-    .tickets-list-admin-five .tickets-list-header,
-    .tickets-list-admin-five .ticket-row:not(.ticket-row-filtered-out),
-    .tickets-list-admin-five form.ticket-row:not(.ticket-row-filtered-out) {
-        display: grid !important;
-        grid-template-columns:
-            52px
-            70px
-            minmax(90px, 1fr)
-            minmax(100px, 1.1fr)
-            110px
-            96px
-            minmax(110px, 0.95fr)
-            132px
-            110px
-            110px
-            72px !important;
-        min-width: 1380px !important;
-        width: 1380px !important;
-        max-width: none !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-    }
-
-    body[data-page="tickets"] #page-tickets .tickets-list-admin-five .ticket-row.ticket-row-filtered-out,
-    body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row.ticket-row-filtered-out,
-    .tickets-list-admin-five .ticket-row.ticket-row-filtered-out,
-    .tickets-list-admin-five form.ticket-row.ticket-row-filtered-out {
-        display: none !important;
-    }
-
-    .tickets-list-admin-five .ticket-row > span::before,
-    .tickets-list-admin-five form.ticket-row > span::before {
-        content: none !important;
-        display: none !important;
     }
 
     .status-card {
@@ -441,8 +395,8 @@ body[data-page="dashboard"] .showcase #page-dashboard.admin-dashboard-page {
     .tickets-list-user .ticket-row,
     .tickets-list-user--actions .tickets-list-header,
     .tickets-list-user--actions .ticket-row {
-        min-width: 860px;
-        width: 860px;
+        min-width: 0;
+        width: 100%;
         max-width: none;
     }
 }
@@ -884,8 +838,8 @@ body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user {
         minmax(200px, 1.75fr);
 }
 
-.tickets-list-user.tickets-list-user--actions .tickets-list-header,
-.tickets-list-user.tickets-list-user--actions .ticket-row {
+.tickets-list-user.tickets-list-user--actions:not(.tickets-list-user--times) .tickets-list-header,
+.tickets-list-user.tickets-list-user--actions:not(.tickets-list-user--times) .ticket-row {
     grid-template-columns:
         72px
         90px
@@ -894,6 +848,19 @@ body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user {
         minmax(0, 0.95fr)
         minmax(0, 1.35fr)
         44px;
+}
+.tickets-list-user.tickets-list-user--actions.tickets-list-user--times .tickets-list-header,
+.tickets-list-user.tickets-list-user--actions.tickets-list-user--times .ticket-row {
+    grid-template-columns:
+        56px
+        72px
+        minmax(90px, 1fr)
+        minmax(100px, 1.1fr)
+        100px
+        140px
+        120px
+        minmax(110px, 0.95fr)
+        72px;
 }
 
 .tickets-list-user:not(.tickets-list-user--actions) .tickets-list-header,
@@ -1034,28 +1001,4 @@ body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-user {
     align-items: center;
 }
 
-/* Final mobile override: admin tickets stay tabular (loaded after main_interface) */
-@media (max-width: 768px) {
-    body[data-page="tickets"] #page-tickets .tickets-list.tickets-list-admin-five {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    body[data-page="tickets"] #page-tickets .tickets-list-admin-five .tickets-list-header,
-    body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row:not(.ticket-row-filtered-out) {
-        display: grid !important;
-        grid-template-columns: 56px 80px minmax(110px, 1.1fr) minmax(130px, 1.3fr) 120px 110px minmax(130px, 1fr) 72px !important;
-        min-width: 1000px !important;
-        width: 1000px !important;
-        max-width: none !important;
-    }
-
-    body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row.ticket-row-filtered-out {
-        display: none !important;
-    }
-
-    body[data-page="tickets"] #page-tickets .tickets-list-admin-five form.ticket-row > span::before {
-        content: none !important;
-        display: none !important;
-    }
-}
+/* Mobile tables are stacked cards (see css/critical_ui_fixes.css). */
