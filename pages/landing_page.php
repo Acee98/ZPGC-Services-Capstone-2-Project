@@ -25,8 +25,6 @@ require_once __DIR__ . '/../logic/version.php';
 
     <div class="hero">
         <h1 id="header">Welcome to ZPGC Services!</h1>
-        <?php $zpgc_version_class = 'app-version app-version--hero'; include __DIR__ . '/partials/app_version.php'; ?>
-        <br>
         <h4 id="subhead">Experience seamless technology support that prioritizes your workflow and minimizes downtime.</h4>
         <br>
         <button class="btnR"><a href="../pages/login_signup.php?form=signup">Signup now!</a></button>
